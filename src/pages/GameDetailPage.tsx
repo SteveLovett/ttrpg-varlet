@@ -5,30 +5,22 @@ import { supabase } from '../supabaseClient'
 
 type Role = 'Game Master' | 'Player'
 
-type MembershipRow = {
-  game_role: Role | null
-  games:
-    | {
-        id: string
-        name: string
-        description: string | null
-        is_public: boolean
-      }
-    | Array<{
-        id: string
-        name: string
-        description: string | null
-        is_public: boolean
-      }>
-    | null
-}
-
-type PublicGameRow = {
+type GameContent = {
   id: string
   name: string
   description: string | null
   is_public: boolean
+  ruleset: string | null
+  house_rules: string | null
+  session_notes: string | null
 }
+
+type MembershipRow = {
+  game_role: Role | null
+  games: GameContent | GameContent[] | null
+}
+
+type PublicGameRow = GameContent
 
 type MemberRow = {
   user_id: string
@@ -57,6 +49,17 @@ export function GameDetailPage() {
   const [savingSettings, setSavingSettings] = useState(false)
   const [settingsError, setSettingsError] = useState<string | null>(null)
   const [settingsInfo, setSettingsInfo] = useState<string | null>(null)
+
+  // Game content (ruleset / house rules / session notes)
+  const [ruleset, setRuleset] = useState<string>('')
+  const [houseRules, setHouseRules] = useState<string>('')
+  const [sessionNotes, setSessionNotes] = useState<string>('')
+  const [draftRuleset, setDraftRuleset] = useState<string>('')
+  const [draftHouseRules, setDraftHouseRules] = useState<string>('')
+  const [draftSessionNotes, setDraftSessionNotes] = useState<string>('')
+  const [savingContent, setSavingContent] = useState(false)
+  const [contentError, setContentError] = useState<string | null>(null)
+  const [contentInfo, setContentInfo] = useState<string | null>(null)
 
   // Invite
   const [inviteEmail, setInviteEmail] = useState('')
@@ -95,10 +98,12 @@ export function GameDetailPage() {
     }
     setCurrentUserId(user.id)
 
+    const gameSelect = 'id, name, description, is_public, ruleset, house_rules, session_notes'
+
     // Try membership-first query (gives role + game in one round-trip).
     const { data: membershipData, error: membershipError } = await supabase
       .from('game_members')
-      .select('game_role, games ( id, name, description, is_public )')
+      .select(`game_role, games ( ${gameSelect} )`)
       .eq('user_id', user.id)
       .eq('game_id', gameId)
       .maybeSingle()
@@ -109,17 +114,27 @@ export function GameDetailPage() {
       return
     }
 
+    function seedFromGame(game: GameContent, viewerRole: Role | null) {
+      setName(game.name)
+      setDescription(game.description ?? '')
+      setIsPublic(game.is_public)
+      setRuleset(game.ruleset ?? '')
+      setHouseRules(game.house_rules ?? '')
+      setSessionNotes(game.session_notes ?? '')
+      setRole(viewerRole)
+      setDraftName(game.name)
+      setDraftDescription(game.description ?? '')
+      setDraftPublic(game.is_public)
+      setDraftRuleset(game.ruleset ?? '')
+      setDraftHouseRules(game.house_rules ?? '')
+      setDraftSessionNotes(game.session_notes ?? '')
+    }
+
     if (membershipData) {
       const row = membershipData as MembershipRow
       const game = Array.isArray(row.games) ? row.games[0] : row.games
       if (game) {
-        setName(game.name)
-        setDescription(game.description ?? '')
-        setIsPublic(game.is_public)
-        setRole(row.game_role === 'Game Master' ? 'Game Master' : 'Player')
-        setDraftName(game.name)
-        setDraftDescription(game.description ?? '')
-        setDraftPublic(game.is_public)
+        seedFromGame(game, row.game_role === 'Game Master' ? 'Game Master' : 'Player')
         setLoading(false)
         return
       }
@@ -128,7 +143,7 @@ export function GameDetailPage() {
     // Fallback: public game viewable without membership.
     const { data: publicGame, error: publicError } = await supabase
       .from('games')
-      .select('id, name, description, is_public')
+      .select(gameSelect)
       .eq('id', gameId)
       .maybeSingle()
 
@@ -143,11 +158,7 @@ export function GameDetailPage() {
       return
     }
 
-    const pg = publicGame as PublicGameRow
-    setName(pg.name)
-    setDescription(pg.description ?? '')
-    setIsPublic(pg.is_public)
-    setRole(null)
+    seedFromGame(publicGame as PublicGameRow, null)
     setLoading(false)
   }, [gameId])
 
@@ -224,6 +235,47 @@ export function GameDetailPage() {
       setSettingsInfo('Lobby settings saved.')
     } finally {
       setSavingSettings(false)
+    }
+  }
+
+  async function handleSaveContent(e: SubmitEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setContentError(null)
+    setContentInfo(null)
+    if (!gameId) return
+
+    const trimmedRuleset = draftRuleset.trim()
+    if (trimmedRuleset.length > 64) {
+      setContentError('Ruleset label must be 64 characters or less.')
+      return
+    }
+    if (draftHouseRules.length > 20000 || draftSessionNotes.length > 20000) {
+      setContentError('House rules and session notes are limited to 20,000 characters each.')
+      return
+    }
+
+    setSavingContent(true)
+    try {
+      const { error: updateError } = await supabase
+        .from('games')
+        .update({
+          ruleset: trimmedRuleset,
+          house_rules: draftHouseRules,
+          session_notes: draftSessionNotes,
+        })
+        .eq('id', gameId)
+
+      if (updateError) {
+        setContentError(updateError.message)
+        return
+      }
+
+      setRuleset(trimmedRuleset)
+      setHouseRules(draftHouseRules)
+      setSessionNotes(draftSessionNotes)
+      setContentInfo('Game content saved.')
+    } finally {
+      setSavingContent(false)
     }
   }
 
@@ -382,6 +434,86 @@ export function GameDetailPage() {
                 {settingsError ? <p>{settingsError}</p> : null}
                 {settingsInfo ? <p>{settingsInfo}</p> : null}
               </form>
+            </section>
+          ) : null}
+
+          {isGM ? (
+            <section>
+              <h3>Game content</h3>
+              <p className="muted">
+                Ruleset, house rules, and session notes — visible to all members and (if public)
+                anyone who can see the game.
+              </p>
+              <form onSubmit={handleSaveContent} className="create-game-form">
+                <div className="form-row">
+                  <label htmlFor="content-ruleset">Ruleset label </label>
+                  <input
+                    id="content-ruleset"
+                    name="content-ruleset"
+                    type="text"
+                    autoComplete="off"
+                    value={draftRuleset}
+                    onChange={(e) => setDraftRuleset(e.target.value)}
+                    disabled={savingContent}
+                    maxLength={64}
+                    placeholder='e.g. "5e", "PF2e", "homebrew"'
+                  />
+                </div>
+                <div className="form-row">
+                  <label htmlFor="content-house-rules">House rules</label>
+                  <textarea
+                    id="content-house-rules"
+                    name="content-house-rules"
+                    value={draftHouseRules}
+                    onChange={(e) => setDraftHouseRules(e.target.value)}
+                    disabled={savingContent}
+                    maxLength={20000}
+                    rows={6}
+                    placeholder="Stable rules for this campaign (markdown or plain text)."
+                  />
+                </div>
+                <div className="form-row">
+                  <label htmlFor="content-session-notes">Session notes</label>
+                  <textarea
+                    id="content-session-notes"
+                    name="content-session-notes"
+                    value={draftSessionNotes}
+                    onChange={(e) => setDraftSessionNotes(e.target.value)}
+                    disabled={savingContent}
+                    maxLength={20000}
+                    rows={8}
+                    placeholder="Active campaign notes — update between sessions."
+                  />
+                </div>
+                <button type="submit" disabled={savingContent}>
+                  {savingContent ? 'Saving...' : 'Save game content'}
+                </button>
+                {contentError ? <p>{contentError}</p> : null}
+                {contentInfo ? <p>{contentInfo}</p> : null}
+              </form>
+            </section>
+          ) : null}
+
+          {(ruleset.length > 0 || houseRules.length > 0 || sessionNotes.length > 0) ? (
+            <section>
+              <h3>Reference</h3>
+              {ruleset.length > 0 ? (
+                <p>
+                  <strong>Ruleset:</strong> {ruleset}
+                </p>
+              ) : null}
+              {houseRules.length > 0 ? (
+                <div className="reference-block">
+                  <h4>House rules</h4>
+                  <pre className="reference-body">{houseRules}</pre>
+                </div>
+              ) : null}
+              {sessionNotes.length > 0 ? (
+                <div className="reference-block">
+                  <h4>Session notes</h4>
+                  <pre className="reference-body">{sessionNotes}</pre>
+                </div>
+              ) : null}
             </section>
           ) : null}
 

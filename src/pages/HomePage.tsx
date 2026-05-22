@@ -9,6 +9,7 @@ type GameSummary = {
   description: string | null
   role: 'Game Master' | 'Player'
   createdAt: string | null
+  ruleset: string | null
 }
 
 type GameMembershipRow = {
@@ -19,12 +20,14 @@ type GameMembershipRow = {
         name: string
         description: string | null
         created_at: string | null
+        ruleset: string | null
       }
     | Array<{
         id: string
         name: string
         description: string | null
         created_at: string | null
+        ruleset: string | null
       }>
     | null
 }
@@ -40,6 +43,7 @@ function mapMembershipRowsToGames(rows: GameMembershipRow[]): GameSummary[] {
         description: game.description,
         role: row.game_role === 'Game Master' ? 'Game Master' : 'Player',
         createdAt: game.created_at,
+        ruleset: game.ruleset && game.ruleset.length > 0 ? game.ruleset : null,
       } satisfies GameSummary
     })
     .filter((game): game is GameSummary => game !== null)
@@ -78,7 +82,7 @@ export function HomePage() {
   const loadMyGames = useCallback(async (userId: string): Promise<{ error: string | null }> => {
     const { data, error } = await supabase
       .from('game_members')
-      .select('game_role, games ( id, name, description, created_at )')
+      .select('game_role, games ( id, name, description, created_at, ruleset )')
       .eq('user_id', userId)
 
     if (error) {
@@ -396,7 +400,10 @@ export function HomePage() {
                 <h4>{game.name}</h4>
                 <Link to={`/app/games/${game.id}`}>Open game</Link>
                 <p>{game.description ?? 'No description yet.'}</p>
-                <p>Role: {game.role}</p>
+                <p>
+                  Role: {game.role}
+                  {game.ruleset ? ` · Ruleset: ${game.ruleset}` : ''}
+                </p>
               </li>
             ))}
           </ul>
