@@ -118,3 +118,62 @@
   gap: 0.5rem;
   justify-content: flex-start;
 }
+
+.search-form {
+  margin-top: 0.75rem;
+}
+
+.search-status {
+  margin-top: 0.75rem;
+}
+
+.search-results {
+  margin-top: 0.75rem;
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.search-results li {
+  text-align: left;
+}
+
+.mailbox-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+  flex-wrap: wrap;
+}
+
+.mailbox-tabs .tab {
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+}
+
+.mailbox-tabs .tab.active {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.mailbox-actions {
+  margin: 0.5rem 0 0.75rem;
+}
+
+.mailbox-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.mailbox-item {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 6px;
+}
+
+.mailbox-item.unread {
+  background: var(--surface-emphasis, rgba(0, 0, 0, 0.05));
+}

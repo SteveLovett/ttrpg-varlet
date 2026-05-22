@@ -21,8 +21,11 @@ export function AppShellLayout() {
           <NavLink className={({ isActive }) => (isActive ? 'active' : '')} to="/app" end>
             Home
           </NavLink>
-          <NavLink className={({ isActive }) => (isActive ? 'active' : '')} to="/app/landing">
-            Landing
+          <NavLink className={({ isActive }) => (isActive ? 'active' : '')} to="/app/search">
+            Search games
+          </NavLink>
+          <NavLink className={({ isActive }) => (isActive ? 'active' : '')} to="/app/mailbox">
+            Mailbox
           </NavLink>
         </nav>
         <span className="app-header-spacer" aria-hidden />

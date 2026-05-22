@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { ComponentProps } from 'react'
+import type { SubmitEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 
@@ -8,6 +8,7 @@ type GameSummary = {
   name: string
   description: string | null
   role: 'Game Master' | 'Player'
+  createdAt: string | null
 }
 
 type GameMembershipRow = {
@@ -17,16 +18,16 @@ type GameMembershipRow = {
         id: string
         name: string
         description: string | null
+        created_at: string | null
       }
     | Array<{
         id: string
         name: string
         description: string | null
+        created_at: string | null
       }>
     | null
 }
-
-type FormSubmitEvent = Parameters<NonNullable<ComponentProps<'form'>['onSubmit']>>[0]
 
 function mapMembershipRowsToGames(rows: GameMembershipRow[]): GameSummary[] {
   return rows
@@ -38,9 +39,18 @@ function mapMembershipRowsToGames(rows: GameMembershipRow[]): GameSummary[] {
         name: game.name,
         description: game.description,
         role: row.game_role === 'Game Master' ? 'Game Master' : 'Player',
+        createdAt: game.created_at,
       } satisfies GameSummary
     })
     .filter((game): game is GameSummary => game !== null)
+    .sort((a, b) => {
+      if (a.createdAt && b.createdAt) {
+        return b.createdAt.localeCompare(a.createdAt)
+      }
+      if (a.createdAt) return -1
+      if (b.createdAt) return 1
+      return 0
+    })
 }
 
 /**
@@ -59,12 +69,16 @@ export function HomePage() {
   const [gameName, setGameName] = useState('')
   const [description, setDescription] = useState('')
   const [isPublic, setIsPublic] = useState(false)
+  const [displayNameDraft, setDisplayNameDraft] = useState('')
+  const [savingDisplayName, setSavingDisplayName] = useState(false)
+  const [displayNameError, setDisplayNameError] = useState<string | null>(null)
+  const [displayNameInfo, setDisplayNameInfo] = useState<string | null>(null)
 
   /** Loads “my games” from Supabase (memberships + nested game rows). */
   const loadMyGames = useCallback(async (userId: string): Promise<{ error: string | null }> => {
     const { data, error } = await supabase
       .from('game_members')
-      .select('game_role, games ( id, name, description )')
+      .select('game_role, games ( id, name, description, created_at )')
       .eq('user_id', userId)
 
     if (error) {
@@ -76,7 +90,59 @@ export function HomePage() {
     return { error: null }
   }, [])
 
-  const handleCreateGame = async (e: FormSubmitEvent) => {
+  const handleSaveDisplayName = async (e: SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setDisplayNameError(null)
+    setDisplayNameInfo(null)
+
+    const trimmed = displayNameDraft.trim()
+    if (!trimmed) {
+      setDisplayNameError('Display name cannot be empty.')
+      return
+    }
+    if (trimmed === displayName) {
+      setDisplayNameInfo('No changes to save.')
+      return
+    }
+
+    setSavingDisplayName(true)
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser()
+      if (userError) {
+        setDisplayNameError(userError.message)
+        return
+      }
+      if (!user) {
+        setDisplayNameError('You must be signed in.')
+        return
+      }
+
+      const { data, error: updateError } = await supabase
+        .from('profiles')
+        .update({ display_name: trimmed })
+        .eq('id', user.id)
+        .select('display_name')
+        .maybeSingle()
+
+      if (updateError) {
+        setDisplayNameError(updateError.message)
+        return
+      }
+
+      if (data?.display_name) {
+        setDisplayName(data.display_name)
+        setDisplayNameDraft(data.display_name)
+        setDisplayNameInfo('Display name updated.')
+      }
+    } finally {
+      setSavingDisplayName(false)
+    }
+  }
+
+  const handleCreateGame = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     setCreateError(null)
 
@@ -179,6 +245,7 @@ export function HomePage() {
 
         if (row?.display_name) {
           setDisplayName(row.display_name)
+          setDisplayNameDraft(row.display_name)
           return
         }
 
@@ -194,7 +261,10 @@ export function HomePage() {
             console.warn('profiles update:', updateError.message)
             return
           }
-          if (updated?.display_name) setDisplayName(updated.display_name)
+          if (updated?.display_name) {
+            setDisplayName(updated.display_name)
+            setDisplayNameDraft(updated.display_name)
+          }
           return
         }
 
@@ -211,6 +281,7 @@ export function HomePage() {
 
         if (inserted?.display_name) {
           setDisplayName(inserted.display_name)
+          setDisplayNameDraft(inserted.display_name)
         }
       } finally {
         setLoadingProfile(false)
@@ -240,6 +311,30 @@ export function HomePage() {
         ) : null}
         .
       </p>
+      <section>
+        <h3>Your display name</h3>
+        <form onSubmit={handleSaveDisplayName} className="create-game-form">
+          <div className="form-row">
+            <label htmlFor="display-name">Display name </label>
+            <input
+              id="display-name"
+              name="display-name"
+              type="text"
+              autoComplete="off"
+              value={displayNameDraft}
+              onChange={(e) => setDisplayNameDraft(e.target.value)}
+              disabled={savingDisplayName || loadingProfile}
+              minLength={1}
+              required
+            />
+          </div>
+          <button type="submit" disabled={savingDisplayName || loadingProfile}>
+            {savingDisplayName ? 'Saving...' : 'Save display name'}
+          </button>
+          {displayNameError ? <p>{displayNameError}</p> : null}
+          {displayNameInfo ? <p>{displayNameInfo}</p> : null}
+        </form>
+      </section>
       <section>
         <h3>Create a new game</h3>
         <form onSubmit={handleCreateGame} className="create-game-form">

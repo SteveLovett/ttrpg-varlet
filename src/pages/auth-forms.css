@@ -54,6 +54,49 @@
   outline-offset: 1px;
 }
 
+.auth-form .password-field {
+  display: flex;
+  align-items: stretch;
+  margin-bottom: 1rem;
+}
+
+.auth-form .password-field input {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+
+.auth-form .password-field input:focus {
+  z-index: 1;
+  position: relative;
+}
+
+.auth-form .password-peek {
+  flex-shrink: 0;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+  cursor: pointer;
+}
+
+.auth-form .password-peek:hover:not(:disabled) {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+}
+
+.auth-form .password-peek:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .auth-form button[type='submit'] {
   width: 100%;
   margin-top: 0.25rem;

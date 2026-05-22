@@ -11,6 +11,7 @@ import { useState } from 'react'
 import type { SubmitEvent } from 'react'
 import type { Location } from 'react-router-dom'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { PasswordInput } from '../components/PasswordInput'
 import { supabase } from '../supabaseClient'
 import './auth-forms.css'
 
@@ -118,13 +119,12 @@ export function LoginPage() {
           />
 
           <label htmlFor="login-password">Password</label>
-          <input
+          <PasswordInput
             id="login-password"
             name="password"
-            type="password"
             autoComplete="current-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             disabled={loading}
           />
 
@@ -134,6 +134,9 @@ export function LoginPage() {
         </form>
         <p className="auth-footer" style={{ marginTop: 0 }}>
           Need an account? <Link to="/register">Register</Link>
+        </p>
+        <p className="auth-footer" style={{ marginTop: 0 }}>
+          Forgot your password? <Link to="/forgot-password">Reset it</Link>
         </p>
       </div>
     </div>

@@ -1,9 +1,7 @@
-import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import type { Session } from '@supabase/supabase-js'
 import { SessionLoadingFallback } from './SessionLoadingFallback.tsx'
-import { supabase } from './supabaseClient'
+import { useSession } from './hooks/useSession'
 
 type Props = {
   children: ReactNode
@@ -14,21 +12,7 @@ type Props = {
  */
 export function ProtectedRoute({ children }: Props) {
   const location = useLocation()
-  const [session, setSession] = useState<Session | null | undefined>(undefined)
-
-  useEffect(() => {
-    void supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s)
-    })
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
+  const session = useSession()
 
   if (session === undefined) {
     return <SessionLoadingFallback />

@@ -15,6 +15,7 @@
 import { useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { PasswordInput } from '../components/PasswordInput'
 import { supabase } from '../supabaseClient'
 import './auth-forms.css'
 
@@ -107,24 +108,22 @@ export function RegisterPage() {
           />
 
           <label htmlFor="register-password">Password</label>
-          <input
+          <PasswordInput
             id="register-password"
             name="password"
-            type="password"
             autoComplete="new-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             disabled={loading}
           />
 
           <label htmlFor="register-confirm">Confirm password</label>
-          <input
+          <PasswordInput
             id="register-confirm"
             name="confirmPassword"
-            type="password"
             autoComplete="new-password"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={setConfirmPassword}
             disabled={loading}
           />
 
