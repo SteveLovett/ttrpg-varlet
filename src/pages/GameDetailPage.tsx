@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { SubmitEvent } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 
+type Role = 'Game Master' | 'Player'
+
 type MembershipRow = {
-  game_role: 'Game Master' | 'Player' | null
+  game_role: Role | null
   games:
     | {
         id: string
@@ -28,108 +30,202 @@ type PublicGameRow = {
   is_public: boolean
 }
 
+type MemberRow = {
+  user_id: string
+  display_name: string | null
+  game_role: Role
+  joined_at: string | null
+}
+
 export function GameDetailPage() {
   const { gameId } = useParams<{ gameId: string }>()
+  const navigate = useNavigate()
+
+  // Game + viewer
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [name, setName] = useState<string | null>(null)
-  const [description, setDescription] = useState<string | null>(null)
+  const [name, setName] = useState<string>('')
+  const [description, setDescription] = useState<string>('')
   const [isPublic, setIsPublic] = useState<boolean>(false)
-  const [role, setRole] = useState<'Game Master' | 'Player' | null>(null)
+  const [role, setRole] = useState<Role | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  // Lobby settings draft (GM only)
+  const [draftName, setDraftName] = useState<string>('')
+  const [draftDescription, setDraftDescription] = useState<string>('')
+  const [draftPublic, setDraftPublic] = useState<boolean>(false)
+  const [savingSettings, setSavingSettings] = useState(false)
+  const [settingsError, setSettingsError] = useState<string | null>(null)
+  const [settingsInfo, setSettingsInfo] = useState<string | null>(null)
+
+  // Invite
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteSending, setInviteSending] = useState(false)
   const [inviteError, setInviteError] = useState<string | null>(null)
   const [inviteInfo, setInviteInfo] = useState<string | null>(null)
 
+  // Members
+  const [members, setMembers] = useState<MemberRow[]>([])
+  const [membersLoading, setMembersLoading] = useState(false)
+  const [membersError, setMembersError] = useState<string | null>(null)
+  const [actingUserId, setActingUserId] = useState<string | null>(null)
+  const [memberActionError, setMemberActionError] = useState<string | null>(null)
+  const [leaving, setLeaving] = useState(false)
+
+  const loadGame = useCallback(async (): Promise<void> => {
+    if (!gameId) {
+      setError('Missing game id.')
+      setLoading(false)
+      return
+    }
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+    if (userError) {
+      setError(userError.message)
+      setLoading(false)
+      return
+    }
+    if (!user) {
+      setError('You must be signed in.')
+      setLoading(false)
+      return
+    }
+    setCurrentUserId(user.id)
+
+    // Try membership-first query (gives role + game in one round-trip).
+    const { data: membershipData, error: membershipError } = await supabase
+      .from('game_members')
+      .select('game_role, games ( id, name, description, is_public )')
+      .eq('user_id', user.id)
+      .eq('game_id', gameId)
+      .maybeSingle()
+
+    if (membershipError) {
+      setError(membershipError.message)
+      setLoading(false)
+      return
+    }
+
+    if (membershipData) {
+      const row = membershipData as MembershipRow
+      const game = Array.isArray(row.games) ? row.games[0] : row.games
+      if (game) {
+        setName(game.name)
+        setDescription(game.description ?? '')
+        setIsPublic(game.is_public)
+        setRole(row.game_role === 'Game Master' ? 'Game Master' : 'Player')
+        setDraftName(game.name)
+        setDraftDescription(game.description ?? '')
+        setDraftPublic(game.is_public)
+        setLoading(false)
+        return
+      }
+    }
+
+    // Fallback: public game viewable without membership.
+    const { data: publicGame, error: publicError } = await supabase
+      .from('games')
+      .select('id, name, description, is_public')
+      .eq('id', gameId)
+      .maybeSingle()
+
+    if (publicError) {
+      setError(publicError.message)
+      setLoading(false)
+      return
+    }
+    if (!publicGame) {
+      setError('Game not found, or it is private and you have not joined.')
+      setLoading(false)
+      return
+    }
+
+    const pg = publicGame as PublicGameRow
+    setName(pg.name)
+    setDescription(pg.description ?? '')
+    setIsPublic(pg.is_public)
+    setRole(null)
+    setLoading(false)
+  }, [gameId])
+
+  const loadMembers = useCallback(async (): Promise<void> => {
+    if (!gameId) return
+    setMembersLoading(true)
+    setMembersError(null)
+    const { data, error: rpcError } = await supabase.rpc('list_game_members', {
+      p_game_id: gameId,
+    })
+    if (rpcError) {
+      setMembersError(rpcError.message)
+      setMembers([])
+      setMembersLoading(false)
+      return
+    }
+    setMembers((data ?? []) as MemberRow[])
+    setMembersLoading(false)
+  }, [gameId])
+
   useEffect(() => {
     let cancelled = false
-
     void (async () => {
-      if (!gameId) {
-        setError('Missing game id.')
-        setLoading(false)
-        return
-      }
-
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
+      setLoading(true)
+      setError(null)
+      await loadGame()
       if (cancelled) return
-
-      if (userError) {
-        setError(userError.message)
-        setLoading(false)
-        return
-      }
-      if (!user) {
-        setError('You must be signed in.')
-        setLoading(false)
-        return
-      }
-
-      // First try membership row (gives role + game in one query).
-      const { data: membershipData, error: membershipError } = await supabase
-        .from('game_members')
-        .select('game_role, games ( id, name, description, is_public )')
-        .eq('user_id', user.id)
-        .eq('game_id', gameId)
-        .maybeSingle()
-
-      if (cancelled) return
-
-      if (membershipError) {
-        setError(membershipError.message)
-        setLoading(false)
-        return
-      }
-
-      if (membershipData) {
-        const row = membershipData as MembershipRow
-        const game = Array.isArray(row.games) ? row.games[0] : row.games
-        if (game) {
-          setName(game.name)
-          setDescription(game.description)
-          setIsPublic(game.is_public)
-          setRole(row.game_role === 'Game Master' ? 'Game Master' : 'Player')
-          setLoading(false)
-          return
-        }
-      }
-
-      // Fallback: fetch public game directly (RLS allows public reads).
-      const { data: publicGame, error: publicError } = await supabase
-        .from('games')
-        .select('id, name, description, is_public')
-        .eq('id', gameId)
-        .maybeSingle()
-
-      if (cancelled) return
-
-      if (publicError) {
-        setError(publicError.message)
-        setLoading(false)
-        return
-      }
-
-      if (!publicGame) {
-        setError('Game not found, or it is private and you have not joined.')
-        setLoading(false)
-        return
-      }
-
-      const pg = publicGame as PublicGameRow
-      setName(pg.name)
-      setDescription(pg.description)
-      setIsPublic(pg.is_public)
-      setRole(null)
-      setLoading(false)
     })()
-
     return () => {
       cancelled = true
     }
-  }, [gameId])
+  }, [loadGame])
+
+  // Members panel is only useful for members; load when we have a role.
+  useEffect(() => {
+    if (role === 'Game Master' || role === 'Player') {
+      void loadMembers()
+    } else {
+      setMembers([])
+    }
+  }, [role, loadMembers])
+
+  async function handleSaveSettings(e: SubmitEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setSettingsError(null)
+    setSettingsInfo(null)
+
+    if (!gameId) return
+    const trimmedName = draftName.trim()
+    if (trimmedName.length < 3) {
+      setSettingsError('Name must be at least 3 characters.')
+      return
+    }
+
+    setSavingSettings(true)
+    try {
+      const { error: updateError } = await supabase
+        .from('games')
+        .update({
+          name: trimmedName,
+          description: draftDescription.trim(),
+          is_public: draftPublic,
+        })
+        .eq('id', gameId)
+
+      if (updateError) {
+        setSettingsError(updateError.message)
+        return
+      }
+
+      setName(trimmedName)
+      setDescription(draftDescription.trim())
+      setIsPublic(draftPublic)
+      setSettingsInfo('Lobby settings saved.')
+    } finally {
+      setSavingSettings(false)
+    }
+  }
 
   async function handleSendInvite(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -173,6 +269,49 @@ export function GameDetailPage() {
     }
   }
 
+  async function callMemberRpc(
+    rpc: 'promote_to_gm' | 'demote_from_gm' | 'remove_member',
+    targetUserId: string,
+  ) {
+    if (!gameId) return
+    setMemberActionError(null)
+    setActingUserId(targetUserId)
+    try {
+      const { error: rpcError } = await supabase.rpc(rpc, {
+        p_game_id: gameId,
+        p_user_id: targetUserId,
+      })
+      if (rpcError) {
+        setMemberActionError(rpcError.message)
+        return
+      }
+      await loadMembers()
+    } finally {
+      setActingUserId(null)
+    }
+  }
+
+  async function handleLeaveGame() {
+    if (!gameId) return
+    const confirmed = window.confirm('Leave this game? You can rejoin later if it is public.')
+    if (!confirmed) return
+    setMemberActionError(null)
+    setLeaving(true)
+    try {
+      const { error: rpcError } = await supabase.rpc('leave_game', { p_game_id: gameId })
+      if (rpcError) {
+        setMemberActionError(rpcError.message)
+        return
+      }
+      navigate('/app', { replace: true })
+    } finally {
+      setLeaving(false)
+    }
+  }
+
+  const isGM = role === 'Game Master'
+  const gmCount = members.filter((m) => m.game_role === 'Game Master').length
+
   return (
     <div className="app-panel">
       <h2>Game detail</h2>
@@ -183,7 +322,7 @@ export function GameDetailPage() {
           <p>
             <strong>{name}</strong>
           </p>
-          <p>{description && description.length > 0 ? description : 'No description yet.'}</p>
+          <p>{description.length > 0 ? description : 'No description yet.'}</p>
           {role ? (
             <p>Role: {role}</p>
           ) : (
@@ -198,7 +337,55 @@ export function GameDetailPage() {
             </p>
           )}
 
-          {role === 'Game Master' ? (
+          {isGM ? (
+            <section>
+              <h3>Lobby settings</h3>
+              <form onSubmit={handleSaveSettings} className="create-game-form">
+                <div className="form-row">
+                  <label htmlFor="settings-name">Game name </label>
+                  <input
+                    id="settings-name"
+                    name="settings-name"
+                    type="text"
+                    autoComplete="off"
+                    value={draftName}
+                    onChange={(e) => setDraftName(e.target.value)}
+                    disabled={savingSettings}
+                    minLength={3}
+                    required
+                  />
+                </div>
+                <div className="form-row">
+                  <label htmlFor="settings-description">Description </label>
+                  <textarea
+                    id="settings-description"
+                    name="settings-description"
+                    value={draftDescription}
+                    onChange={(e) => setDraftDescription(e.target.value)}
+                    disabled={savingSettings}
+                  />
+                </div>
+                <div className="form-row form-row-inline">
+                  <input
+                    id="settings-public"
+                    name="settings-public"
+                    type="checkbox"
+                    checked={draftPublic}
+                    onChange={(e) => setDraftPublic(e.target.checked)}
+                    disabled={savingSettings}
+                  />
+                  <label htmlFor="settings-public">Public game </label>
+                </div>
+                <button type="submit" disabled={savingSettings}>
+                  {savingSettings ? 'Saving...' : 'Save lobby settings'}
+                </button>
+                {settingsError ? <p>{settingsError}</p> : null}
+                {settingsInfo ? <p>{settingsInfo}</p> : null}
+              </form>
+            </section>
+          ) : null}
+
+          {isGM ? (
             <section>
               <h3>Invite a player</h3>
               <form onSubmit={handleSendInvite} className="create-game-form">
@@ -221,6 +408,83 @@ export function GameDetailPage() {
                 {inviteError ? <p>{inviteError}</p> : null}
                 {inviteInfo ? <p>{inviteInfo}</p> : null}
               </form>
+            </section>
+          ) : null}
+
+          {role ? (
+            <section>
+              <h3>Members</h3>
+              {membersLoading ? <p>Loading members...</p> : null}
+              {!membersLoading && membersError ? <p>Could not load members: {membersError}</p> : null}
+              {memberActionError ? <p>{memberActionError}</p> : null}
+              {!membersLoading && !membersError && members.length === 0 ? (
+                <p>No members yet.</p>
+              ) : null}
+              {!membersLoading && !membersError && members.length > 0 ? (
+                <ul className="members-list">
+                  {members.map((m) => {
+                    const isSelf = m.user_id === currentUserId
+                    const isMemberGM = m.game_role === 'Game Master'
+                    const acting = actingUserId === m.user_id
+                    const lastGM = isMemberGM && gmCount <= 1
+                    return (
+                      <li key={m.user_id} className="member-row">
+                        <div className="member-meta">
+                          <strong>{m.display_name ?? '(unknown)'}</strong>
+                          {isSelf ? ' (you)' : ''} — {m.game_role}
+                        </div>
+                        {isGM && !isSelf ? (
+                          <div className="member-actions">
+                            {isMemberGM ? (
+                              <button
+                                type="button"
+                                onClick={() => void callMemberRpc('demote_from_gm', m.user_id)}
+                                disabled={acting || lastGM}
+                                title={lastGM ? 'Cannot demote the last Game Master' : undefined}
+                              >
+                                {acting ? 'Working...' : 'Demote'}
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => void callMemberRpc('promote_to_gm', m.user_id)}
+                                disabled={acting}
+                              >
+                                {acting ? 'Working...' : 'Promote to GM'}
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => void callMemberRpc('remove_member', m.user_id)}
+                              disabled={acting || lastGM}
+                              title={lastGM ? 'Cannot remove the last Game Master' : undefined}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ) : null}
+                      </li>
+                    )
+                  })}
+                </ul>
+              ) : null}
+
+              <div className="leave-game-row">
+                <button
+                  type="button"
+                  className="danger"
+                  onClick={() => void handleLeaveGame()}
+                  disabled={leaving || (isGM && gmCount <= 1)}
+                  title={isGM && gmCount <= 1 ? 'Promote another GM before leaving' : undefined}
+                >
+                  {leaving ? 'Leaving...' : 'Leave game'}
+                </button>
+                {isGM && gmCount <= 1 ? (
+                  <p className="leave-hint">
+                    You are the only Game Master. Promote another member to GM before you can leave.
+                  </p>
+                ) : null}
+              </div>
             </section>
           ) : null}
         </>

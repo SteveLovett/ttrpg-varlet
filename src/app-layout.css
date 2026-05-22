@@ -177,3 +177,54 @@
 .mailbox-item.unread {
   background: var(--surface-emphasis, rgba(0, 0, 0, 0.05));
 }
+
+.members-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 6px;
+  text-align: left;
+}
+
+.member-meta {
+  min-width: 0;
+}
+
+.member-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.leave-game-row {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.leave-game-row .danger {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.5);
+}
+
+.leave-game-row .danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.leave-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
