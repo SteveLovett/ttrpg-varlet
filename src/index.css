@@ -31,7 +31,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  html:not([data-theme]) {
     --text: #9ca3af;
     --text-h: #f3f4f6;
     --bg: #16171d;
@@ -45,7 +45,7 @@
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
   }
 
-  #social .button-icon {
+  html:not([data-theme]) #social .button-icon {
     filter: invert(1) brightness(2);
   }
 }
@@ -60,6 +60,28 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+}
+
+/* Authenticated app: full-width shell */
+html[data-app-shell] #root {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  text-align: left;
+  border-inline: none;
+}
+
+html[data-app-shell],
+html[data-auth-theme] {
+  font: 18px/145% var(--sans);
+  color: var(--text);
+  background: var(--bg);
+}
+
+@media (max-width: 1024px) {
+  html[data-app-shell] {
+    font-size: 16px;
+  }
 }
 
 body {

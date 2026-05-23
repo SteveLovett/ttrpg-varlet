@@ -1,5 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
+import { clearThemeCache } from './themes/themeCache'
+import { ThemeProvider } from './themes/ThemeProvider'
 import './app-layout.css'
 
 /**
@@ -9,36 +11,51 @@ export function AppShellLayout() {
   const navigate = useNavigate()
 
   async function handleSignOut() {
+    clearThemeCache()
     await supabase.auth.signOut()
     navigate('/login', { replace: true })
   }
 
   return (
-    <div className="app-shell">
-      <header className="app-header">
-        <h1 className="app-header-title">TTRPG Varlet</h1>
-        <nav className="app-nav" aria-label="App">
-          <NavLink className={({ isActive }) => (isActive ? 'active' : '')} to="/app" end>
-            Games
-          </NavLink>
-          <NavLink className={({ isActive }) => (isActive ? 'active' : '')} to="/app/search">
-            Search games
-          </NavLink>
-          <NavLink className={({ isActive }) => (isActive ? 'active' : '')} to="/app/mailbox">
-            Mailbox
-          </NavLink>
-          <NavLink className={({ isActive }) => (isActive ? 'active' : '')} to="/app/tools">
-            Tools
-          </NavLink>
-        </nav>
-        <span className="app-header-spacer" aria-hidden />
-        <button type="button" className="app-sign-out" onClick={() => void handleSignOut()}>
-          Sign out
-        </button>
-      </header>
-      <main className="app-main">
-        <Outlet />
-      </main>
-    </div>
+    <ThemeProvider>
+      <div className="app-shell">
+        <header className="app-header">
+          <h1 className="app-header-title">TTRPG Varlet</h1>
+          <nav className="app-nav" aria-label="App">
+            <NavLink className={({ isActive }) => (isActive ? 'active' : '')} to="/app" end>
+              Games
+            </NavLink>
+            <NavLink
+              className={({ isActive }) => (isActive ? 'active' : '')}
+              to="/app/search"
+            >
+              Search games
+            </NavLink>
+            <NavLink
+              className={({ isActive }) => (isActive ? 'active' : '')}
+              to="/app/mailbox"
+            >
+              Mailbox
+            </NavLink>
+            <NavLink className={({ isActive }) => (isActive ? 'active' : '')} to="/app/tools">
+              Tools
+            </NavLink>
+            <NavLink
+              className={({ isActive }) => (isActive ? 'active' : '')}
+              to="/app/settings"
+            >
+              Settings
+            </NavLink>
+          </nav>
+          <span className="app-header-spacer" aria-hidden />
+          <button type="button" className="app-sign-out" onClick={() => void handleSignOut()}>
+            Sign out
+          </button>
+        </header>
+        <main className="app-main">
+          <Outlet />
+        </main>
+      </div>
+    </ThemeProvider>
   )
 }
