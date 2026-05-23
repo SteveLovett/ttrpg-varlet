@@ -1254,9 +1254,16 @@
 
 .vtt-stage {
   display: grid;
-  grid-template-columns: minmax(12rem, 16rem) 1fr;
+  grid-template-columns: minmax(12rem, 18rem) 1fr;
   gap: 0.75rem;
   align-items: start;
+}
+
+.vtt-sidebar {
+  display: grid;
+  gap: 0.75rem;
+  max-height: clamp(20rem, 60vh, 40rem);
+  overflow-y: auto;
 }
 
 @media (max-width: 768px) {
@@ -1265,15 +1272,57 @@
   }
 }
 
-.vtt-token-tray {
+.vtt-token-tray,
+.vtt-fog-tools,
+.vtt-drawing-tools {
   display: grid;
   gap: 0.75rem;
   padding: 0.65rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface, rgba(0, 0, 0, 0.02));
-  max-height: clamp(20rem, 60vh, 40rem);
-  overflow-y: auto;
+}
+
+.vtt-fog-tool-row {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.vtt-fog-tool-row button.is-active {
+  border-color: #facc15;
+  background: rgba(250, 204, 21, 0.12);
+}
+
+.vtt-fog-hint {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.vtt-fog-preview {
+  font-size: 0.85rem;
+}
+
+.vtt-fog-preview summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.vtt-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.35rem 0;
+}
+
+.vtt-fog-clear {
+  justify-self: start;
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.vtt-fog-tools-player .muted {
+  margin: 0;
+  font-size: 0.85rem;
 }
 
 .vtt-tray-heading {

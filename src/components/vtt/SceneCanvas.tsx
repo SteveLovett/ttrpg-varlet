@@ -14,6 +14,11 @@ import {
 import { useOthers, useSelf } from '@liveblocks/react'
 import { useYjsDoc } from '../../hooks/useYjsDoc'
 import { drawSquareGrid } from './drawGrid'
+import { drawLinePreview, syncDrawingsLayer } from './drawDrawings'
+import { drawFogGuide, drawFogPreview, renderFogMaskSprite } from './drawFog'
+import { isPointVisibleInFog, shouldHideTokensByFog } from './fogVisibility'
+import { newDrawingId, type DrawingTool, type DrawingVisibility } from './drawingUtils'
+import type { FogTool } from './fogUtils'
 import type { PlacementMode } from './placementTypes'
 import {
   canMoveToken,
@@ -21,7 +26,7 @@ import {
   snapTokenCenter,
   tokenRadiusPx,
 } from './tokenUtils'
-import type { SceneState, TokenState } from './types'
+import type { DrawingShape, FogStroke, SceneState, TokenState } from './types'
 
 type SceneCanvasProps = {
   mapUrl: string
@@ -35,6 +40,25 @@ type SceneCanvasProps = {
   onSelectToken: (id: string | null) => void
   onMoveToken: (id: string, x: number, y: number) => void
   onPlaceToken: (x: number, y: number) => void
+  fogStrokes: FogStroke[]
+  /** When set, render the fog mask as this player sees it. */
+  fogViewerUserId: string | null
+  showPlayerFog: boolean
+  gmFogGuide: boolean
+  fogTool: FogTool | null
+  fogBrushRadius: number
+  fogForPlayerId: string | null
+  onFogStrokeStart: (stroke: FogStroke) => void
+  onFogStrokeUpdate: (stroke: FogStroke) => void
+  hideTokensInFog: boolean
+  drawings: DrawingShape[]
+  drawingTool: DrawingTool | null
+  drawingColor: string
+  drawingVisibility: DrawingVisibility
+  textPlacementReady: boolean
+  onDrawingStart: (shape: DrawingShape) => void
+  onDrawingUpdate: (shape: DrawingShape) => void
+  onPlaceTextDrawing: (x: number, y: number) => void
 }
 
 const MIN_SCALE = 0.05
@@ -44,7 +68,27 @@ type PixiScene = {
   app: Application
   viewport: Container
   world: Container
+  publicDrawingsLayer: Container
+  fogMaskSprite: Sprite | null
+  fogGuideGfx: Graphics
+  fogPreviewGfx: Graphics
+  drawingPreviewGfx: Graphics
+  gmDrawingsLayer: Container
   tokensLayer: Container
+}
+
+type ActiveFogPaint = {
+  stroke: FogStroke
+  lastSyncX: number
+  lastSyncY: number
+  lastSyncAt: number
+}
+
+type ActiveLinePaint = {
+  shape: DrawingShape & { kind: 'line' }
+  lastSyncX: number
+  lastSyncY: number
+  lastSyncAt: number
 }
 
 type ActiveDrag = {
@@ -71,6 +115,24 @@ export function SceneCanvas({
   onSelectToken,
   onMoveToken,
   onPlaceToken,
+  fogStrokes,
+  fogViewerUserId,
+  showPlayerFog,
+  gmFogGuide,
+  fogTool,
+  fogBrushRadius,
+  fogForPlayerId,
+  onFogStrokeStart,
+  onFogStrokeUpdate,
+  hideTokensInFog,
+  drawings,
+  drawingTool,
+  drawingColor,
+  drawingVisibility,
+  textPlacementReady,
+  onDrawingStart,
+  onDrawingUpdate,
+  onPlaceTextDrawing,
 }: SceneCanvasProps) {
   const { synced } = useYjsDoc()
   const self = useSelf()
@@ -78,6 +140,8 @@ export function SceneCanvas({
   const hostRef = useRef<HTMLDivElement | null>(null)
   const sceneRef = useRef<PixiScene | null>(null)
   const dragRef = useRef<ActiveDrag | null>(null)
+  const fogPaintRef = useRef<ActiveFogPaint | null>(null)
+  const linePaintRef = useRef<ActiveLinePaint | null>(null)
   const tokenViewsRef = useRef<Map<string, Container>>(new Map())
 
   const onSelectRef = useRef(onSelectToken)
@@ -88,6 +152,20 @@ export function SceneCanvas({
   const selectedRef = useRef(selectedTokenId)
   const isGMRef = useRef(isGM)
   const userIdRef = useRef(currentUserId)
+  const fogToolRef = useRef(fogTool)
+  const fogBrushRef = useRef(fogBrushRadius)
+  const fogForPlayerRef = useRef(fogForPlayerId)
+  const onFogStartRef = useRef(onFogStrokeStart)
+  const onFogUpdateRef = useRef(onFogStrokeUpdate)
+  const drawingToolRef = useRef(drawingTool)
+  const drawingColorRef = useRef(drawingColor)
+  const drawingVisibilityRef = useRef(drawingVisibility)
+  const textPlacementRef = useRef(textPlacementReady)
+  const onDrawingStartRef = useRef(onDrawingStart)
+  const onDrawingUpdateRef = useRef(onDrawingUpdate)
+  const onPlaceTextRef = useRef(onPlaceTextDrawing)
+  const fogStrokesRef = useRef(fogStrokes)
+  const hideTokensInFogRef = useRef(hideTokensInFog)
 
   useEffect(() => {
     onSelectRef.current = onSelectToken
@@ -98,6 +176,20 @@ export function SceneCanvas({
     selectedRef.current = selectedTokenId
     isGMRef.current = isGM
     userIdRef.current = currentUserId
+    fogToolRef.current = fogTool
+    fogBrushRef.current = fogBrushRadius
+    fogForPlayerRef.current = fogForPlayerId
+    onFogStartRef.current = onFogStrokeStart
+    onFogUpdateRef.current = onFogStrokeUpdate
+    drawingToolRef.current = drawingTool
+    drawingColorRef.current = drawingColor
+    drawingVisibilityRef.current = drawingVisibility
+    textPlacementRef.current = textPlacementReady
+    onDrawingStartRef.current = onDrawingStart
+    onDrawingUpdateRef.current = onDrawingUpdate
+    onPlaceTextRef.current = onPlaceTextDrawing
+    fogStrokesRef.current = fogStrokes
+    hideTokensInFogRef.current = hideTokensInFog
   }, [
     onSelectToken,
     onMoveToken,
@@ -107,6 +199,20 @@ export function SceneCanvas({
     selectedTokenId,
     isGM,
     currentUserId,
+    fogTool,
+    fogBrushRadius,
+    fogForPlayerId,
+    onFogStrokeStart,
+    onFogStrokeUpdate,
+    drawingTool,
+    drawingColor,
+    drawingVisibility,
+    textPlacementReady,
+    onDrawingStart,
+    onDrawingUpdate,
+    onPlaceTextDrawing,
+    fogStrokes,
+    hideTokensInFog,
   ])
 
   const [ready, setReady] = useState(false)
@@ -156,8 +262,28 @@ export function SceneCanvas({
         drawSquareGrid(grid, mapW, mapH, gridSize)
         world.addChild(grid)
 
+        const publicDrawingsLayer = new Container()
+        publicDrawingsLayer.label = 'publicDrawings'
+        world.addChild(publicDrawingsLayer)
+
+        const fogGuideGfx = new Graphics()
+        fogGuideGfx.label = 'fogGuide'
+        world.addChild(fogGuideGfx)
+
+        const fogPreviewGfx = new Graphics()
+        fogPreviewGfx.label = 'fogPreview'
+        world.addChild(fogPreviewGfx)
+
+        const drawingPreviewGfx = new Graphics()
+        drawingPreviewGfx.label = 'drawingPreview'
+        world.addChild(drawingPreviewGfx)
+
         const tokensLayer = new Container()
         world.addChild(tokensLayer)
+
+        const gmDrawingsLayer = new Container()
+        gmDrawingsLayer.label = 'gmDrawings'
+        world.addChild(gmDrawingsLayer)
 
         viewport.addChild(world)
 
@@ -186,14 +312,146 @@ export function SceneCanvas({
           )
         }
 
+        function beginFogPaint(p: { x: number; y: number }) {
+          const tool = fogToolRef.current
+          const authorId = userIdRef.current
+          if (!tool || !authorId) return
+          const stroke: FogStroke = {
+            id: crypto.randomUUID(),
+            op: tool,
+            points: [{ x: p.x, y: p.y }],
+            radius: fogBrushRef.current,
+            authorId,
+            createdAt: new Date().toISOString(),
+            forPlayerId: fogForPlayerRef.current,
+          }
+          fogPaintRef.current = {
+            stroke,
+            lastSyncX: p.x,
+            lastSyncY: p.y,
+            lastSyncAt: 0,
+          }
+          drawFogPreview(fogPreviewGfx, stroke)
+          onFogStartRef.current(stroke)
+        }
+
+        function continueFogPaint(p: { x: number; y: number }) {
+          const paint = fogPaintRef.current
+          if (!paint) return
+          const last = paint.stroke.points[paint.stroke.points.length - 1]
+          if (last && last.x === p.x && last.y === p.y) return
+          paint.stroke.points.push({ x: p.x, y: p.y })
+          drawFogPreview(fogPreviewGfx, paint.stroke)
+          if (
+            shouldSyncLiveDrag(
+              paint.lastSyncX,
+              paint.lastSyncY,
+              paint.lastSyncAt,
+              p.x,
+              p.y,
+            )
+          ) {
+            paint.lastSyncX = p.x
+            paint.lastSyncY = p.y
+            paint.lastSyncAt = performance.now()
+            onFogUpdateRef.current(paint.stroke)
+          }
+        }
+
+        function endFogPaint() {
+          const paint = fogPaintRef.current
+          if (!paint) return
+          fogPreviewGfx.clear()
+          onFogUpdateRef.current(paint.stroke)
+          fogPaintRef.current = null
+        }
+
+        function beginLinePaint(p: { x: number; y: number }) {
+          if (drawingToolRef.current !== 'line' || !isGMRef.current) return
+          const shape: DrawingShape = {
+            id: newDrawingId(),
+            kind: 'line',
+            points: [{ x: p.x, y: p.y }],
+            color: drawingColorRef.current,
+            visibility: drawingVisibilityRef.current,
+          }
+          linePaintRef.current = {
+            shape,
+            lastSyncX: p.x,
+            lastSyncY: p.y,
+            lastSyncAt: 0,
+          }
+          drawLinePreview(drawingPreviewGfx, shape.points, shape.color)
+          onDrawingStartRef.current(shape)
+        }
+
+        function continueLinePaint(p: { x: number; y: number }) {
+          const paint = linePaintRef.current
+          if (!paint) return
+          const last = paint.shape.points[paint.shape.points.length - 1]
+          if (last && last.x === p.x && last.y === p.y) return
+          paint.shape.points.push({ x: p.x, y: p.y })
+          drawLinePreview(drawingPreviewGfx, paint.shape.points, paint.shape.color)
+          if (
+            shouldSyncLiveDrag(
+              paint.lastSyncX,
+              paint.lastSyncY,
+              paint.lastSyncAt,
+              p.x,
+              p.y,
+            )
+          ) {
+            paint.lastSyncX = p.x
+            paint.lastSyncY = p.y
+            paint.lastSyncAt = performance.now()
+            onDrawingUpdateRef.current(paint.shape)
+          }
+        }
+
+        function endLinePaint() {
+          const paint = linePaintRef.current
+          if (!paint) return
+          drawingPreviewGfx.clear()
+          onDrawingUpdateRef.current(paint.shape)
+          linePaintRef.current = null
+        }
+
         world.on('pointerdown', (e: FederatedPointerEvent) => {
-          if (e.button !== 0 || !placementRef.current) return
+          if (e.button !== 0) return
           const p = e.getLocalPosition(world)
+          if (fogToolRef.current && isGMRef.current) {
+            e.stopPropagation()
+            beginFogPaint(p)
+            return
+          }
+          if (drawingToolRef.current === 'line' && isGMRef.current) {
+            e.stopPropagation()
+            beginLinePaint(p)
+            return
+          }
+          if (textPlacementRef.current && isGMRef.current) {
+            e.stopPropagation()
+            onPlaceTextRef.current(p.x, p.y)
+            return
+          }
+          if (!placementRef.current) return
           onPlaceRef.current(p.x, p.y)
         })
 
         app.stage.eventMode = 'static'
         app.stage.on('globalpointermove', (e: FederatedPointerEvent) => {
+          const fogPaint = fogPaintRef.current
+          if (fogPaint) {
+            const p = e.getLocalPosition(world)
+            continueFogPaint(p)
+            return
+          }
+          const linePaint = linePaintRef.current
+          if (linePaint) {
+            const p = e.getLocalPosition(world)
+            continueLinePaint(p)
+            return
+          }
           const drag = dragRef.current
           if (!drag) return
           const p = e.getLocalPosition(world)
@@ -209,6 +467,16 @@ export function SceneCanvas({
         })
 
         function endDrag(e: FederatedPointerEvent) {
+          if (fogPaintRef.current) {
+            endFogPaint()
+            e.stopPropagation()
+            return
+          }
+          if (linePaintRef.current) {
+            endLinePaint()
+            e.stopPropagation()
+            return
+          }
           const drag = dragRef.current
           if (!drag) return
           const token = tokensRef.current[drag.tokenId]
@@ -275,7 +543,18 @@ export function SceneCanvas({
         canvas.addEventListener('pointerup', endPan)
         canvas.addEventListener('pointercancel', endPan)
 
-        sceneRef.current = { app, viewport, world, tokensLayer }
+        sceneRef.current = {
+          app,
+          viewport,
+          world,
+          publicDrawingsLayer,
+          fogMaskSprite: null,
+          fogGuideGfx,
+          fogPreviewGfx,
+          drawingPreviewGfx,
+          gmDrawingsLayer,
+          tokensLayer,
+        }
         tokenViewsRef.current = new Map()
         setReady(true)
       } catch (err) {
@@ -286,6 +565,8 @@ export function SceneCanvas({
     return () => {
       disposed = true
       dragRef.current = null
+      fogPaintRef.current = null
+      linePaintRef.current = null
       const current = sceneRef.current
       sceneRef.current = null
       tokenViewsRef.current = new Map()
@@ -332,6 +613,9 @@ export function SceneCanvas({
         attachTokenHandlers(container, token, {
           dragRef,
           placementRef,
+          fogToolRef,
+          drawingToolRef,
+          textPlacementRef,
           onSelectRef,
           tokensRef,
           userIdRef,
@@ -348,17 +632,90 @@ export function SceneCanvas({
         token.id === selectedRef.current,
       )
       container.position.set(token.x, token.y)
+
+      const applyTokenFog = shouldHideTokensByFog(
+        hideTokensInFogRef.current,
+        showPlayerFog,
+        fogViewerUserId,
+      )
+      if (applyTokenFog && fogViewerUserId && token.id !== draggingId) {
+        const visible = isPointVisibleInFog(
+          token.x,
+          token.y,
+          fogStrokesRef.current,
+          fogViewerUserId,
+        )
+        container.visible = visible
+        container.eventMode = visible ? 'static' : 'none'
+      } else {
+        container.visible = true
+        container.eventMode = 'static'
+      }
     }
-  }, [tokens, selectedTokenId, gridSize, mapW, mapH, ready])
+  }, [
+    tokens,
+    selectedTokenId,
+    gridSize,
+    mapW,
+    mapH,
+    ready,
+    hideTokensInFog,
+    showPlayerFog,
+    fogViewerUserId,
+    fogStrokes,
+  ])
+
+  useEffect(() => {
+    const scene = sceneRef.current
+    if (!scene || !ready) return
+
+    const { world, app, fogGuideGfx, tokensLayer } = scene
+
+    if (scene.fogMaskSprite) {
+      world.removeChild(scene.fogMaskSprite)
+      scene.fogMaskSprite.texture.destroy(true)
+      scene.fogMaskSprite.destroy()
+      scene.fogMaskSprite = null
+    }
+
+    if (showPlayerFog && fogViewerUserId) {
+      const sprite = renderFogMaskSprite(app, mapW, mapH, fogStrokes, fogViewerUserId)
+      scene.fogMaskSprite = sprite
+      const tokenIndex = world.getChildIndex(tokensLayer)
+      world.addChildAt(sprite, tokenIndex)
+    }
+
+    if (gmFogGuide) {
+      drawFogGuide(fogGuideGfx, fogStrokes)
+      fogGuideGfx.visible = true
+    } else {
+      fogGuideGfx.clear()
+      fogGuideGfx.visible = false
+    }
+  }, [fogStrokes, showPlayerFog, fogViewerUserId, gmFogGuide, mapW, mapH, ready])
+
+  useEffect(() => {
+    const scene = sceneRef.current
+    if (!scene || !ready) return
+    syncDrawingsLayer(scene.publicDrawingsLayer, drawings, isGM, 'public')
+    syncDrawingsLayer(scene.gmDrawingsLayer, drawings, isGM, 'gm')
+  }, [drawings, isGM, ready])
 
   useEffect(() => {
     const scene = sceneRef.current
     if (!scene) return
+    if (fogTool || drawingTool === 'line' || textPlacementReady) {
+      scene.world.cursor = 'crosshair'
+      return
+    }
     scene.world.cursor = placementMode ? 'crosshair' : 'default'
-  }, [placementMode])
+  }, [placementMode, fogTool, drawingTool, textPlacementReady])
 
   const presenceCount = (self ? 1 : 0) + others.length
   const placing = placementMode !== null
+  const fogPainting = fogTool !== null
+  const lineDrawing = drawingTool === 'line'
+  const textPlacing = textPlacementReady
 
   return (
     <div className="vtt-canvas-wrapper">
@@ -367,9 +724,15 @@ export function SceneCanvas({
         <span className="muted">
           {synced ? 'Live' : 'Connecting…'} · {presenceCount} in room · Right-drag
           pan · Scroll zoom
-          {placing
-            ? ' · Click map to place token'
-            : ' · Drag tokens (live for everyone, snap on release)'}
+          {fogPainting
+            ? ' · Paint fog (left drag)'
+            : lineDrawing
+              ? ' · Draw line (left drag)'
+              : textPlacing
+                ? ' · Click map to place text'
+                : placing
+                  ? ' · Click map to place token'
+                  : ' · Drag tokens (live for everyone, snap on release)'}
         </span>
       </header>
       <div ref={hostRef} className="vtt-canvas-host" aria-label="Battle map canvas" />
@@ -442,6 +805,9 @@ function attachTokenHandlers(
   refs: {
     dragRef: MutableRefObject<ActiveDrag | null>
     placementRef: MutableRefObject<PlacementMode | null>
+    fogToolRef: MutableRefObject<FogTool | null>
+    drawingToolRef: MutableRefObject<DrawingTool | null>
+    textPlacementRef: MutableRefObject<boolean>
     onSelectRef: MutableRefObject<(id: string | null) => void>
     tokensRef: MutableRefObject<Record<string, TokenState>>
     userIdRef: MutableRefObject<string | null>
@@ -455,7 +821,14 @@ function attachTokenHandlers(
     const live = refs.tokensRef.current[token.id] ?? token
     refs.onSelectRef.current(live.id)
 
-    if (refs.placementRef.current) return
+    if (
+      refs.placementRef.current ||
+      refs.fogToolRef.current ||
+      refs.drawingToolRef.current === 'line' ||
+      refs.textPlacementRef.current
+    ) {
+      return
+    }
     if (!canMoveToken(live, refs.userIdRef.current, refs.isGMRef.current)) return
 
     refs.dragRef.current = {

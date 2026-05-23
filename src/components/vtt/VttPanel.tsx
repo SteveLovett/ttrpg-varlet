@@ -1,15 +1,27 @@
 import { Suspense, lazy, useCallback, useEffect, useState, type FormEvent } from 'react'
 import { NumericInput } from '../NumericInput'
 import { useYjsDoc } from '../../hooks/useYjsDoc'
+import { useYjsDrawings } from '../../hooks/useYjsDrawings'
+import { useYjsFog } from '../../hooks/useYjsFog'
 import { useYjsTokens } from '../../hooks/useYjsTokens'
 import { useVttScene } from '../../hooks/useVttScene'
 import { useVttSceneSync } from '../../hooks/useVttSceneSync'
+import { DrawingTools } from './DrawingTools'
+import { FogTools, type VttMemberOption } from './FogTools'
+import {
+  DRAWING_COLORS,
+  newDrawingId,
+  type DrawingTool,
+  type DrawingVisibility,
+} from './drawingUtils'
+import type { FogTool } from './fogUtils'
 import type { PlacementMode } from './placementTypes'
 import { SceneSetupForm } from './SceneSetupForm'
 import { TokenTray } from './TokenTray'
 import { tokenFromPlacement } from './tokenPlacement'
 import { sceneStateFromRow, writeYjsScene } from './yjsScene'
 import { canDeleteToken, snapTokenCenter } from './tokenUtils'
+import type { DrawingShape, FogStroke } from './types'
 
 const SceneCanvas = lazy(() =>
   import('./SceneCanvas').then((m) => ({ default: m.SceneCanvas })),
@@ -19,6 +31,7 @@ type VttPanelProps = {
   gameId: string
   isGM: boolean
   currentUserId: string | null
+  members: VttMemberOption[]
 }
 
 /**
@@ -71,7 +84,7 @@ function GridSizeField({
   )
 }
 
-export function VttPanel({ gameId, isGM, currentUserId }: VttPanelProps) {
+export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps) {
   const {
     scene,
     loading,
@@ -90,9 +103,28 @@ export function VttPanel({ gameId, isGM, currentUserId }: VttPanelProps) {
     synced,
     scene,
   })
+  const { fogStrokes, addFogStroke, updateFogStroke, resetFog } = useYjsFog(doc, {
+    synced,
+    scene,
+  })
+  const { drawings, addDrawing, updateDrawing, resetDrawings } = useYjsDrawings(doc, {
+    synced,
+    scene,
+  })
 
   const [placementMode, setPlacementMode] = useState<PlacementMode | null>(null)
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null)
+  const [fogTool, setFogTool] = useState<FogTool | null>(null)
+  const [fogBrushRadius, setFogBrushRadius] = useState(48)
+  const [fogForPlayerId, setFogForPlayerId] = useState<string | null>(null)
+  const [gmFogPreview, setGmFogPreview] = useState(false)
+  const [previewPlayerId, setPreviewPlayerId] = useState<string | null>(null)
+  const [drawingTool, setDrawingTool] = useState<DrawingTool | null>(null)
+  const [drawingColor, setDrawingColor] = useState<string>(DRAWING_COLORS[3]!)
+  const [drawingVisibility, setDrawingVisibility] =
+    useState<DrawingVisibility>('all')
+  const [drawingTextDraft, setDrawingTextDraft] = useState('')
+  const [textPlacementReady, setTextPlacementReady] = useState(false)
 
   const [signedMap, setSignedMap] = useState<{
     path: string
@@ -148,6 +180,88 @@ export function VttPanel({ gameId, isGM, currentUserId }: VttPanelProps) {
     [placementMode, currentUserId, liveScene, addToken],
   )
 
+  const showPlayerFog = isGM ? gmFogPreview && !!previewPlayerId : !!currentUserId
+  const fogViewerUserId = isGM
+    ? previewPlayerId
+    : currentUserId
+  const gmFogGuide = isGM && !showPlayerFog
+  const hideTokensInFog = liveScene?.hideTokensInFog ?? false
+
+  const handleHideTokensInFog = useCallback(
+    (enabled: boolean) => {
+      if (!liveScene) return
+      writeYjsScene(doc, { ...liveScene, hideTokensInFog: enabled })
+    },
+    [doc, liveScene],
+  )
+
+  const handleFogStrokeStart = useCallback(
+    (stroke: FogStroke) => {
+      addFogStroke(stroke)
+    },
+    [addFogStroke],
+  )
+
+  const handleFogStrokeUpdate = useCallback(
+    (stroke: FogStroke) => {
+      updateFogStroke(stroke)
+    },
+    [updateFogStroke],
+  )
+
+  const handleDrawingStart = useCallback(
+    (shape: DrawingShape) => {
+      addDrawing(shape)
+    },
+    [addDrawing],
+  )
+
+  const handleDrawingUpdate = useCallback(
+    (shape: DrawingShape) => {
+      updateDrawing(shape)
+    },
+    [updateDrawing],
+  )
+
+  const handlePlaceTextDrawing = useCallback(
+    (worldX: number, worldY: number) => {
+      if (!textPlacementReady || !drawingTextDraft.trim()) return
+      addDrawing({
+        id: newDrawingId(),
+        kind: 'text',
+        x: worldX,
+        y: worldY,
+        text: drawingTextDraft.trim(),
+        color: drawingColor,
+        visibility: drawingVisibility,
+      })
+      setTextPlacementReady(false)
+    },
+    [
+      textPlacementReady,
+      drawingTextDraft,
+      drawingColor,
+      drawingVisibility,
+      addDrawing,
+    ],
+  )
+
+  const handleClearDrawings = useCallback(() => {
+    if (!window.confirm('Clear all drawings on this map?')) return
+    resetDrawings()
+  }, [resetDrawings])
+
+  const handleClearFog = useCallback(() => {
+    if (
+      !window.confirm(
+        'Clear all fog strokes? Players will see a fully hidden map until you reveal again.',
+      )
+    ) {
+      return
+    }
+    resetFog()
+  }, [resetFog])
+
   const handleDeleteToken = useCallback(
     (tokenId: string) => {
       const token = tokens[tokenId]
@@ -195,7 +309,7 @@ export function VttPanel({ gameId, isGM, currentUserId }: VttPanelProps) {
     const err = await updateGridSize(scene.id, gridSizePx)
     if (err) return err
     if (liveScene) {
-      writeYjsScene(doc, { ...liveScene, gridSizePx })
+      writeYjsScene(doc, { ...liveScene, gridSizePx, hideTokensInFog: liveScene.hideTokensInFog })
     }
     return null
   }
@@ -278,17 +392,72 @@ export function VttPanel({ gameId, isGM, currentUserId }: VttPanelProps) {
       {mapUrlError ? <p>{mapUrlError}</p> : null}
 
       <div className="vtt-stage">
-        <TokenTray
-          gameId={gameId}
-          isGM={isGM}
-          currentUserId={currentUserId}
-          tokens={tokens}
-          placementMode={placementMode}
-          selectedTokenId={selectedTokenId}
-          onPlacementModeChange={setPlacementMode}
-          onSelectToken={setSelectedTokenId}
-          onDeleteToken={handleDeleteToken}
-        />
+        <div className="vtt-sidebar">
+          <FogTools
+            isGM={isGM}
+            members={members}
+            fogTool={fogTool}
+            brushRadius={fogBrushRadius}
+            forPlayerId={fogForPlayerId}
+            previewAsPlayer={gmFogPreview}
+            previewPlayerId={previewPlayerId}
+            hideTokensInFog={hideTokensInFog}
+            onFogToolChange={(tool) => {
+              setFogTool(tool)
+              if (tool) {
+                setPlacementMode(null)
+                setDrawingTool(null)
+                setTextPlacementReady(false)
+              }
+            }}
+            onBrushRadiusChange={setFogBrushRadius}
+            onForPlayerIdChange={setFogForPlayerId}
+            onPreviewAsPlayerChange={setGmFogPreview}
+            onPreviewPlayerIdChange={setPreviewPlayerId}
+            onHideTokensInFogChange={handleHideTokensInFog}
+            onClearFog={handleClearFog}
+          />
+          {isGM ? (
+            <DrawingTools
+              drawingTool={drawingTool}
+              drawingColor={drawingColor}
+              drawingVisibility={drawingVisibility}
+              textDraft={drawingTextDraft}
+              textPlacementReady={textPlacementReady}
+              onDrawingToolChange={(tool) => {
+                setDrawingTool(tool)
+                if (tool) {
+                  setFogTool(null)
+                  setPlacementMode(null)
+                }
+                if (tool !== 'text') setTextPlacementReady(false)
+              }}
+              onDrawingColorChange={setDrawingColor}
+              onDrawingVisibilityChange={setDrawingVisibility}
+              onTextDraftChange={setDrawingTextDraft}
+              onTextPlacementReadyChange={setTextPlacementReady}
+              onClearDrawings={handleClearDrawings}
+            />
+          ) : null}
+          <TokenTray
+            gameId={gameId}
+            isGM={isGM}
+            currentUserId={currentUserId}
+            tokens={tokens}
+            placementMode={placementMode}
+            selectedTokenId={selectedTokenId}
+            onPlacementModeChange={(mode) => {
+              setPlacementMode(mode)
+              if (mode) {
+                setFogTool(null)
+                setDrawingTool(null)
+                setTextPlacementReady(false)
+              }
+            }}
+            onSelectToken={setSelectedTokenId}
+            onDeleteToken={handleDeleteToken}
+          />
+        </div>
 
         {mapUrl && liveScene ? (
           <Suspense fallback={<div className="vtt-skeleton" aria-hidden />}>
@@ -304,6 +473,24 @@ export function VttPanel({ gameId, isGM, currentUserId }: VttPanelProps) {
               onSelectToken={setSelectedTokenId}
               onMoveToken={moveToken}
               onPlaceToken={handlePlaceToken}
+              fogStrokes={fogStrokes}
+              fogViewerUserId={fogViewerUserId}
+              showPlayerFog={showPlayerFog}
+              gmFogGuide={gmFogGuide}
+              fogTool={fogTool}
+              fogBrushRadius={fogBrushRadius}
+              fogForPlayerId={fogForPlayerId}
+              onFogStrokeStart={handleFogStrokeStart}
+              onFogStrokeUpdate={handleFogStrokeUpdate}
+              hideTokensInFog={hideTokensInFog}
+              drawings={drawings}
+              drawingTool={drawingTool}
+              drawingColor={drawingColor}
+              drawingVisibility={drawingVisibility}
+              textPlacementReady={textPlacementReady}
+              onDrawingStart={handleDrawingStart}
+              onDrawingUpdate={handleDrawingUpdate}
+              onPlaceTextDrawing={handlePlaceTextDrawing}
             />
           </Suspense>
         ) : (

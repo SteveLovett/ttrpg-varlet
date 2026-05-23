@@ -6,6 +6,8 @@
 
 export const YJS_SCENE_KEY = 'scene'
 export const YJS_TOKENS_KEY = 'tokens'
+export const YJS_FOG_KEY = 'fog'
+export const YJS_DRAWINGS_KEY = 'drawings'
 
 /**
  * Scene metadata in Yjs (live) and mirrored to `vtt_scenes.state_json` on snapshot.
@@ -16,6 +18,8 @@ export type SceneState = {
   mapPath: string | null
   mapWidthPx: number | null
   mapHeightPx: number | null
+  /** When true, tokens are hidden outside revealed fog for players (and GM preview). */
+  hideTokensInFog: boolean
 }
 
 /** Visible disc on the map. Square grids only in MVP — slice 3. */
@@ -37,6 +41,8 @@ export type FogStroke = {
   radius: number
   authorId: string
   createdAt: string
+  /** When set, only this player sees the stroke. `null` = all players. */
+  forPlayerId: string | null
 }
 
 export type DrawingShape =

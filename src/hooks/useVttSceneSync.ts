@@ -3,7 +3,13 @@ import type * as Y from 'yjs'
 import { readYjsScene, sceneStateFromRow, writeYjsScene } from '../components/vtt/yjsScene'
 import { buildVttSnapshot } from '../components/vtt/vttSnapshot'
 import type { VttSceneRow } from './useVttScene'
-import { YJS_SCENE_KEY, YJS_TOKENS_KEY, type SceneState } from '../components/vtt/types'
+import {
+  YJS_DRAWINGS_KEY,
+  YJS_FOG_KEY,
+  YJS_SCENE_KEY,
+  YJS_TOKENS_KEY,
+  type SceneState,
+} from '../components/vtt/types'
 
 const SNAPSHOT_DEBOUNCE_MS = 2000
 
@@ -63,6 +69,8 @@ export function useVttSceneSync({
     const sceneId = scene.id
     const sceneMap = doc.getMap(YJS_SCENE_KEY)
     const tokenMap = doc.getMap(YJS_TOKENS_KEY)
+    const fogArr = doc.getArray(YJS_FOG_KEY)
+    const drawingsArr = doc.getArray(YJS_DRAWINGS_KEY)
 
     function scheduleSnapshot() {
       if (snapshotTimer.current) clearTimeout(snapshotTimer.current)
@@ -75,9 +83,13 @@ export function useVttSceneSync({
 
     sceneMap.observe(scheduleSnapshot)
     tokenMap.observe(scheduleSnapshot)
+    fogArr.observe(scheduleSnapshot)
+    drawingsArr.observe(scheduleSnapshot)
     return () => {
       sceneMap.unobserve(scheduleSnapshot)
       tokenMap.unobserve(scheduleSnapshot)
+      fogArr.unobserve(scheduleSnapshot)
+      drawingsArr.unobserve(scheduleSnapshot)
       if (snapshotTimer.current) clearTimeout(snapshotTimer.current)
     }
   }, [doc, isGM, scene, saveSnapshot])

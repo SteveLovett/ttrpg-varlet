@@ -466,6 +466,10 @@ export function GameDetailPage() {
                 gameId={gameId}
                 isGM={isGM}
                 currentUserId={currentUserId}
+                members={members.map((m) => ({
+                  userId: m.user_id,
+                  displayName: m.display_name,
+                }))}
               />
             </Suspense>
           </div>

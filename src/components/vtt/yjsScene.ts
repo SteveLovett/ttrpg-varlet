@@ -14,6 +14,7 @@ export function readYjsScene(map: Y.Map<unknown>): SceneState | null {
       typeof map.get('mapWidthPx') === 'number' ? (map.get('mapWidthPx') as number) : null,
     mapHeightPx:
       typeof map.get('mapHeightPx') === 'number' ? (map.get('mapHeightPx') as number) : null,
+    hideTokensInFog: map.get('hideTokensInFog') === true,
   }
 }
 
@@ -24,6 +25,7 @@ export function writeYjsScene(doc: Y.Doc, state: SceneState): void {
     map.set('mapPath', state.mapPath)
     map.set('mapWidthPx', state.mapWidthPx)
     map.set('mapHeightPx', state.mapHeightPx)
+    map.set('hideTokensInFog', state.hideTokensInFog)
   })
 }
 
@@ -39,5 +41,6 @@ export function sceneStateFromRow(row: {
     mapPath: row.map_path,
     mapWidthPx: row.map_width_px,
     mapHeightPx: row.map_height_px,
+    hideTokensInFog: false,
   }
 }

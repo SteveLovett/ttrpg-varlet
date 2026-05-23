@@ -33,4 +33,4 @@ Slice 3 adds collaborative tokens on the battle map: placement, drag with grid s
 
 ## Next slice
 
-Fog of war (paint reveal/hide), drawings, and visibility rules.
+See [slice 4 — fog of war](./phase-f6-vtt-slice-4.md). Drawings and dynamic vision remain deferred.
