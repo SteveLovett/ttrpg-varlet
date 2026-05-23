@@ -14,13 +14,15 @@ type FogToolsProps = {
   forPlayerId: string | null
   previewAsPlayer: boolean
   previewPlayerId: string | null
-  hideTokensInFog: boolean
+  hidePcTokensInFog: boolean
+  hideNpcTokensInFog: boolean
   onFogToolChange: (tool: FogTool | null) => void
   onBrushRadiusChange: (radius: number) => void
   onForPlayerIdChange: (userId: string | null) => void
   onPreviewAsPlayerChange: (enabled: boolean) => void
   onPreviewPlayerIdChange: (userId: string | null) => void
-  onHideTokensInFogChange: (enabled: boolean) => void
+  onHidePcTokensInFogChange: (enabled: boolean) => void
+  onHideNpcTokensInFogChange: (enabled: boolean) => void
   onClearFog: () => void
 }
 
@@ -32,15 +34,19 @@ export function FogTools({
   forPlayerId,
   previewAsPlayer,
   previewPlayerId,
-  hideTokensInFog,
+  hidePcTokensInFog,
+  hideNpcTokensInFog,
   onFogToolChange,
   onBrushRadiusChange,
   onForPlayerIdChange,
   onPreviewAsPlayerChange,
   onPreviewPlayerIdChange,
-  onHideTokensInFogChange,
+  onHidePcTokensInFogChange,
+  onHideNpcTokensInFogChange,
   onClearFog,
 }: FogToolsProps) {
+  const anyTokenFog = hidePcTokensInFog || hideNpcTokensInFog
+
   if (!isGM) {
     return (
       <section className="vtt-fog-tools vtt-fog-tools-player" aria-label="Fog of war">
@@ -49,8 +55,14 @@ export function FogTools({
           The Game Master reveals areas as you explore. You only see parts of the map they
           have uncovered.
         </p>
-        {hideTokensInFog ? (
-          <p className="muted">Tokens outside revealed areas are hidden.</p>
+        {anyTokenFog ? (
+          <p className="muted">
+            {hidePcTokensInFog && hideNpcTokensInFog
+              ? 'Tokens outside revealed areas are hidden.'
+              : hidePcTokensInFog
+                ? 'Character tokens outside revealed areas are hidden.'
+                : 'NPC tokens outside revealed areas are hidden.'}
+          </p>
         ) : null}
       </section>
     )
@@ -144,18 +156,29 @@ export function FogTools({
         )}
       </details>
 
-      <label className="vtt-checkbox-row">
-        <input
-          type="checkbox"
-          checked={hideTokensInFog}
-          onChange={(e) => onHideTokensInFogChange(e.target.checked)}
-        />
-        Hide tokens outside revealed fog
-      </label>
-      <p className="muted vtt-fog-hint">
-        Applies to players and to GM player-preview. When off, tokens stay visible on top of
-        fog.
-      </p>
+      <fieldset className="vtt-fog-token-fieldset">
+        <legend>Hide tokens outside revealed fog</legend>
+        <label className="vtt-checkbox-row">
+          <input
+            type="checkbox"
+            checked={hidePcTokensInFog}
+            onChange={(e) => onHidePcTokensInFogChange(e.target.checked)}
+          />
+          Player characters (PCs)
+        </label>
+        <label className="vtt-checkbox-row">
+          <input
+            type="checkbox"
+            checked={hideNpcTokensInFog}
+            onChange={(e) => onHideNpcTokensInFogChange(e.target.checked)}
+          />
+          NPCs
+        </label>
+        <p className="muted vtt-fog-hint">
+          Applies to players and GM player-preview. When both off, all tokens stay visible
+          on top of fog.
+        </p>
+      </fieldset>
 
       <button type="button" className="vtt-fog-clear" onClick={onClearFog}>
         Clear all fog

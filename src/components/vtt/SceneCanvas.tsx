@@ -16,7 +16,7 @@ import { useYjsDoc } from '../../hooks/useYjsDoc'
 import { drawSquareGrid } from './drawGrid'
 import { drawLinePreview, syncDrawingsLayer } from './drawDrawings'
 import { drawFogGuide, drawFogPreview, renderFogMaskSprite } from './drawFog'
-import { isPointVisibleInFog, shouldHideTokensByFog } from './fogVisibility'
+import { isPointVisibleInFog, shouldApplyFogToToken } from './fogVisibility'
 import { newDrawingId, type DrawingTool, type DrawingVisibility } from './drawingUtils'
 import type { FogTool } from './fogUtils'
 import type { PlacementMode } from './placementTypes'
@@ -50,8 +50,10 @@ type SceneCanvasProps = {
   fogForPlayerId: string | null
   onFogStrokeStart: (stroke: FogStroke) => void
   onFogStrokeUpdate: (stroke: FogStroke) => void
-  hideTokensInFog: boolean
+  hidePcTokensInFog: boolean
+  hideNpcTokensInFog: boolean
   drawings: DrawingShape[]
+  selectedDrawingId: string | null
   drawingTool: DrawingTool | null
   drawingColor: string
   drawingVisibility: DrawingVisibility
@@ -59,6 +61,7 @@ type SceneCanvasProps = {
   onDrawingStart: (shape: DrawingShape) => void
   onDrawingUpdate: (shape: DrawingShape) => void
   onPlaceTextDrawing: (x: number, y: number) => void
+  onEraseDrawingAt: (x: number, y: number) => void
 }
 
 const MIN_SCALE = 0.05
@@ -124,8 +127,10 @@ export function SceneCanvas({
   fogForPlayerId,
   onFogStrokeStart,
   onFogStrokeUpdate,
-  hideTokensInFog,
+  hidePcTokensInFog,
+  hideNpcTokensInFog,
   drawings,
+  selectedDrawingId,
   drawingTool,
   drawingColor,
   drawingVisibility,
@@ -133,6 +138,7 @@ export function SceneCanvas({
   onDrawingStart,
   onDrawingUpdate,
   onPlaceTextDrawing,
+  onEraseDrawingAt,
 }: SceneCanvasProps) {
   const { synced } = useYjsDoc()
   const self = useSelf()
@@ -165,7 +171,10 @@ export function SceneCanvas({
   const onDrawingUpdateRef = useRef(onDrawingUpdate)
   const onPlaceTextRef = useRef(onPlaceTextDrawing)
   const fogStrokesRef = useRef(fogStrokes)
-  const hideTokensInFogRef = useRef(hideTokensInFog)
+  const hidePcInFogRef = useRef(hidePcTokensInFog)
+  const hideNpcInFogRef = useRef(hideNpcTokensInFog)
+  const onEraseDrawingRef = useRef(onEraseDrawingAt)
+  const selectedDrawingRef = useRef(selectedDrawingId)
 
   useEffect(() => {
     onSelectRef.current = onSelectToken
@@ -189,7 +198,10 @@ export function SceneCanvas({
     onDrawingUpdateRef.current = onDrawingUpdate
     onPlaceTextRef.current = onPlaceTextDrawing
     fogStrokesRef.current = fogStrokes
-    hideTokensInFogRef.current = hideTokensInFog
+    hidePcInFogRef.current = hidePcTokensInFog
+    hideNpcInFogRef.current = hideNpcTokensInFog
+    onEraseDrawingRef.current = onEraseDrawingAt
+    selectedDrawingRef.current = selectedDrawingId
   }, [
     onSelectToken,
     onMoveToken,
@@ -212,7 +224,10 @@ export function SceneCanvas({
     onDrawingUpdate,
     onPlaceTextDrawing,
     fogStrokes,
-    hideTokensInFog,
+    hidePcTokensInFog,
+    hideNpcTokensInFog,
+    onEraseDrawingAt,
+    selectedDrawingId,
   ])
 
   const [ready, setReady] = useState(false)
@@ -429,6 +444,11 @@ export function SceneCanvas({
             beginLinePaint(p)
             return
           }
+          if (drawingToolRef.current === 'erase' && isGMRef.current) {
+            e.stopPropagation()
+            onEraseDrawingRef.current(p.x, p.y)
+            return
+          }
           if (textPlacementRef.current && isGMRef.current) {
             e.stopPropagation()
             onPlaceTextRef.current(p.x, p.y)
@@ -633,8 +653,10 @@ export function SceneCanvas({
       )
       container.position.set(token.x, token.y)
 
-      const applyTokenFog = shouldHideTokensByFog(
-        hideTokensInFogRef.current,
+      const applyTokenFog = shouldApplyFogToToken(
+        token,
+        hidePcInFogRef.current,
+        hideNpcInFogRef.current,
         showPlayerFog,
         fogViewerUserId,
       )
@@ -659,7 +681,8 @@ export function SceneCanvas({
     mapW,
     mapH,
     ready,
-    hideTokensInFog,
+    hidePcTokensInFog,
+    hideNpcTokensInFog,
     showPlayerFog,
     fogViewerUserId,
     fogStrokes,
@@ -697,14 +720,20 @@ export function SceneCanvas({
   useEffect(() => {
     const scene = sceneRef.current
     if (!scene || !ready) return
-    syncDrawingsLayer(scene.publicDrawingsLayer, drawings, isGM, 'public')
-    syncDrawingsLayer(scene.gmDrawingsLayer, drawings, isGM, 'gm')
-  }, [drawings, isGM, ready])
+    syncDrawingsLayer(
+      scene.publicDrawingsLayer,
+      drawings,
+      isGM,
+      'public',
+      selectedDrawingId,
+    )
+    syncDrawingsLayer(scene.gmDrawingsLayer, drawings, isGM, 'gm', selectedDrawingId)
+  }, [drawings, isGM, ready, selectedDrawingId])
 
   useEffect(() => {
     const scene = sceneRef.current
     if (!scene) return
-    if (fogTool || drawingTool === 'line' || textPlacementReady) {
+    if (fogTool || drawingTool === 'line' || drawingTool === 'erase' || textPlacementReady) {
       scene.world.cursor = 'crosshair'
       return
     }
@@ -715,6 +744,7 @@ export function SceneCanvas({
   const placing = placementMode !== null
   const fogPainting = fogTool !== null
   const lineDrawing = drawingTool === 'line'
+  const erasing = drawingTool === 'erase'
   const textPlacing = textPlacementReady
 
   return (
@@ -728,7 +758,9 @@ export function SceneCanvas({
             ? ' · Paint fog (left drag)'
             : lineDrawing
               ? ' · Draw line (left drag)'
-              : textPlacing
+              : erasing
+                ? ' · Click drawing to erase'
+                : textPlacing
                 ? ' · Click map to place text'
                 : placing
                   ? ' · Click map to place token'
@@ -825,6 +857,7 @@ function attachTokenHandlers(
       refs.placementRef.current ||
       refs.fogToolRef.current ||
       refs.drawingToolRef.current === 'line' ||
+      refs.drawingToolRef.current === 'erase' ||
       refs.textPlacementRef.current
     ) {
       return

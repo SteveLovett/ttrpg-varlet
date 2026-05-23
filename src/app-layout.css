@@ -1397,9 +1397,69 @@
   gap: 0.25rem;
 }
 
-.vtt-token-list li.is-selected .vtt-token-row {
+.vtt-token-list li.is-selected .vtt-token-row,
+.vtt-drawing-list li.is-selected .vtt-drawing-row {
   border-color: #facc15;
   background: rgba(250, 204, 21, 0.12);
+}
+
+.vtt-drawing-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.vtt-drawing-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.vtt-drawing-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.35rem 0.45rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.vtt-drawing-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.vtt-drawing-row-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vtt-tray-subheading {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.vtt-fog-token-fieldset {
+  margin: 0;
+  padding: 0.35rem 0;
+  border: none;
+}
+
+.vtt-fog-token-fieldset legend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
 }
 
 .vtt-token-swatch {

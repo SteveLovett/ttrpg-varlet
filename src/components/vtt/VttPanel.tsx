@@ -10,6 +10,7 @@ import { DrawingTools } from './DrawingTools'
 import { FogTools, type VttMemberOption } from './FogTools'
 import {
   DRAWING_COLORS,
+  findDrawingAtPoint,
   newDrawingId,
   type DrawingTool,
   type DrawingVisibility,
@@ -21,7 +22,7 @@ import { TokenTray } from './TokenTray'
 import { tokenFromPlacement } from './tokenPlacement'
 import { sceneStateFromRow, writeYjsScene } from './yjsScene'
 import { canDeleteToken, snapTokenCenter } from './tokenUtils'
-import type { DrawingShape, FogStroke } from './types'
+import type { DrawingShape, FogStroke, SceneState } from './types'
 
 const SceneCanvas = lazy(() =>
   import('./SceneCanvas').then((m) => ({ default: m.SceneCanvas })),
@@ -107,7 +108,7 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
     synced,
     scene,
   })
-  const { drawings, addDrawing, updateDrawing, resetDrawings } = useYjsDrawings(doc, {
+  const { drawings, addDrawing, updateDrawing, deleteDrawing, resetDrawings } = useYjsDrawings(doc, {
     synced,
     scene,
   })
@@ -125,6 +126,7 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
     useState<DrawingVisibility>('all')
   const [drawingTextDraft, setDrawingTextDraft] = useState('')
   const [textPlacementReady, setTextPlacementReady] = useState(false)
+  const [selectedDrawingId, setSelectedDrawingId] = useState<string | null>(null)
 
   const [signedMap, setSignedMap] = useState<{
     path: string
@@ -185,14 +187,29 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
     ? previewPlayerId
     : currentUserId
   const gmFogGuide = isGM && !showPlayerFog
-  const hideTokensInFog = liveScene?.hideTokensInFog ?? false
+  const hidePcTokensInFog = liveScene?.hidePcTokensInFog ?? false
+  const hideNpcTokensInFog = liveScene?.hideNpcTokensInFog ?? false
 
-  const handleHideTokensInFog = useCallback(
-    (enabled: boolean) => {
+  const patchSceneFlags = useCallback(
+    (patch: Partial<Pick<SceneState, 'hidePcTokensInFog' | 'hideNpcTokensInFog'>>) => {
       if (!liveScene) return
-      writeYjsScene(doc, { ...liveScene, hideTokensInFog: enabled })
+      writeYjsScene(doc, { ...liveScene, ...patch })
     },
     [doc, liveScene],
+  )
+
+  const handleHidePcTokensInFog = useCallback(
+    (enabled: boolean) => {
+      patchSceneFlags({ hidePcTokensInFog: enabled })
+    },
+    [patchSceneFlags],
+  )
+
+  const handleHideNpcTokensInFog = useCallback(
+    (enabled: boolean) => {
+      patchSceneFlags({ hideNpcTokensInFog: enabled })
+    },
+    [patchSceneFlags],
   )
 
   const handleFogStrokeStart = useCallback(
@@ -244,6 +261,22 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
       drawingVisibility,
       addDrawing,
     ],
+  )
+
+  const handleDeleteDrawing = useCallback(
+    (drawingId: string) => {
+      deleteDrawing(drawingId)
+      if (selectedDrawingId === drawingId) setSelectedDrawingId(null)
+    },
+    [deleteDrawing, selectedDrawingId],
+  )
+
+  const handleEraseDrawingAt = useCallback(
+    (worldX: number, worldY: number) => {
+      const id = findDrawingAtPoint(worldX, worldY, drawings, true)
+      if (id) handleDeleteDrawing(id)
+    },
+    [drawings, handleDeleteDrawing],
   )
 
   const handleClearDrawings = useCallback(() => {
@@ -309,7 +342,12 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
     const err = await updateGridSize(scene.id, gridSizePx)
     if (err) return err
     if (liveScene) {
-      writeYjsScene(doc, { ...liveScene, gridSizePx, hideTokensInFog: liveScene.hideTokensInFog })
+      writeYjsScene(doc, {
+        ...liveScene,
+        gridSizePx,
+        hidePcTokensInFog: liveScene.hidePcTokensInFog,
+        hideNpcTokensInFog: liveScene.hideNpcTokensInFog,
+      })
     }
     return null
   }
@@ -401,7 +439,8 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
             forPlayerId={fogForPlayerId}
             previewAsPlayer={gmFogPreview}
             previewPlayerId={previewPlayerId}
-            hideTokensInFog={hideTokensInFog}
+            hidePcTokensInFog={hidePcTokensInFog}
+            hideNpcTokensInFog={hideNpcTokensInFog}
             onFogToolChange={(tool) => {
               setFogTool(tool)
               if (tool) {
@@ -414,11 +453,14 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
             onForPlayerIdChange={setFogForPlayerId}
             onPreviewAsPlayerChange={setGmFogPreview}
             onPreviewPlayerIdChange={setPreviewPlayerId}
-            onHideTokensInFogChange={handleHideTokensInFog}
+            onHidePcTokensInFogChange={handleHidePcTokensInFog}
+            onHideNpcTokensInFogChange={handleHideNpcTokensInFog}
             onClearFog={handleClearFog}
           />
           {isGM ? (
             <DrawingTools
+              drawings={drawings}
+              selectedDrawingId={selectedDrawingId}
               drawingTool={drawingTool}
               drawingColor={drawingColor}
               drawingVisibility={drawingVisibility}
@@ -436,6 +478,8 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
               onDrawingVisibilityChange={setDrawingVisibility}
               onTextDraftChange={setDrawingTextDraft}
               onTextPlacementReadyChange={setTextPlacementReady}
+              onSelectDrawing={setSelectedDrawingId}
+              onDeleteDrawing={handleDeleteDrawing}
               onClearDrawings={handleClearDrawings}
             />
           ) : null}
@@ -482,8 +526,10 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
               fogForPlayerId={fogForPlayerId}
               onFogStrokeStart={handleFogStrokeStart}
               onFogStrokeUpdate={handleFogStrokeUpdate}
-              hideTokensInFog={hideTokensInFog}
+              hidePcTokensInFog={hidePcTokensInFog}
+              hideNpcTokensInFog={hideNpcTokensInFog}
               drawings={drawings}
+              selectedDrawingId={selectedDrawingId}
               drawingTool={drawingTool}
               drawingColor={drawingColor}
               drawingVisibility={drawingVisibility}
@@ -491,6 +537,7 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
               onDrawingStart={handleDrawingStart}
               onDrawingUpdate={handleDrawingUpdate}
               onPlaceTextDrawing={handlePlaceTextDrawing}
+              onEraseDrawingAt={handleEraseDrawingAt}
             />
           </Suspense>
         ) : (

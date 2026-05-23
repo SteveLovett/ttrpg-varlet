@@ -10,7 +10,8 @@ Slice 5 adds GM map annotations and optional token hiding outside revealed fog.
 | **Text labels** | GM enters text, clicks **Place on map**, then clicks the canvas |
 | **Visibility** | Each drawing is **Everyone** or **GM only** (GM-only renders above fog) |
 | **Colors** | Preset palette in the drawing tools panel |
-| **Token fog visibility** | GM toggle **Hide tokens outside revealed fog** stored in Yjs `scene.hideTokensInFog` |
+| **Token fog visibility** | GM toggles **PCs** and **NPCs** separately (`hidePcTokensInFog`, `hideNpcTokensInFog`) |
+| **Drawing delete** | **Erase** tool (click on map) or delete from the drawings list |
 | **Player behavior** | When enabled, players only see tokens whose center is in revealed fog |
 | **GM preview** | Toggle applies in **Player view preview** when previewing a player |
 | **Persistence** | Drawings in Yjs `drawings` array; included in GM snapshots |
@@ -40,12 +41,10 @@ Slice 5 adds GM map annotations and optional token hiding outside revealed fog.
 1. **Lines:** GM draws a red line; player sees it in a revealed area (under fog in unrevealed areas).
 2. **GM-only text:** GM sets visibility **GM only** — player does not see it; GM does (above fog).
 3. **Everyone text:** Player sees label after area is revealed.
-4. **Hide tokens:** Enable toggle; reveal a small area; only tokens in that area show for players.
-5. Disable toggle — all tokens visible again on top of fog.
-6. GM preview as player with toggle on — matches that player’s token visibility.
-7. Refresh — drawings and toggle persist.
+4. Enable **PCs** only — character tokens hide in fog; NPCs stay visible.
+5. Enable **NPCs** only — opposite behavior.
+6. **Erase** a line from the map or list; refresh — change persists.
 
 ## Deferred
 
-- Drawing erase / select individual shapes  
-- Arrows, rectangles, fog-linked token peek for owners only  
+- Drawing move/edit in place

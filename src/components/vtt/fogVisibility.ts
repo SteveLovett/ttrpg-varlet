@@ -1,5 +1,5 @@
 import { fogStrokesForViewer } from './fogUtils'
-import type { FogStroke } from './types'
+import type { FogStroke, TokenState } from './types'
 
 function pointInStroke(x: number, y: number, stroke: FogStroke): boolean {
   const r2 = stroke.radius * stroke.radius
@@ -33,10 +33,18 @@ export function isPointVisibleInFog(
   return !hidden
 }
 
-export function shouldHideTokensByFog(
-  hideTokensInFog: boolean,
+export function isPcToken(token: TokenState): boolean {
+  return token.characterId !== null
+}
+
+export function shouldApplyFogToToken(
+  token: TokenState,
+  hidePcTokensInFog: boolean,
+  hideNpcTokensInFog: boolean,
   showPlayerFog: boolean,
   fogViewerUserId: string | null,
 ): boolean {
-  return hideTokensInFog && showPlayerFog && !!fogViewerUserId
+  if (!showPlayerFog || !fogViewerUserId) return false
+  if (isPcToken(token)) return hidePcTokensInFog
+  return hideNpcTokensInFog
 }

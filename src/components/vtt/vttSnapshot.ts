@@ -50,7 +50,8 @@ function parseSceneFromSnapshot(raw: unknown): SceneState | null {
     mapPath: typeof s.mapPath === 'string' ? s.mapPath : null,
     mapWidthPx: typeof s.mapWidthPx === 'number' ? s.mapWidthPx : null,
     mapHeightPx: typeof s.mapHeightPx === 'number' ? s.mapHeightPx : null,
-    hideTokensInFog: s.hideTokensInFog === true,
+    hidePcTokensInFog: readHidePcFromSnapshot(s),
+    hideNpcTokensInFog: readHideNpcFromSnapshot(s),
   }
 }
 
@@ -100,6 +101,16 @@ export function buildVttSnapshot(doc: Y.Doc, scene: SceneState): VttSceneSnapsho
     fog: readFogStrokes(doc.getArray(YJS_FOG_KEY)),
     drawings: readDrawings(doc.getArray(YJS_DRAWINGS_KEY)),
   }
+}
+
+function readHidePcFromSnapshot(s: Partial<SceneState>): boolean {
+  if ('hidePcTokensInFog' in s) return s.hidePcTokensInFog === true
+  return (s as { hideTokensInFog?: boolean }).hideTokensInFog === true
+}
+
+function readHideNpcFromSnapshot(s: Partial<SceneState>): boolean {
+  if ('hideNpcTokensInFog' in s) return s.hideNpcTokensInFog === true
+  return (s as { hideTokensInFog?: boolean }).hideTokensInFog === true
 }
 
 function parseFogFromSnapshot(raw: unknown): FogStroke[] {

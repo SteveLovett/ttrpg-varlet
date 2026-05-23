@@ -1,7 +1,14 @@
-import type { DrawingTool, DrawingVisibility } from './drawingUtils'
-import { DRAWING_COLORS } from './drawingUtils'
+import type { DrawingShape } from './types'
+import {
+  drawingListLabel,
+  DRAWING_COLORS,
+  type DrawingTool,
+  type DrawingVisibility,
+} from './drawingUtils'
 
 type DrawingToolsProps = {
+  drawings: DrawingShape[]
+  selectedDrawingId: string | null
   drawingTool: DrawingTool | null
   drawingColor: string
   drawingVisibility: DrawingVisibility
@@ -12,10 +19,14 @@ type DrawingToolsProps = {
   onDrawingVisibilityChange: (visibility: DrawingVisibility) => void
   onTextDraftChange: (text: string) => void
   onTextPlacementReadyChange: (ready: boolean) => void
+  onSelectDrawing: (id: string | null) => void
+  onDeleteDrawing: (id: string) => void
   onClearDrawings: () => void
 }
 
 export function DrawingTools({
+  drawings,
+  selectedDrawingId,
   drawingTool,
   drawingColor,
   drawingVisibility,
@@ -26,8 +37,12 @@ export function DrawingTools({
   onDrawingVisibilityChange,
   onTextDraftChange,
   onTextPlacementReadyChange,
+  onSelectDrawing,
+  onDeleteDrawing,
   onClearDrawings,
 }: DrawingToolsProps) {
+  const sorted = [...drawings].reverse()
+
   return (
     <section className="vtt-drawing-tools" aria-label="Drawing tools">
       <h3 className="vtt-tray-heading">Drawings</h3>
@@ -47,11 +62,24 @@ export function DrawingTools({
         >
           Text
         </button>
+        <button
+          type="button"
+          className={drawingTool === 'erase' ? 'is-active' : undefined}
+          onClick={() => onDrawingToolChange(drawingTool === 'erase' ? null : 'erase')}
+        >
+          Erase
+        </button>
       </div>
 
       {drawingTool === 'line' ? (
         <p className="vtt-fog-hint muted" role="status">
           Draw on the map with the left mouse button.
+        </p>
+      ) : null}
+
+      {drawingTool === 'erase' ? (
+        <p className="vtt-fog-hint muted" role="status">
+          Click a line or label on the map to delete it.
         </p>
       ) : null}
 
@@ -106,6 +134,46 @@ export function DrawingTools({
           <option value="gm">GM only</option>
         </select>
       </div>
+
+      <section className="vtt-tray-section">
+        <h4 className="vtt-tray-subheading">On map ({drawings.length})</h4>
+        {sorted.length === 0 ? (
+          <p className="muted">No drawings yet.</p>
+        ) : (
+          <ul className="vtt-drawing-list">
+            {sorted.map((d) => {
+              const selected = d.id === selectedDrawingId
+              return (
+                <li key={d.id} className={selected ? 'is-selected' : undefined}>
+                  <button
+                    type="button"
+                    className="vtt-drawing-row"
+                    onClick={() => onSelectDrawing(selected ? null : d.id)}
+                  >
+                    <span
+                      className="vtt-token-swatch"
+                      style={{ background: d.color }}
+                      aria-hidden
+                    />
+                    <span className="vtt-drawing-row-label">
+                      {drawingListLabel(d)}
+                      {d.visibility === 'gm' ? ' (GM)' : ''}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="vtt-token-remove"
+                    aria-label={`Delete ${drawingListLabel(d)}`}
+                    onClick={() => onDeleteDrawing(d.id)}
+                  >
+                    ×
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </section>
 
       <button type="button" className="vtt-fog-clear" onClick={onClearDrawings}>
         Clear all drawings

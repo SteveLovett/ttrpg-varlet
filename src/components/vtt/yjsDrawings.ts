@@ -67,6 +67,19 @@ export function replaceDrawing(doc: Y.Doc, shapeId: string, shape: DrawingShape)
   })
 }
 
+export function removeDrawing(doc: Y.Doc, shapeId: string): void {
+  const arr = doc.getArray(YJS_DRAWINGS_KEY)
+  doc.transact(() => {
+    for (let i = 0; i < arr.length; i++) {
+      const existing = parseDrawing(arr.get(i))
+      if (existing?.id === shapeId) {
+        arr.delete(i, 1)
+        return
+      }
+    }
+  })
+}
+
 export function clearDrawings(doc: Y.Doc): void {
   const arr = doc.getArray(YJS_DRAWINGS_KEY)
   doc.transact(() => {

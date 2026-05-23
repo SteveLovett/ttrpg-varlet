@@ -18,8 +18,10 @@ export type SceneState = {
   mapPath: string | null
   mapWidthPx: number | null
   mapHeightPx: number | null
-  /** When true, tokens are hidden outside revealed fog for players (and GM preview). */
-  hideTokensInFog: boolean
+  /** Hide PC tokens (linked to a character) outside revealed fog. */
+  hidePcTokensInFog: boolean
+  /** Hide NPC tokens (no character link) outside revealed fog. */
+  hideNpcTokensInFog: boolean
 }
 
 /** Visible disc on the map. Square grids only in MVP — slice 3. */

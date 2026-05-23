@@ -14,8 +14,19 @@ export function readYjsScene(map: Y.Map<unknown>): SceneState | null {
       typeof map.get('mapWidthPx') === 'number' ? (map.get('mapWidthPx') as number) : null,
     mapHeightPx:
       typeof map.get('mapHeightPx') === 'number' ? (map.get('mapHeightPx') as number) : null,
-    hideTokensInFog: map.get('hideTokensInFog') === true,
+    hidePcTokensInFog: readHidePcInFog(map),
+    hideNpcTokensInFog: readHideNpcInFog(map),
   }
+}
+
+function readHidePcInFog(map: Y.Map<unknown>): boolean {
+  if (map.has('hidePcTokensInFog')) return map.get('hidePcTokensInFog') === true
+  return map.get('hideTokensInFog') === true
+}
+
+function readHideNpcInFog(map: Y.Map<unknown>): boolean {
+  if (map.has('hideNpcTokensInFog')) return map.get('hideNpcTokensInFog') === true
+  return map.get('hideTokensInFog') === true
 }
 
 export function writeYjsScene(doc: Y.Doc, state: SceneState): void {
@@ -25,7 +36,8 @@ export function writeYjsScene(doc: Y.Doc, state: SceneState): void {
     map.set('mapPath', state.mapPath)
     map.set('mapWidthPx', state.mapWidthPx)
     map.set('mapHeightPx', state.mapHeightPx)
-    map.set('hideTokensInFog', state.hideTokensInFog)
+    map.set('hidePcTokensInFog', state.hidePcTokensInFog)
+    map.set('hideNpcTokensInFog', state.hideNpcTokensInFog)
   })
 }
 
@@ -41,6 +53,7 @@ export function sceneStateFromRow(row: {
     mapPath: row.map_path,
     mapWidthPx: row.map_width_px,
     mapHeightPx: row.map_height_px,
-    hideTokensInFog: false,
+    hidePcTokensInFog: false,
+    hideNpcTokensInFog: false,
   }
 }

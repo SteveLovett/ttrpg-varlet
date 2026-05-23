@@ -6,6 +6,7 @@ import {
   appendDrawing,
   clearDrawings,
   readDrawings,
+  removeDrawing,
   replaceDrawing,
   writeDrawingsFromSnapshot,
 } from '../components/vtt/yjsDrawings'
@@ -53,9 +54,16 @@ export function useYjsDrawings(
     [doc],
   )
 
+  const deleteDrawing = useCallback(
+    (shapeId: string) => {
+      removeDrawing(doc, shapeId)
+    },
+    [doc],
+  )
+
   const resetDrawings = useCallback(() => {
     clearDrawings(doc)
   }, [doc])
 
-  return { drawings, addDrawing, updateDrawing, resetDrawings }
+  return { drawings, addDrawing, updateDrawing, deleteDrawing, resetDrawings }
 }

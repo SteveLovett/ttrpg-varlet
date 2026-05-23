@@ -15,12 +15,15 @@ export function syncDrawingsLayer(
   drawings: DrawingShape[],
   isGM: boolean,
   placement: 'public' | 'gm',
+  selectedDrawingId: string | null = null,
 ): void {
   layer.removeChildren()
 
   for (const shape of drawingsForViewer(drawings, isGM)) {
     if (placement === 'public' && shape.visibility !== 'all') continue
     if (placement === 'gm' && shape.visibility !== 'gm') continue
+
+    const selected = shape.id === selectedDrawingId
 
     if (shape.kind === 'line') {
       const gfx = new Graphics()
@@ -32,7 +35,12 @@ export function syncDrawingsLayer(
         const pt = shape.points[i]!
         gfx.lineTo(pt.x, pt.y)
       }
-      gfx.stroke({ width: LINE_WIDTH, color, cap: 'round', join: 'round' })
+      gfx.stroke({
+        width: selected ? LINE_WIDTH + 2 : LINE_WIDTH,
+        color: selected ? 0xfacc15 : color,
+        cap: 'round',
+        join: 'round',
+      })
       layer.addChild(gfx)
       continue
     }
@@ -40,7 +48,7 @@ export function syncDrawingsLayer(
     const label = new Text({
       text: shape.text,
       style: new TextStyle({
-        fill: hexColor(shape.color),
+        fill: selected ? 0xfacc15 : hexColor(shape.color),
         fontSize: 16,
         fontWeight: '600',
         stroke: { color: 0x000000, width: 3 },
