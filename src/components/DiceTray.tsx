@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { NumericInput } from './NumericInput'
 import type { SubmitEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { DiceRollDisplay } from './dice/DiceRollDisplay'
@@ -32,7 +33,7 @@ function delay(ms: number): Promise<void> {
 export function DiceTray({ variant, gameId, onRoll, lastResult }: DiceTrayProps) {
   const [graphicsEnabled, setGraphicsEnabled] = useDiceGraphicsPreference()
   const [formula, setFormula] = useState('1d20')
-  const [modifier, setModifier] = useState('0')
+  const [modifier, setModifier] = useState(0)
   const [label, setLabel] = useState('')
   const [localResult, setLocalResult] = useState<RollResult | null>(null)
   const [rollError, setRollError] = useState<string | null>(null)
@@ -76,7 +77,7 @@ export function DiceTray({ variant, gameId, onRoll, lastResult }: DiceTrayProps)
   }
 
   async function handleD20(mode: AdvantageMode) {
-    const mod = Number.parseInt(modifier, 10) || 0
+    const mod = modifier
     const outcome = rollD20(mod, mode, mode === 'normal' ? '1d20' : `d20 (${mode})`)
     if ('error' in outcome) {
       setRollError(outcome.error)
@@ -131,12 +132,12 @@ export function DiceTray({ variant, gameId, onRoll, lastResult }: DiceTrayProps)
         <label className="dice-tray-mod-label" htmlFor={isCompact ? 'd20-mod-compact' : 'd20-mod'}>
           d20 modifier
         </label>
-        <input
+        <NumericInput
           id={isCompact ? 'd20-mod-compact' : 'd20-mod'}
-          type="number"
           className="dice-tray-mod-input"
+          emptyFallback={0}
           value={modifier}
-          onChange={(e) => setModifier(e.target.value)}
+          onChange={setModifier}
           disabled={rolling}
         />
         <div className="dice-tray-adv-row">

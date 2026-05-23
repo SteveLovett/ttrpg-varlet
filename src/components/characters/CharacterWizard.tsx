@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { NumericInput } from '../NumericInput'
 import {
   ABILITY_KEYS,
   ABILITY_LABELS,
@@ -127,15 +128,13 @@ export function CharacterWizard({ onComplete, onCancel }: CharacterWizardProps) 
             </div>
             <div className="form-row">
               <label htmlFor="wiz-level">Level</label>
-              <input
+              <NumericInput
                 id="wiz-level"
-                type="number"
                 min={1}
                 max={20}
+                emptyFallback={1}
                 value={sheet.level}
-                onChange={(e) =>
-                  setSheet((s) => ({ ...s, level: Number.parseInt(e.target.value, 10) || 1 }))
-                }
+                onChange={(level) => setSheet((s) => ({ ...s, level }))}
               />
             </div>
           </div>
@@ -191,19 +190,16 @@ export function CharacterWizard({ onComplete, onCancel }: CharacterWizardProps) 
               {ABILITY_KEYS.map((key) => (
                 <div key={key} className="form-row">
                   <label htmlFor={`man-${key}`}>{ABILITY_LABELS[key]}</label>
-                  <input
+                  <NumericInput
                     id={`man-${key}`}
-                    type="number"
                     min={3}
                     max={20}
+                    emptyFallback={10}
                     value={sheet.abilities[key]}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       setSheet((s) => ({
                         ...s,
-                        abilities: {
-                          ...s.abilities,
-                          [key]: Number.parseInt(e.target.value, 10) || 10,
-                        },
+                        abilities: { ...s.abilities, [key]: value },
                       }))
                     }
                   />

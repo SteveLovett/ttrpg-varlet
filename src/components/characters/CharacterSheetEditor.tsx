@@ -1,3 +1,4 @@
+import { NumericInput } from '../NumericInput'
 import {
   ABILITY_KEYS,
   ABILITY_LABELS,
@@ -82,13 +83,13 @@ export function CharacterSheetEditor({ sheet, onChange, disabled = false }: Char
         </div>
         <div className="form-row">
           <label htmlFor="edit-level">Level</label>
-          <input
+          <NumericInput
             id="edit-level"
-            type="number"
             min={1}
             max={20}
+            emptyFallback={1}
             value={sheet.level}
-            onChange={(e) => patch({ level: Number.parseInt(e.target.value, 10) || 1 })}
+            onChange={(level) => patch({ level })}
             disabled={disabled}
           />
         </div>
@@ -100,13 +101,13 @@ export function CharacterSheetEditor({ sheet, onChange, disabled = false }: Char
           {ABILITY_KEYS.map((key) => (
             <div key={key} className="form-row">
               <label htmlFor={`edit-ab-${key}`}>{ABILITY_LABELS[key]}</label>
-              <input
+              <NumericInput
                 id={`edit-ab-${key}`}
-                type="number"
                 min={3}
                 max={20}
+                emptyFallback={10}
                 value={sheet.abilities[key]}
-                onChange={(e) => setAbility(key, Number.parseInt(e.target.value, 10) || 10)}
+                onChange={(value) => setAbility(key, value)}
                 disabled={disabled}
               />
             </div>
@@ -134,46 +135,46 @@ export function CharacterSheetEditor({ sheet, onChange, disabled = false }: Char
       <div className="character-editor-row">
         <div className="form-row">
           <label htmlFor="edit-ac">AC</label>
-          <input
+          <NumericInput
             id="edit-ac"
-            type="number"
             min={1}
             max={40}
+            emptyFallback={10}
             value={sheet.ac}
-            onChange={(e) => patch({ ac: Number.parseInt(e.target.value, 10) || 10 })}
+            onChange={(ac) => patch({ ac })}
             disabled={disabled}
           />
         </div>
         <div className="form-row">
           <label htmlFor="edit-hp-max">HP max</label>
-          <input
+          <NumericInput
             id="edit-hp-max"
-            type="number"
             min={1}
+            emptyFallback={1}
             value={sheet.hpMax}
-            onChange={(e) => patch({ hpMax: Number.parseInt(e.target.value, 10) || 1 })}
+            onChange={(hpMax) => patch({ hpMax })}
             disabled={disabled}
           />
         </div>
         <div className="form-row">
           <label htmlFor="edit-hp-cur">HP current</label>
-          <input
+          <NumericInput
             id="edit-hp-cur"
-            type="number"
             min={0}
+            emptyFallback={0}
             value={sheet.hpCurrent}
-            onChange={(e) => patch({ hpCurrent: Number.parseInt(e.target.value, 10) || 0 })}
+            onChange={(hpCurrent) => patch({ hpCurrent })}
             disabled={disabled}
           />
         </div>
         <div className="form-row">
           <label htmlFor="edit-speed">Speed (ft.)</label>
-          <input
+          <NumericInput
             id="edit-speed"
-            type="number"
             min={0}
+            emptyFallback={0}
             value={sheet.speed}
-            onChange={(e) => patch({ speed: Number.parseInt(e.target.value, 10) || 0 })}
+            onChange={(speed) => patch({ speed })}
             disabled={disabled}
           />
         </div>

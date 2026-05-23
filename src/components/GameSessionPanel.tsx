@@ -2,15 +2,23 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useGameRolls } from '../hooks/useGameRolls'
 import type { RollResult } from '../rules/dnd5e/dice/types'
+import { InitiativeTracker } from './gm/InitiativeTracker'
 import { DiceTray } from './DiceTray'
 import { RollLog } from './RollLog'
 
 type GameSessionPanelProps = {
   gameId: string
   currentUserId: string | null
+  isGM: boolean
+  memberNames?: string[]
 }
 
-export function GameSessionPanel({ gameId, currentUserId }: GameSessionPanelProps) {
+export function GameSessionPanel({
+  gameId,
+  currentUserId,
+  isGM,
+  memberNames = [],
+}: GameSessionPanelProps) {
   const { rolls, loading, error, loadRolls, saveRoll } = useGameRolls(gameId)
   const [lastResult, setLastResult] = useState<RollResult | null>(null)
 
@@ -38,7 +46,8 @@ export function GameSessionPanel({ gameId, currentUserId }: GameSessionPanelProp
           lastResult={lastResult}
         />
       </div>
-      <div className="game-session-log">
+      <div className="game-session-side">
+        <InitiativeTracker gameId={gameId} isGM={isGM} memberNames={memberNames} />
         <RollLog
           rolls={rolls}
           loading={loading}

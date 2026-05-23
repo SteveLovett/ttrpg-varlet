@@ -19,10 +19,14 @@ export function ToolsPage() {
           — roll any formula, d20 with advantage/disadvantage
         </li>
         <li>
-          <strong>Bestiary</strong> — Phase F4 (after running fetch:srd)
+          <Link to="/app/tools/bestiary">
+            <strong>Bestiary</strong>
+          </Link>{' '}
+          — browse SRD creatures (search &amp; filter)
         </li>
         <li>
-          <strong>Rules quick reference</strong> — conditions on dice page; full compendium in F4
+          <strong>Rules quick reference</strong> — conditions on the{' '}
+          <Link to="/app/tools/dice">dice tray</Link> page
         </li>
       </ul>
       <p>

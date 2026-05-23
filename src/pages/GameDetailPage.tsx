@@ -2,16 +2,18 @@ import { useCallback, useEffect, useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { GameCharactersPanel } from '../components/characters/GameCharactersPanel'
+import { GameGmPanel } from '../components/gm/GameGmPanel'
 import { GameSessionPanel } from '../components/GameSessionPanel'
 import { DND5E_2024_RULESET_LABEL } from '../rules/dnd5e/constants'
 import { supabase } from '../supabaseClient'
 
-const GAME_TABS = ['overview', 'characters', 'session', 'vtt'] as const
+const GAME_TABS = ['overview', 'characters', 'gm', 'session', 'vtt'] as const
 type GameTab = (typeof GAME_TABS)[number]
 
 const TAB_LABELS: Record<GameTab, string> = {
   overview: 'Overview',
   characters: 'Characters',
+  gm: 'GM tools',
   session: 'Session',
   vtt: 'VTT',
 }
@@ -400,6 +402,23 @@ export function GameDetailPage() {
     }
   }
 
+  async function appendToSessionNotes(block: string): Promise<string | null> {
+    if (!gameId) return 'Missing game id.'
+    const combined =
+      sessionNotes.trim().length > 0 ? `${sessionNotes.trimEnd()}\n\n${block}` : block
+    if (combined.length > 20000) {
+      return 'Session notes would exceed 20,000 characters.'
+    }
+    const { error: updateError } = await supabase
+      .from('games')
+      .update({ session_notes: combined })
+      .eq('id', gameId)
+    if (updateError) return updateError.message
+    setSessionNotes(combined)
+    setDraftSessionNotes(combined)
+    return null
+  }
+
   async function handleLeaveGame() {
     if (!gameId) return
     const confirmed = window.confirm('Leave this game? You can rejoin later if it is public.')
@@ -423,6 +442,10 @@ export function GameDetailPage() {
   const gmCount = members.filter((m) => m.game_role === 'Game Master').length
   const displayRuleset =
     ruleset.length > 0 ? ruleset : DND5E_2024_RULESET_LABEL
+  const memberNames = members
+    .map((m) => m.display_name)
+    .filter((n): n is string => !!n && n.length > 0)
+  const visibleTabs = GAME_TABS.filter((tab) => tab !== 'gm' || isGM)
 
   return (
     <div className="app-panel app-panel-wide">
@@ -462,7 +485,7 @@ export function GameDetailPage() {
           </header>
 
           <nav className="game-detail-tabs" aria-label="Game sections">
-            {GAME_TABS.map((tab) => (
+            {visibleTabs.map((tab) => (
               <button
                 key={tab}
                 type="button"
@@ -723,10 +746,25 @@ export function GameDetailPage() {
             </div>
           ) : null}
 
+          {activeTab === 'gm' && isGM && gameId ? (
+            <div className="game-tab-panel">
+              <GameGmPanel
+                gameId={gameId}
+                memberCount={members.length}
+                onAppendToSessionNotes={appendToSessionNotes}
+              />
+            </div>
+          ) : null}
+
           {activeTab === 'session' ? (
             <div className="game-tab-panel">
               {isMember && gameId ? (
-                <GameSessionPanel gameId={gameId} currentUserId={currentUserId} />
+                <GameSessionPanel
+                  gameId={gameId}
+                  currentUserId={currentUserId}
+                  isGM={isGM}
+                  memberNames={memberNames}
+                />
               ) : (
                 <p className="muted">Join this game to use session tools.</p>
               )}
