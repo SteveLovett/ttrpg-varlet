@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { GameCharactersPanel } from '../components/characters/GameCharactersPanel'
 import { GameSessionPanel } from '../components/GameSessionPanel'
 import { DND5E_2024_RULESET_LABEL } from '../rules/dnd5e/constants'
 import { supabase } from '../supabaseClient'
@@ -711,11 +712,10 @@ export function GameDetailPage() {
 
           {activeTab === 'characters' ? (
             <div className="game-tab-panel">
-              {isMember ? (
-                <GameTabPlaceholder
-                  title="Characters"
-                  phase="Phase F3"
-                  summary="Build and attach D&D 5e (2024) player characters to this campaign."
+              {isMember && gameId ? (
+                <GameCharactersPanel
+                  gameId={gameId}
+                  currentUserId={currentUserId}
                 />
               ) : (
                 <p className="muted">Join this game to manage characters.</p>

@@ -448,6 +448,8 @@
 }
 
 .form-row input[type='text'],
+.form-row input[type='number'],
+.form-row select,
 .form-row textarea {
   width: 100%;
   box-sizing: border-box;
@@ -600,4 +602,321 @@
   font: inherit;
   font-size: 0.95rem;
   line-height: 1.4;
+}
+
+/* Phase F3 — characters */
+.game-characters {
+  text-align: left;
+}
+
+.game-characters-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.game-characters-toolbar h3 {
+  margin: 0;
+}
+
+.character-card-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.character-card {
+  display: grid;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-emphasis, rgba(0, 0, 0, 0.05));
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.character-card--active {
+  border-color: var(--accent-border, var(--accent, #7c9cff));
+  box-shadow: 0 0 0 1px var(--accent-border, var(--accent, #7c9cff));
+}
+
+.character-card--compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.character-card-main {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.character-card-owner {
+  font-size: 0.8rem;
+}
+
+.attach-characters-panel {
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.attach-characters-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.character-detail {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.character-detail-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.character-wizard {
+  margin: 0.75rem 0 1rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-emphasis, rgba(0, 0, 0, 0.05));
+}
+
+.character-wizard-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.character-wizard-steps .active {
+  font-weight: 700;
+  color: var(--accent, #7c9cff);
+}
+
+.character-wizard-steps .done {
+  opacity: 0.7;
+}
+
+.character-wizard-panel {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.character-wizard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.character-editor-row {
+  display: grid;
+  gap: 0.65rem;
+}
+
+@media (min-width: 36rem) {
+  .character-editor-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.character-fieldset {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  margin: 0;
+}
+
+.character-fieldset legend {
+  font-weight: 600;
+  padding: 0 0.25rem;
+}
+
+.ability-editor-grid,
+.standard-array-grid {
+  display: grid;
+  gap: 0.5rem;
+}
+
+@media (min-width: 28rem) {
+  .ability-editor-grid,
+  .standard-array-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.skill-editor-grid {
+  display: grid;
+  gap: 0.35rem 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+}
+
+.skill-check-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.character-assign-mode {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.character-assign-mode label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.character-review-dl {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.character-review-dl div {
+  display: grid;
+  grid-template-columns: 6rem 1fr;
+  gap: 0.5rem;
+}
+
+.character-review-dl dt {
+  font-weight: 600;
+  margin: 0;
+}
+
+.character-review-dl dd {
+  margin: 0;
+}
+
+.character-suggest-hp {
+  justify-self: start;
+  margin-bottom: 0.5rem;
+}
+
+.character-sheet-header h3 {
+  margin: 0 0 0.25rem;
+}
+
+.character-sheet-subtitle {
+  margin: 0 0 0.75rem;
+}
+
+.character-sheet-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 40rem) {
+  .character-sheet-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .character-sheet-block--wide {
+    grid-column: 1 / -1;
+  }
+}
+
+.character-sheet-block h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.ability-scores {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.ability-scores li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ability-label {
+  font-size: 0.9rem;
+}
+
+.ability-score {
+  font-weight: 700;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.ability-mod {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  min-width: 2rem;
+  text-align: right;
+}
+
+.character-sheet-prof {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+}
+
+.character-stat-dl {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.character-stat-dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.character-stat-dl dt {
+  font-weight: 600;
+}
+
+.character-stat-dl dd {
+  margin: 0;
+}
+
+.character-skill-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.character-sheet-pre {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  background: var(--surface-emphasis, rgba(0, 0, 0, 0.05));
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  white-space: pre-wrap;
+  font: inherit;
+  font-size: 0.9rem;
 }
