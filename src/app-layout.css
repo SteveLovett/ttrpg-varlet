@@ -1478,6 +1478,18 @@
   white-space: nowrap;
 }
 
+.vtt-token-kind {
+  opacity: 0.65;
+  font-size: 0.8em;
+}
+
+.vtt-token-fog-select {
+  flex-shrink: 0;
+  max-width: 4.5rem;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.25rem;
+}
+
 .vtt-token-remove {
   flex-shrink: 0;
   width: 1.75rem;

@@ -10,7 +10,7 @@ Slice 5 adds GM map annotations and optional token hiding outside revealed fog.
 | **Text labels** | GM enters text, clicks **Place on map**, then clicks the canvas |
 | **Visibility** | Each drawing is **Everyone** or **GM only** (GM-only renders above fog) |
 | **Colors** | Preset palette in the drawing tools panel |
-| **Token fog visibility** | GM toggles **PCs** and **NPCs** separately (`hidePcTokensInFog`, `hideNpcTokensInFog`) |
+| **Token fog visibility** | GM toggles **PCs** and **NPCs** separately; per-token **Auto / Shown / Hidden** in the token list |
 | **Drawing delete** | **Erase** tool (click on map) or delete from the drawings list |
 | **Player behavior** | When enabled, players only see tokens whose center is in revealed fog |
 | **GM preview** | Toggle applies in **Player view preview** when previewing a player |
@@ -43,7 +43,8 @@ Slice 5 adds GM map annotations and optional token hiding outside revealed fog.
 3. **Everyone text:** Player sees label after area is revealed.
 4. Enable **PCs** only — character tokens hide in fog; NPCs stay visible.
 5. Enable **NPCs** only — opposite behavior.
-6. **Erase** a line from the map or list; refresh — change persists.
+6. Set one NPC to **Shown** — visible to players even in unrevealed fog; another to **Hidden** — invisible even in revealed areas.
+7. **Erase** a line from the map or list; refresh — change persists.
 
 ## Deferred
 

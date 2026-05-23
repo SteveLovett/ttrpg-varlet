@@ -2,7 +2,7 @@ import type * as Y from 'yjs'
 import { readYjsScene } from './yjsScene'
 import { readDrawings } from './yjsDrawings'
 import { readFogStrokes } from './yjsFog'
-import { readAllTokens } from './yjsTokens'
+import { parseTokenValue, readAllTokens } from './yjsTokens'
 import {
   YJS_DRAWINGS_KEY,
   YJS_FOG_KEY,
@@ -25,10 +25,8 @@ export function parseVttSnapshot(raw: unknown): VttSceneSnapshot | null {
   if (o.tokens && typeof o.tokens === 'object') {
     for (const [id, value] of Object.entries(o.tokens)) {
       if (!value || typeof value !== 'object') continue
-      const t = value as TokenState
-      if (typeof t.id === 'string' && typeof t.x === 'number' && typeof t.y === 'number') {
-        tokens[id] = t
-      }
+      const token = parseTokenValue(value)
+      if (token) tokens[id] = token
     }
   }
   return {

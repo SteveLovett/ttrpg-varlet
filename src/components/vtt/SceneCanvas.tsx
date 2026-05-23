@@ -16,7 +16,7 @@ import { useYjsDoc } from '../../hooks/useYjsDoc'
 import { drawSquareGrid } from './drawGrid'
 import { drawLinePreview, syncDrawingsLayer } from './drawDrawings'
 import { drawFogGuide, drawFogPreview, renderFogMaskSprite } from './drawFog'
-import { isPointVisibleInFog, shouldApplyFogToToken } from './fogVisibility'
+import { isTokenVisibleInFogView } from './fogVisibility'
 import { newDrawingId, type DrawingTool, type DrawingVisibility } from './drawingUtils'
 import type { FogTool } from './fogUtils'
 import type { PlacementMode } from './placementTypes'
@@ -653,19 +653,13 @@ export function SceneCanvas({
       )
       container.position.set(token.x, token.y)
 
-      const applyTokenFog = shouldApplyFogToToken(
-        token,
-        hidePcInFogRef.current,
-        hideNpcInFogRef.current,
-        showPlayerFog,
-        fogViewerUserId,
-      )
-      if (applyTokenFog && fogViewerUserId && token.id !== draggingId) {
-        const visible = isPointVisibleInFog(
-          token.x,
-          token.y,
+      if (showPlayerFog && fogViewerUserId && token.id !== draggingId) {
+        const visible = isTokenVisibleInFogView(
+          token,
           fogStrokesRef.current,
           fogViewerUserId,
+          hidePcInFogRef.current,
+          hideNpcInFogRef.current,
         )
         container.visible = visible
         container.eventMode = visible ? 'static' : 'none'

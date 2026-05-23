@@ -1,7 +1,12 @@
 import type * as Y from 'yjs'
-import { YJS_TOKENS_KEY, type TokenState } from './types'
+import { YJS_TOKENS_KEY, type TokenFogOverride, type TokenState } from './types'
 
-function parseTokenValue(value: unknown): TokenState | null {
+function parseFogOverride(value: unknown): TokenFogOverride {
+  if (value === 'visible' || value === 'hidden') return value
+  return 'default'
+}
+
+export function parseTokenValue(value: unknown): TokenState | null {
   if (!value || typeof value !== 'object') return null
   const o = value as Partial<TokenState>
   if (typeof o.id !== 'string' || typeof o.x !== 'number' || typeof o.y !== 'number') {
@@ -19,6 +24,7 @@ function parseTokenValue(value: unknown): TokenState | null {
     characterId: typeof o.characterId === 'string' ? o.characterId : null,
     ownerId: typeof o.ownerId === 'string' ? o.ownerId : '',
     sizeCells,
+    fogOverride: parseFogOverride(o.fogOverride),
   }
 }
 

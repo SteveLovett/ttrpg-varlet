@@ -20,5 +20,6 @@ export function tokenFromPlacement(
     characterId: mode.kind === 'character' ? mode.characterId : null,
     ownerId,
     sizeCells: mode.sizeCells,
+    fogOverride: 'default',
   }
 }

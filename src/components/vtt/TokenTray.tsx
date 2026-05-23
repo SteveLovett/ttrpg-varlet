@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useGameCharacters } from '../../hooks/useGameCharacters'
 import type { PlacementMode } from './placementTypes'
-import { canDeleteToken, colorForOwner } from './tokenUtils'
-import type { TokenState } from './types'
+import { canDeleteToken, colorForOwner, labelForFogOverride, tokenKindLabel } from './tokenUtils'
+import type { TokenFogOverride, TokenState } from './types'
 
 type TokenTrayProps = {
   gameId: string
@@ -14,6 +14,7 @@ type TokenTrayProps = {
   onPlacementModeChange: (mode: PlacementMode | null) => void
   onSelectToken: (id: string | null) => void
   onDeleteToken: (id: string) => void
+  onTokenFogOverrideChange: (tokenId: string, fogOverride: TokenFogOverride) => void
 }
 
 export function TokenTray({
@@ -26,6 +27,7 @@ export function TokenTray({
   onPlacementModeChange,
   onSelectToken,
   onDeleteToken,
+  onTokenFogOverrideChange,
 }: TokenTrayProps) {
   const { characters, loading, loadCharacters } = useGameCharacters(gameId)
   const [npcName, setNpcName] = useState('NPC')
@@ -160,6 +162,12 @@ export function TokenTray({
 
       <section className="vtt-tray-section">
         <h3 className="vtt-tray-heading">On map ({tokenList.length})</h3>
+        {isGM && tokenList.length > 0 ? (
+          <p className="muted vtt-fog-hint">
+            Per-token fog: Auto follows group rules; Shown/Hidden overrides for individual
+            PCs and NPCs.
+          </p>
+        ) : null}
         {tokenList.length === 0 ? (
           <p className="muted">No tokens yet.</p>
         ) : (
@@ -181,9 +189,28 @@ export function TokenTray({
                     />
                     <span className="vtt-token-row-label">
                       {t.label}
+                      <span className="vtt-token-kind"> · {tokenKindLabel(t)}</span>
                       {t.sizeCells > 1 ? ` (${t.sizeCells}×${t.sizeCells})` : ''}
                     </span>
                   </button>
+                  {isGM ? (
+                    <select
+                      className="vtt-token-fog-select"
+                      value={t.fogOverride}
+                      aria-label={`Fog visibility for ${t.label}`}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) =>
+                        onTokenFogOverrideChange(
+                          t.id,
+                          e.target.value as TokenFogOverride,
+                        )
+                      }
+                    >
+                      <option value="default">{labelForFogOverride('default')}</option>
+                      <option value="visible">{labelForFogOverride('visible')}</option>
+                      <option value="hidden">{labelForFogOverride('hidden')}</option>
+                    </select>
+                  ) : null}
                   {canDelete ? (
                     <button
                       type="button"

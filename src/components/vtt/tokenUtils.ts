@@ -1,4 +1,4 @@
-import type { TokenState } from './types'
+import type { TokenFogOverride, TokenState } from './types'
 
 const OWNER_COLORS = [
   '#dc2626',
@@ -71,6 +71,21 @@ function clamp(n: number, min: number, max: number): number {
 
 export function newTokenId(): string {
   return crypto.randomUUID()
+}
+
+export function tokenKindLabel(token: TokenState): string {
+  return token.characterId ? 'PC' : 'NPC'
+}
+
+export function labelForFogOverride(override: TokenFogOverride): string {
+  switch (override) {
+    case 'visible':
+      return 'Shown'
+    case 'hidden':
+      return 'Hidden'
+    default:
+      return 'Auto'
+  }
 }
 
 /** Throttle live drag sync to Yjs (~20 Hz) and skip tiny jitter. */

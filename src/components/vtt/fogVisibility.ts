@@ -48,3 +48,26 @@ export function shouldApplyFogToToken(
   if (isPcToken(token)) return hidePcTokensInFog
   return hideNpcTokensInFog
 }
+
+/** Whether a token is shown in player / GM-preview fog view. */
+export function isTokenVisibleInFogView(
+  token: TokenState,
+  fogStrokes: FogStroke[],
+  viewerUserId: string,
+  hidePcTokensInFog: boolean,
+  hideNpcTokensInFog: boolean,
+): boolean {
+  if (token.fogOverride === 'visible') return true
+  if (token.fogOverride === 'hidden') return false
+
+  const groupApplies = shouldApplyFogToToken(
+    token,
+    hidePcTokensInFog,
+    hideNpcTokensInFog,
+    true,
+    viewerUserId,
+  )
+  if (!groupApplies) return true
+
+  return isPointVisibleInFog(token.x, token.y, fogStrokes, viewerUserId)
+}

@@ -61,5 +61,14 @@ export function useYjsTokens(
     [doc],
   )
 
-  return { tokens, addToken, deleteToken, moveToken }
+  const setTokenFogOverride = useCallback(
+    (tokenId: string, fogOverride: TokenState['fogOverride']) => {
+      const existing = readAllTokens(doc.getMap(YJS_TOKENS_KEY))[tokenId]
+      if (!existing) return
+      upsertToken(doc, { ...existing, fogOverride })
+    },
+    [doc],
+  )
+
+  return { tokens, addToken, deleteToken, moveToken, setTokenFogOverride }
 }

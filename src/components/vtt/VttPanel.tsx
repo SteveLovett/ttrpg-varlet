@@ -100,7 +100,7 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
 
   const { doc, synced } = useYjsDoc()
   const liveScene = useVttSceneSync({ doc, synced, scene, isGM, saveSnapshot })
-  const { tokens, addToken, deleteToken, moveToken } = useYjsTokens(doc, {
+  const { tokens, addToken, deleteToken, moveToken, setTokenFogOverride } = useYjsTokens(doc, {
     synced,
     scene,
   })
@@ -500,6 +500,7 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
             }}
             onSelectToken={setSelectedTokenId}
             onDeleteToken={handleDeleteToken}
+            onTokenFogOverrideChange={setTokenFogOverride}
           />
         </div>
 

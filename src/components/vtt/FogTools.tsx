@@ -176,7 +176,8 @@ export function FogTools({
         </label>
         <p className="muted vtt-fog-hint">
           Applies to players and GM player-preview. When both off, all tokens stay visible
-          on top of fog.
+          on top of fog unless set to Hidden in the token list. Use per-token Shown/Hidden
+          there to reveal specific PCs or NPCs.
         </p>
       </fieldset>
 

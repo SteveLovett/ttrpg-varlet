@@ -24,6 +24,9 @@ export type SceneState = {
   hideNpcTokensInFog: boolean
 }
 
+/** Per-token fog visibility for players (GM sets in token tray). */
+export type TokenFogOverride = 'default' | 'visible' | 'hidden'
+
 /** Visible disc on the map. Square grids only in MVP — slice 3. */
 export type TokenState = {
   id: string
@@ -34,6 +37,12 @@ export type TokenState = {
   characterId: string | null
   ownerId: string
   sizeCells: 1 | 2 | 3 | 4
+  /**
+   * `default` — follow group PC/NPC fog rules and map position.
+   * `visible` — always shown in player fog view (reveal this token).
+   * `hidden` — always hidden in player fog view.
+   */
+  fogOverride: TokenFogOverride
 }
 
 export type FogStroke = {
