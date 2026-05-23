@@ -1,4 +1,5 @@
 import type * as Y from 'yjs'
+import { normalizeHexColor } from './colorUtils'
 import { YJS_TOKENS_KEY, type TokenFogOverride, type TokenState } from './types'
 
 function parseFogOverride(value: unknown): TokenFogOverride {
@@ -19,7 +20,8 @@ export function parseTokenValue(value: unknown): TokenState | null {
     id: o.id,
     x: o.x,
     y: o.y,
-    color: typeof o.color === 'string' ? o.color : '#dc2626',
+    color:
+      (typeof o.color === 'string' ? normalizeHexColor(o.color) : null) ?? '#dc2626',
     label: typeof o.label === 'string' ? o.label.slice(0, 3) : '?',
     characterId: typeof o.characterId === 'string' ? o.characterId : null,
     ownerId: typeof o.ownerId === 'string' ? o.ownerId : '',

@@ -1,3 +1,4 @@
+import { ColorPickerPopover } from './ColorPickerPopover'
 import type { DrawingShape } from './types'
 import {
   drawingListLabel,
@@ -22,6 +23,7 @@ type DrawingToolsProps = {
   onSelectDrawing: (id: string | null) => void
   onDeleteDrawing: (id: string) => void
   onClearDrawings: () => void
+  onDrawingItemColorChange: (id: string, color: string) => void
 }
 
 export function DrawingTools({
@@ -40,6 +42,7 @@ export function DrawingTools({
   onSelectDrawing,
   onDeleteDrawing,
   onClearDrawings,
+  onDrawingItemColorChange,
 }: DrawingToolsProps) {
   const sorted = [...drawings].reverse()
 
@@ -106,19 +109,26 @@ export function DrawingTools({
         </div>
       ) : null}
 
-      <div className="form-row">
-        <label htmlFor="vtt-drawing-color">Color</label>
-        <select
-          id="vtt-drawing-color"
-          value={drawingColor}
-          onChange={(e) => onDrawingColorChange(e.target.value)}
-        >
+      <div className="form-row vtt-color-tool-row">
+        <span className="vtt-color-tool-label">Color</span>
+        <ColorPickerPopover
+          color={drawingColor}
+          ariaLabel="Drawing color"
+          onChange={onDrawingColorChange}
+        />
+        <div className="vtt-color-presets" role="group" aria-label="Color presets">
           {DRAWING_COLORS.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
+            <button
+              key={c}
+              type="button"
+              className="vtt-color-preset"
+              style={{ background: c }}
+              title={c}
+              aria-label={`Use ${c}`}
+              onClick={() => onDrawingColorChange(c)}
+            />
           ))}
-        </select>
+        </div>
       </div>
 
       <div className="form-row">
@@ -145,16 +155,16 @@ export function DrawingTools({
               const selected = d.id === selectedDrawingId
               return (
                 <li key={d.id} className={selected ? 'is-selected' : undefined}>
+                  <ColorPickerPopover
+                    color={d.color}
+                    ariaLabel={`Color for ${drawingListLabel(d)}`}
+                    onChange={(color) => onDrawingItemColorChange(d.id, color)}
+                  />
                   <button
                     type="button"
                     className="vtt-drawing-row"
                     onClick={() => onSelectDrawing(selected ? null : d.id)}
                   >
-                    <span
-                      className="vtt-token-swatch"
-                      style={{ background: d.color }}
-                      aria-hidden
-                    />
                     <span className="vtt-drawing-row-label">
                       {drawingListLabel(d)}
                       {d.visibility === 'gm' ? ' (GM)' : ''}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useGameCharacters } from '../../hooks/useGameCharacters'
 import type { PlacementMode } from './placementTypes'
+import { ColorPickerPopover } from './ColorPickerPopover'
 import { canDeleteToken, colorForOwner, labelForFogOverride, tokenKindLabel } from './tokenUtils'
 import type { TokenFogOverride, TokenState } from './types'
 
@@ -15,6 +16,7 @@ type TokenTrayProps = {
   onSelectToken: (id: string | null) => void
   onDeleteToken: (id: string) => void
   onTokenFogOverrideChange: (tokenId: string, fogOverride: TokenFogOverride) => void
+  onTokenColorChange: (tokenId: string, color: string) => void
 }
 
 export function TokenTray({
@@ -28,6 +30,7 @@ export function TokenTray({
   onSelectToken,
   onDeleteToken,
   onTokenFogOverrideChange,
+  onTokenColorChange,
 }: TokenTrayProps) {
   const { characters, loading, loadCharacters } = useGameCharacters(gameId)
   const [npcName, setNpcName] = useState('NPC')
@@ -177,16 +180,24 @@ export function TokenTray({
               const canDelete = canDeleteToken(t, currentUserId, isGM)
               return (
                 <li key={t.id} className={selected ? 'is-selected' : undefined}>
-                  <button
-                    type="button"
-                    className="vtt-token-row"
-                    onClick={() => onSelectToken(selected ? null : t.id)}
-                  >
+                  {isGM ? (
+                    <ColorPickerPopover
+                      color={t.color}
+                      ariaLabel={`Color for ${t.label}`}
+                      onChange={(color) => onTokenColorChange(t.id, color)}
+                    />
+                  ) : (
                     <span
                       className="vtt-token-swatch"
                       style={{ background: t.color }}
                       aria-hidden
                     />
+                  )}
+                  <button
+                    type="button"
+                    className="vtt-token-row"
+                    onClick={() => onSelectToken(selected ? null : t.id)}
+                  >
                     <span className="vtt-token-row-label">
                       {t.label}
                       <span className="vtt-token-kind"> · {tokenKindLabel(t)}</span>

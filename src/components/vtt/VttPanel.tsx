@@ -100,10 +100,11 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
 
   const { doc, synced } = useYjsDoc()
   const liveScene = useVttSceneSync({ doc, synced, scene, isGM, saveSnapshot })
-  const { tokens, addToken, deleteToken, moveToken, setTokenFogOverride } = useYjsTokens(doc, {
-    synced,
-    scene,
-  })
+  const { tokens, addToken, deleteToken, moveToken, setTokenFogOverride, setTokenColor } =
+    useYjsTokens(doc, {
+      synced,
+      scene,
+    })
   const { fogStrokes, addFogStroke, updateFogStroke, resetFog } = useYjsFog(doc, {
     synced,
     scene,
@@ -269,6 +270,15 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
       if (selectedDrawingId === drawingId) setSelectedDrawingId(null)
     },
     [deleteDrawing, selectedDrawingId],
+  )
+
+  const handleDrawingItemColorChange = useCallback(
+    (drawingId: string, color: string) => {
+      const shape = drawings.find((d) => d.id === drawingId)
+      if (!shape) return
+      updateDrawing({ ...shape, color })
+    },
+    [drawings, updateDrawing],
   )
 
   const handleEraseDrawingAt = useCallback(
@@ -481,6 +491,7 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
               onSelectDrawing={setSelectedDrawingId}
               onDeleteDrawing={handleDeleteDrawing}
               onClearDrawings={handleClearDrawings}
+              onDrawingItemColorChange={handleDrawingItemColorChange}
             />
           ) : null}
           <TokenTray
@@ -501,6 +512,7 @@ export function VttPanel({ gameId, isGM, currentUserId, members }: VttPanelProps
             onSelectToken={setSelectedTokenId}
             onDeleteToken={handleDeleteToken}
             onTokenFogOverrideChange={setTokenFogOverride}
+            onTokenColorChange={setTokenColor}
           />
         </div>
 

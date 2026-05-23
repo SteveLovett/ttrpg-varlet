@@ -1,5 +1,10 @@
 import type * as Y from 'yjs'
+import { normalizeHexColor } from './colorUtils'
 import { YJS_DRAWINGS_KEY, type DrawingShape } from './types'
+
+function parseDrawingColor(raw: unknown): string {
+  return (typeof raw === 'string' ? normalizeHexColor(raw) : null) ?? '#3b82f6'
+}
 
 function parseDrawing(value: unknown): DrawingShape | null {
   if (!value || typeof value !== 'object') return null
@@ -17,7 +22,7 @@ function parseDrawing(value: unknown): DrawingShape | null {
       x: o.x,
       y: o.y,
       text: o.text.slice(0, 120),
-      color: o.color,
+      color: parseDrawingColor(o.color),
       visibility,
     }
   }
@@ -31,7 +36,7 @@ function parseDrawing(value: unknown): DrawingShape | null {
       }
     }
     if (points.length === 0) return null
-    return { id: o.id, kind: 'line', points, color: o.color, visibility }
+    return { id: o.id, kind: 'line', points, color: parseDrawingColor(o.color), visibility }
   }
 
   return null

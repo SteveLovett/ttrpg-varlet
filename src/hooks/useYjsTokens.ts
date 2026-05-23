@@ -70,5 +70,14 @@ export function useYjsTokens(
     [doc],
   )
 
-  return { tokens, addToken, deleteToken, moveToken, setTokenFogOverride }
+  const setTokenColor = useCallback(
+    (tokenId: string, color: string) => {
+      const existing = readAllTokens(doc.getMap(YJS_TOKENS_KEY))[tokenId]
+      if (!existing) return
+      upsertToken(doc, { ...existing, color })
+    },
+    [doc],
+  )
+
+  return { tokens, addToken, deleteToken, moveToken, setTokenFogOverride, setTokenColor }
 }
