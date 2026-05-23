@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import type * as Y from 'yjs'
 import { readYjsScene, sceneStateFromRow, writeYjsScene } from '../components/vtt/yjsScene'
+import { buildVttSnapshot } from '../components/vtt/vttSnapshot'
 import type { VttSceneRow } from './useVttScene'
-import { emptyVttSnapshot, YJS_SCENE_KEY, type SceneState } from '../components/vtt/types'
+import { YJS_SCENE_KEY, YJS_TOKENS_KEY, type SceneState } from '../components/vtt/types'
 
 const SNAPSHOT_DEBOUNCE_MS = 2000
 
@@ -16,7 +17,7 @@ type UseVttSceneSyncArgs = {
 
 /**
  * Keeps the Yjs `scene` map aligned with Postgres and debounces GM snapshots
- * into `vtt_scenes.state_json` so the map survives Liveblocks room hibernation.
+ * (scene + tokens) into `vtt_scenes.state_json`.
  */
 export function useVttSceneSync({
   doc,
@@ -60,20 +61,23 @@ export function useVttSceneSync({
   useEffect(() => {
     if (!isGM || !scene) return
     const sceneId = scene.id
-    const yMap = doc.getMap(YJS_SCENE_KEY)
+    const sceneMap = doc.getMap(YJS_SCENE_KEY)
+    const tokenMap = doc.getMap(YJS_TOKENS_KEY)
 
     function scheduleSnapshot() {
       if (snapshotTimer.current) clearTimeout(snapshotTimer.current)
       snapshotTimer.current = setTimeout(() => {
-        const live = readYjsScene(yMap)
+        const live = readYjsScene(sceneMap)
         if (!live) return
-        void saveSnapshot(sceneId, emptyVttSnapshot(live))
+        void saveSnapshot(sceneId, buildVttSnapshot(doc, live))
       }, SNAPSHOT_DEBOUNCE_MS)
     }
 
-    yMap.observe(scheduleSnapshot)
+    sceneMap.observe(scheduleSnapshot)
+    tokenMap.observe(scheduleSnapshot)
     return () => {
-      yMap.unobserve(scheduleSnapshot)
+      sceneMap.unobserve(scheduleSnapshot)
+      tokenMap.unobserve(scheduleSnapshot)
       if (snapshotTimer.current) clearTimeout(snapshotTimer.current)
     }
   }, [doc, isGM, scene, saveSnapshot])

@@ -1,10 +1,15 @@
-import { Suspense, lazy, useEffect, useState, type FormEvent } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useState, type FormEvent } from 'react'
 import { NumericInput } from '../NumericInput'
 import { useYjsDoc } from '../../hooks/useYjsDoc'
+import { useYjsTokens } from '../../hooks/useYjsTokens'
 import { useVttScene } from '../../hooks/useVttScene'
 import { useVttSceneSync } from '../../hooks/useVttSceneSync'
-import { sceneStateFromRow, writeYjsScene } from './yjsScene'
+import type { PlacementMode } from './placementTypes'
 import { SceneSetupForm } from './SceneSetupForm'
+import { TokenTray } from './TokenTray'
+import { tokenFromPlacement } from './tokenPlacement'
+import { sceneStateFromRow, writeYjsScene } from './yjsScene'
+import { canDeleteToken, snapTokenCenter } from './tokenUtils'
 
 const SceneCanvas = lazy(() =>
   import('./SceneCanvas').then((m) => ({ default: m.SceneCanvas })),
@@ -13,10 +18,11 @@ const SceneCanvas = lazy(() =>
 type VttPanelProps = {
   gameId: string
   isGM: boolean
+  currentUserId: string | null
 }
 
 /**
- * Phase F6 slice 2 — scene CRUD, map upload, Pixi canvas with grid and pan/zoom.
+ * Phase F6 — scene CRUD, map canvas, Yjs tokens (slice 3).
  * Expects to render inside `GameLiveRoom` (Liveblocks + Yjs already connected).
  */
 function GridSizeField({
@@ -65,7 +71,7 @@ function GridSizeField({
   )
 }
 
-export function VttPanel({ gameId, isGM }: VttPanelProps) {
+export function VttPanel({ gameId, isGM, currentUserId }: VttPanelProps) {
   const {
     scene,
     loading,
@@ -80,6 +86,13 @@ export function VttPanel({ gameId, isGM }: VttPanelProps) {
 
   const { doc, synced } = useYjsDoc()
   const liveScene = useVttSceneSync({ doc, synced, scene, isGM, saveSnapshot })
+  const { tokens, addToken, deleteToken, moveToken } = useYjsTokens(doc, {
+    synced,
+    scene,
+  })
+
+  const [placementMode, setPlacementMode] = useState<PlacementMode | null>(null)
+  const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null)
 
   const [signedMap, setSignedMap] = useState<{
     path: string
@@ -115,6 +128,35 @@ export function VttPanel({ gameId, isGM }: VttPanelProps) {
       cancelled = true
     }
   }, [mapPath, getMapSignedUrl])
+
+  const handlePlaceToken = useCallback(
+    (worldX: number, worldY: number) => {
+      if (!placementMode || !currentUserId || !liveScene) return
+      const mapW = liveScene.mapWidthPx ?? 1
+      const mapH = liveScene.mapHeightPx ?? 1
+      const snapped = snapTokenCenter(
+        worldX,
+        worldY,
+        liveScene.gridSizePx,
+        mapW,
+        mapH,
+        placementMode.sizeCells,
+      )
+      addToken(tokenFromPlacement(placementMode, snapped.x, snapped.y, currentUserId))
+      setPlacementMode(null)
+    },
+    [placementMode, currentUserId, liveScene, addToken],
+  )
+
+  const handleDeleteToken = useCallback(
+    (tokenId: string) => {
+      const token = tokens[tokenId]
+      if (!token || !canDeleteToken(token, currentUserId, isGM)) return
+      deleteToken(tokenId)
+      if (selectedTokenId === tokenId) setSelectedTokenId(null)
+    },
+    [tokens, currentUserId, isGM, deleteToken, selectedTokenId],
+  )
 
   async function handleCreate(input: {
     name: string
@@ -235,13 +277,39 @@ export function VttPanel({ gameId, isGM }: VttPanelProps) {
 
       {mapUrlError ? <p>{mapUrlError}</p> : null}
 
-      {mapUrl && liveScene ? (
-        <Suspense fallback={<div className="vtt-skeleton" aria-hidden />}>
-          <SceneCanvas mapUrl={mapUrl} sceneState={liveScene} sceneName={scene.name} />
-        </Suspense>
-      ) : (
-        <div className="vtt-skeleton" aria-hidden />
-      )}
+      <div className="vtt-stage">
+        <TokenTray
+          gameId={gameId}
+          isGM={isGM}
+          currentUserId={currentUserId}
+          tokens={tokens}
+          placementMode={placementMode}
+          selectedTokenId={selectedTokenId}
+          onPlacementModeChange={setPlacementMode}
+          onSelectToken={setSelectedTokenId}
+          onDeleteToken={handleDeleteToken}
+        />
+
+        {mapUrl && liveScene ? (
+          <Suspense fallback={<div className="vtt-skeleton" aria-hidden />}>
+            <SceneCanvas
+              mapUrl={mapUrl}
+              sceneState={liveScene}
+              sceneName={scene.name}
+              tokens={tokens}
+              selectedTokenId={selectedTokenId}
+              placementMode={placementMode}
+              isGM={isGM}
+              currentUserId={currentUserId}
+              onSelectToken={setSelectedTokenId}
+              onMoveToken={moveToken}
+              onPlaceToken={handlePlaceToken}
+            />
+          </Suspense>
+        ) : (
+          <div className="vtt-skeleton" aria-hidden />
+        )}
+      </div>
     </section>
   )
 }

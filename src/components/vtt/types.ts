@@ -5,6 +5,7 @@
  */
 
 export const YJS_SCENE_KEY = 'scene'
+export const YJS_TOKENS_KEY = 'tokens'
 
 /**
  * Scene metadata in Yjs (live) and mirrored to `vtt_scenes.state_json` on snapshot.

@@ -462,7 +462,11 @@ export function GameDetailPage() {
         {activeTab === 'vtt' ? (
           <div className="game-tab-panel">
             <Suspense fallback={<p className="muted">Loading VTT…</p>}>
-              <VttPanel gameId={gameId} isGM={isGM} />
+              <VttPanel
+                gameId={gameId}
+                isGM={isGM}
+                currentUserId={currentUserId}
+              />
             </Suspense>
           </div>
         ) : null}
