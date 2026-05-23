@@ -8,6 +8,7 @@ import { LoginPage } from './pages/LoginPage.tsx'
 import { MailboxPage } from './pages/MailboxPage.tsx'
 import { ResetPasswordPage } from './pages/ResetPasswordPage.tsx'
 import { SearchGamesPage } from './pages/SearchGamesPage.tsx'
+import { DiceToolsPage } from './pages/DiceToolsPage.tsx'
 import { ToolsPage } from './pages/ToolsPage.tsx'
 import { RegisterPage } from './pages/RegisterPage.tsx'
 import { ProtectedRoute } from './ProtectedRoute.tsx'
@@ -60,6 +61,7 @@ function App() {
         <Route path="search" element={<SearchGamesPage />} />
         <Route path="mailbox" element={<MailboxPage />} />
         <Route path="tools" element={<ToolsPage />} />
+        <Route path="tools/dice" element={<DiceToolsPage />} />
         <Route path="games/:gameId" element={<GameDetailPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

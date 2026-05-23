@@ -1,0 +1,224 @@
+.die-graphic {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.die-graphic-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.die-graphic--sm .die-graphic-svg {
+  width: 2.25rem;
+}
+
+.die-graphic--md .die-graphic-svg {
+  width: 3.25rem;
+}
+
+.die-graphic--lg .die-graphic-svg {
+  width: 4.5rem;
+}
+
+.die-graphic-shape {
+  fill: var(--die-fill, #3d4f6f);
+  stroke: var(--die-stroke, #8eb4e8);
+  stroke-width: 2;
+  transition: fill 0.2s ease, stroke 0.2s ease;
+}
+
+.die-graphic-shape--d4 {
+  fill: var(--die-d4-fill, #5c4a7a);
+  stroke: var(--die-d4-stroke, #b8a0e8);
+}
+
+.die-graphic-shape--d6 {
+  fill: var(--die-d6-fill, #2d6a4f);
+  stroke: var(--die-d6-stroke, #95d5b2);
+}
+
+.die-graphic-shape--d8 {
+  fill: var(--die-d8-fill, #6b3a2a);
+  stroke: var(--die-d8-stroke, #e8a87c);
+}
+
+.die-graphic-shape--d10 {
+  fill: var(--die-d10-fill, #1d4e6f);
+  stroke: var(--die-d10-stroke, #7ec8e3);
+}
+
+.die-graphic-shape--d12 {
+  fill: var(--die-d12-fill, #5c4a1a);
+  stroke: var(--die-d12-stroke, #e8d47c);
+}
+
+.die-graphic-shape--d20 {
+  fill: var(--die-d20-fill, #4a2d6b);
+  stroke: var(--die-d20-stroke, #c9a0e8);
+}
+
+.die-graphic-shape--d100 {
+  fill: var(--die-d100-fill, #1a3d52);
+  stroke: var(--die-d100-stroke, #7ec8e3);
+}
+
+.die-graphic-d100-mark {
+  fill: var(--die-d100-stroke, #9ed8f0);
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.die-graphic--d100 .die-graphic-value {
+  font-size: 15px;
+}
+
+.die-graphic-value {
+  fill: var(--die-text, #f4f7fb);
+  font-size: 18px;
+  font-weight: 700;
+  font-family: inherit;
+  pointer-events: none;
+}
+
+.die-graphic--d100 .die-graphic-value {
+  font-size: 16px;
+}
+
+.die-graphic-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.85;
+}
+
+.die-graphic--rolling .die-graphic-svg {
+  animation: die-tumble 0.48s ease-in-out;
+}
+
+.die-graphic--rolling .die-graphic-value {
+  opacity: 0.6;
+}
+
+.die-graphic--revealed .die-graphic-svg {
+  animation: die-settle 0.35s ease-out;
+}
+
+.die-graphic--dropped {
+  opacity: 0.4;
+}
+
+.die-graphic--dropped .die-graphic-value {
+  text-decoration: line-through;
+}
+
+@keyframes die-tumble {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  35% {
+    transform: rotate(120deg) scale(1.12);
+  }
+  70% {
+    transform: rotate(260deg) scale(0.95);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes die-settle {
+  0% {
+    transform: scale(1.15);
+  }
+  60% {
+    transform: scale(0.96);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.dice-roll-display {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-emphasis, rgba(0, 0, 0, 0.05));
+  text-align: center;
+}
+
+.dice-roll-display-faces {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.dice-roll-display-total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.dice-roll-display-total-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+}
+
+.dice-roll-display-total-value {
+  font-size: 2rem;
+  line-height: 1.1;
+  color: var(--text-h);
+}
+
+.dice-roll-display-breakdown {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.dice-roll-display--compact .dice-roll-display-total-value {
+  font-size: 1.5rem;
+}
+
+.dice-tray-graphics-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dice-tray-graphics-toggle input {
+  accent-color: var(--accent, #7c9cff);
+}
+
+.dice-preset-btn--graphic {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.35rem 0.5rem;
+  min-width: 2.75rem;
+}
+
+.dice-preset-btn--text {
+  font-weight: 600;
+  font-size: 0.85rem;
+  min-width: 3rem;
+  padding: 0.45rem 0.55rem;
+}
+
+.dice-tray-presets--graphic {
+  gap: 0.5rem;
+}

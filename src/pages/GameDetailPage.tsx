@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { GameSessionPanel } from '../components/GameSessionPanel'
 import { DND5E_2024_RULESET_LABEL } from '../rules/dnd5e/constants'
 import { supabase } from '../supabaseClient'
 
@@ -724,12 +725,8 @@ export function GameDetailPage() {
 
           {activeTab === 'session' ? (
             <div className="game-tab-panel">
-              {isMember ? (
-                <GameTabPlaceholder
-                  title="Session"
-                  phase="Phase F2 / F5"
-                  summary="Shared dice tray, roll log, initiative tracker, and live session chat for your table."
-                />
+              {isMember && gameId ? (
+                <GameSessionPanel gameId={gameId} currentUserId={currentUserId} />
               ) : (
                 <p className="muted">Join this game to use session tools.</p>
               )}

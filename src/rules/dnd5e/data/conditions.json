@@ -1,0 +1,72 @@
+[
+  {
+    "id": "blinded",
+    "name": "Blinded",
+    "summary": "Can't see; auto-fail sight checks; attacks have disadvantage; attacks against have advantage."
+  },
+  {
+    "id": "charmed",
+    "name": "Charmed",
+    "summary": "Can't attack charmer; charmer has advantage on social checks against you."
+  },
+  {
+    "id": "deafened",
+    "name": "Deafened",
+    "summary": "Can't hear; auto-fail hearing checks."
+  },
+  {
+    "id": "frightened",
+    "name": "Frightened",
+    "summary": "Disadvantage on ability checks and attacks while source is in line of sight; can't willingly move closer."
+  },
+  {
+    "id": "grappled",
+    "name": "Grappled",
+    "summary": "Speed becomes 0; can't benefit from speed bonuses."
+  },
+  {
+    "id": "incapacitated",
+    "name": "Incapacitated",
+    "summary": "Can't take actions or reactions."
+  },
+  {
+    "id": "invisible",
+    "name": "Invisible",
+    "summary": "Heavily obscured for others; attacks have advantage; attacks against have disadvantage."
+  },
+  {
+    "id": "paralyzed",
+    "name": "Paralyzed",
+    "summary": "Incapacitated; can't move or speak; auto-fail Str/Dex saves; attacks have advantage; hits within 5 ft. are critical if attacker is within 5 ft."
+  },
+  {
+    "id": "petrified",
+    "name": "Petrified",
+    "summary": "Incapacitated; resistant to all damage; immune to poison and disease."
+  },
+  {
+    "id": "poisoned",
+    "name": "Poisoned",
+    "summary": "Disadvantage on attack rolls and ability checks."
+  },
+  {
+    "id": "prone",
+    "name": "Prone",
+    "summary": "Melee attacks against have advantage; ranged have disadvantage; your attacks have disadvantage."
+  },
+  {
+    "id": "restrained",
+    "name": "Restrained",
+    "summary": "Speed 0; disadvantage on attacks and Dex saves; attacks against have advantage."
+  },
+  {
+    "id": "stunned",
+    "name": "Stunned",
+    "summary": "Incapacitated; can't move; can speak only falteringly; auto-fail Str/Dex saves; attacks against have advantage."
+  },
+  {
+    "id": "unconscious",
+    "name": "Unconscious",
+    "summary": "Incapacitated; can't move or speak; drops held items; falls prone; auto-fail Str/Dex saves; attacks have advantage; hits within 5 ft. are critical."
+  }
+]

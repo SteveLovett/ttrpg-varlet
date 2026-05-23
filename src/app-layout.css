@@ -262,6 +262,173 @@
   font-size: 0.95rem;
 }
 
+/* Phase F2 — dice tray & session layout */
+.game-session-layout,
+.dice-tools-layout {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 52rem) {
+  .game-session-layout,
+  .dice-tools-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, 22rem);
+    align-items: start;
+  }
+}
+
+.dice-tray {
+  display: grid;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.dice-tray--compact {
+  gap: 0.55rem;
+}
+
+.dice-tray-d20-block {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.dice-tray-mod-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.dice-tray-mod-input {
+  width: 5rem;
+}
+
+.dice-tray-adv-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.dice-tray-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.dice-preset-btn {
+  padding: 0.3rem 0.55rem;
+  font-size: 0.85rem;
+}
+
+.dice-tray-form {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.dice-tray-hint {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.dice-tray-error {
+  margin: 0;
+  color: #f87171;
+}
+
+.dice-result {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-emphasis, rgba(0, 0, 0, 0.05));
+}
+
+.dice-result-total {
+  margin: 0;
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+.dice-result-breakdown {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+}
+
+.roll-log-panel {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-emphasis, rgba(0, 0, 0, 0.05));
+  text-align: left;
+}
+
+.roll-log-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+}
+
+.roll-log-summary::-webkit-details-marker {
+  display: none;
+}
+
+.roll-log-body {
+  padding: 0 0.75rem 0.65rem;
+  max-height: 24rem;
+  overflow-y: auto;
+}
+
+.roll-log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.roll-log-item {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.roll-log-item-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.roll-log-item-head strong {
+  font-size: 1.15rem;
+}
+
+.roll-log-item-meta,
+.roll-log-item-detail {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+}
+
+.dice-tools-reference {
+  margin-top: 1.5rem;
+  text-align: left;
+}
+
+.conditions-ref summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+
+.conditions-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+}
+
 .app-panel p {
   margin: 0;
   line-height: 1.45;

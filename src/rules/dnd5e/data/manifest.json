@@ -1,0 +1,7 @@
+{
+  "source": "Open5e",
+  "ruleset": "D&D 5e (2024)",
+  "documentKeys": ["srd-2024"],
+  "apiVersion": 2,
+  "note": "Run npm run fetch:srd to download monsters.json and spells.json from Open5e into this folder."
+}

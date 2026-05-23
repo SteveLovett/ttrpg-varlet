@@ -10,7 +10,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "fetch:srd": "node scripts/fetch-open5e-data.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.1",

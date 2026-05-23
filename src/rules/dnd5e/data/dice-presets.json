@@ -1,0 +1,8 @@
+[
+  { "id": "d4", "label": "d4", "formula": "1d4" },
+  { "id": "d6", "label": "d6", "formula": "1d6" },
+  { "id": "d8", "label": "d8", "formula": "1d8" },
+  { "id": "d10", "label": "d10", "formula": "1d10" },
+  { "id": "d12", "label": "d12", "formula": "1d12" },
+  { "id": "d100", "label": "d100", "formula": "d100", "kind": "percentile-tens" }
+]

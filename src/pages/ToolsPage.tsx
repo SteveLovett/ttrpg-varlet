@@ -13,13 +13,16 @@ export function ToolsPage() {
       </p>
       <ul className="tools-coming-list">
         <li>
-          <strong>Dice tray</strong> — Phase F2
+          <Link to="/app/tools/dice">
+            <strong>Dice tray</strong>
+          </Link>{' '}
+          — roll any formula, d20 with advantage/disadvantage
         </li>
         <li>
-          <strong>Bestiary</strong> — Phase F4
+          <strong>Bestiary</strong> — Phase F4 (after running fetch:srd)
         </li>
         <li>
-          <strong>Rules quick reference</strong> — Phase F4
+          <strong>Rules quick reference</strong> — conditions on dice page; full compendium in F4
         </li>
       </ul>
       <p>
