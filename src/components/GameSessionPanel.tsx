@@ -8,7 +8,6 @@ import {
 import type { RollResult } from '../rules/dnd5e/dice/types'
 import { InitiativeTracker } from './gm/InitiativeTracker'
 import { DiceTray } from './DiceTray'
-import { LiveSessionRoom } from './session/LiveSessionRoom'
 import { SessionChat } from './session/SessionChat'
 import { SessionPresence } from './session/SessionPresence'
 import { RollLog } from './RollLog'
@@ -22,22 +21,10 @@ type GameSessionPanelProps = {
 }
 
 /**
- * Phase F5 — wraps the Session tab in a Liveblocks room so rolls, initiative,
- * and chat fan out to every member without polling.
+ * Phase F5 session tools. Liveblocks room is provided by `GameLiveRoom` on the
+ * game detail page so Session and VTT share one connection.
  */
-export function GameSessionPanel(props: GameSessionPanelProps) {
-  return (
-    <LiveSessionRoom
-      gameId={props.gameId}
-      isGM={props.isGM}
-      displayName={props.displayName}
-    >
-      <SessionPanelContent {...props} />
-    </LiveSessionRoom>
-  )
-}
-
-function SessionPanelContent({
+export function GameSessionPanel({
   gameId,
   currentUserId,
   isGM,

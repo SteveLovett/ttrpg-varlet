@@ -1193,3 +1193,55 @@
   color: #dc2626;
   font-size: 0.85rem;
 }
+
+.vtt-skeleton {
+  width: 100%;
+  height: clamp(20rem, 60vh, 40rem);
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    var(--surface-emphasis, rgba(0, 0, 0, 0.06)) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    var(--surface-emphasis, rgba(0, 0, 0, 0.06)) 100%
+  );
+  background-size: 200% 100%;
+  animation: vtt-skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes vtt-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.vtt-setup-form,
+.vtt-gm-tools {
+  text-align: left;
+  max-width: 28rem;
+}
+
+.vtt-gm-tools {
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+}
+
+.vtt-gm-tools summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.vtt-grid-form,
+.vtt-replace-form {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.vtt-canvas-loading {
+  margin: 0.35rem 0 0;
+}

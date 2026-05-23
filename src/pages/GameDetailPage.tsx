@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { GameCharactersPanel } from '../components/characters/GameCharactersPanel'
 import { GameGmPanel } from '../components/gm/GameGmPanel'
 import { GameSessionPanel } from '../components/GameSessionPanel'
-import { VttPanel } from '../components/vtt/VttPanel'
+import { GameLiveRoom } from '../components/session/GameLiveRoom'
+const VttPanel = lazy(() =>
+  import('../components/vtt/VttPanel').then((m) => ({ default: m.VttPanel })),
+)
 import { DND5E_2024_RULESET_LABEL } from '../rules/dnd5e/constants'
 import { supabase } from '../supabaseClient'
 
@@ -430,6 +433,32 @@ export function GameDetailPage() {
     members.find((m) => m.user_id === currentUserId)?.display_name ?? null
   const visibleTabs = GAME_TABS.filter((tab) => tab !== 'gm' || isGM)
 
+  /** Keep Liveblocks connected after first visit to Session or VTT. */
+  const [liveRoomMounted, setLiveRoomMounted] = useState(false)
+  useEffect(() => {
+    if (activeTab === 'session' || activeTab === 'vtt') {
+      setLiveRoomMounted(true)
+    }
+  }, [activeTab])
+
+  const liveRoomChild =
+    isMember && gameId && liveRoomMounted ? (
+      <GameLiveRoom
+        gameId={gameId}
+        isGM={isGM}
+        displayName={currentDisplayName}
+      >
+        <LiveTabPanels
+          activeTab={activeTab}
+          gameId={gameId}
+          currentUserId={currentUserId}
+          isGM={isGM}
+          displayName={currentDisplayName}
+          memberNames={memberNames}
+        />
+      </GameLiveRoom>
+    ) : null
+
   return (
     <div className="app-panel app-panel-wide">
       {loading ? <p>Loading game...</p> : null}
@@ -739,33 +768,17 @@ export function GameDetailPage() {
             </div>
           ) : null}
 
-          {activeTab === 'session' ? (
+          {liveRoomChild}
+
+          {activeTab === 'session' && !(isMember && gameId) ? (
             <div className="game-tab-panel">
-              {isMember && gameId ? (
-                <GameSessionPanel
-                  gameId={gameId}
-                  currentUserId={currentUserId}
-                  isGM={isGM}
-                  displayName={currentDisplayName}
-                  memberNames={memberNames}
-                />
-              ) : (
-                <p className="muted">Join this game to use session tools.</p>
-              )}
+              <p className="muted">Join this game to use session tools.</p>
             </div>
           ) : null}
 
-          {activeTab === 'vtt' ? (
+          {activeTab === 'vtt' && !(isMember && gameId) ? (
             <div className="game-tab-panel">
-              {isMember && gameId ? (
-                <VttPanel
-                  gameId={gameId}
-                  isGM={isGM}
-                  displayName={currentDisplayName}
-                />
-              ) : (
-                <p className="muted">Join this game to open the VTT.</p>
-              )}
+              <p className="muted">Join this game to open the VTT.</p>
             </div>
           ) : null}
         </>
@@ -774,5 +787,48 @@ export function GameDetailPage() {
         <Link to="/app">Back to Games</Link>
       </p>
     </div>
+  )
+}
+
+type LiveTabPanelsProps = {
+  activeTab: GameTab
+  gameId: string
+  currentUserId: string | null
+  isGM: boolean
+  displayName: string | null
+  memberNames: string[]
+}
+
+function LiveTabPanels({
+  activeTab,
+  gameId,
+  currentUserId,
+  isGM,
+  displayName,
+  memberNames,
+}: LiveTabPanelsProps) {
+  return (
+    <>
+      <div
+        className="game-tab-panel"
+        hidden={activeTab !== 'session'}
+        aria-hidden={activeTab !== 'session'}
+      >
+        <GameSessionPanel
+          gameId={gameId}
+          currentUserId={currentUserId}
+          isGM={isGM}
+          displayName={displayName}
+          memberNames={memberNames}
+        />
+      </div>
+      {activeTab === 'vtt' ? (
+        <div className="game-tab-panel">
+          <Suspense fallback={<p className="muted">Loading VTT…</p>}>
+            <VttPanel gameId={gameId} isGM={isGM} />
+          </Suspense>
+        </div>
+      ) : null}
+    </>
   )
 }
