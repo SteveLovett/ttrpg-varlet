@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { SubmitEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { MyGameCard } from '../components/MyGameCard'
 import { supabase } from '../supabaseClient'
+import { DND5E_2024_RULESET_LABEL } from '../rules/dnd5e/constants'
 
 type GameSummary = {
   id: string
@@ -177,6 +178,7 @@ export function HomePage() {
         p_name: trimmedName,
         p_description: desc.length > 0 ? desc : '',
         p_is_public: isPublic,
+        p_ruleset: DND5E_2024_RULESET_LABEL,
       })
 
       if (gameError) {
@@ -301,7 +303,7 @@ export function HomePage() {
 
   return (
     <div className="app-panel">
-      <h2>Home</h2>
+      <h2>Games</h2>
       <p>
         {"You're signed in"}
         {label ? (
@@ -379,6 +381,10 @@ export function HomePage() {
             <label htmlFor="is-public">Public game </label>
           </div>
 
+          <p className="muted create-game-ruleset-hint">
+            New games use ruleset: <strong>{DND5E_2024_RULESET_LABEL}</strong>
+          </p>
+
           <button type="submit" disabled={isCreating}>
             Create game
           </button>
@@ -394,17 +400,9 @@ export function HomePage() {
         ) : games.length === 0 ? (
           <p>You are not in any games yet.</p>
         ) : (
-          <ul>
+          <ul className="game-card-list">
             {games.map((game) => (
-              <li key={game.id}>
-                <h4>{game.name}</h4>
-                <Link to={`/app/games/${game.id}`}>Open game</Link>
-                <p>{game.description ?? 'No description yet.'}</p>
-                <p>
-                  Role: {game.role}
-                  {game.ruleset ? ` · Ruleset: ${game.ruleset}` : ''}
-                </p>
-              </li>
+              <MyGameCard key={game.id} game={game} />
             ))}
           </ul>
         )}

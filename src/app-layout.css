@@ -77,10 +77,189 @@
   box-shadow: var(--shadow);
 }
 
+.app-panel-wide {
+  max-width: 48rem;
+}
+
 .app-panel h2 {
   margin: 0 0 0.5rem;
   font-size: 1.2rem;
   color: var(--text-h);
+}
+
+.game-detail-header {
+  margin-bottom: 0.75rem;
+}
+
+.game-detail-header h2 {
+  margin: 0 0 0.35rem;
+}
+
+.game-detail-meta {
+  margin: 0.25rem 0 0;
+  line-height: 1.45;
+}
+
+.game-detail-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.75rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.game-detail-tabs .tab {
+  padding: 0.4rem 0.75rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.game-detail-tabs .tab:hover {
+  color: var(--accent);
+  border-color: var(--border);
+}
+
+.game-detail-tabs .tab.active {
+  color: var(--accent);
+  border-color: var(--accent-border, var(--border));
+  background: var(--surface-emphasis, rgba(0, 0, 0, 0.05));
+}
+
+.game-tab-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.game-tab-panel section {
+  margin: 0;
+}
+
+.game-tab-placeholder h3 {
+  margin: 0 0 0.35rem;
+}
+
+.phase-badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.game-detail-back {
+  margin-top: 1.25rem;
+}
+
+.create-game-ruleset-hint {
+  margin: 0;
+  text-align: left;
+}
+
+.tools-coming-list {
+  margin: 0.75rem 0 1rem;
+  padding-left: 1.25rem;
+  text-align: left;
+}
+
+.tools-coming-list li {
+  margin: 0.35rem 0;
+}
+
+.game-card-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+  text-align: left;
+}
+
+.game-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-emphasis, rgba(0, 0, 0, 0.05));
+  overflow: hidden;
+}
+
+.game-card-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.85rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.game-card-summary::-webkit-details-marker {
+  display: none;
+}
+
+.game-card-summary::marker {
+  content: '';
+}
+
+.game-card-chevron {
+  flex-shrink: 0;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid var(--text);
+  border-bottom: 2px solid var(--text);
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+  margin-top: -0.15rem;
+}
+
+.game-card[open] .game-card-chevron {
+  transform: rotate(45deg);
+  margin-top: 0.1rem;
+}
+
+.game-card-summary-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.game-card-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-h);
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.game-card-meta {
+  font-size: 0.85rem;
+  color: var(--text);
+  opacity: 0.9;
+  line-height: 1.35;
+}
+
+.game-card-open {
+  flex-shrink: 0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.game-card-body {
+  padding: 0 0.85rem 0.75rem 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.game-card-description {
+  margin: 0.65rem 0 0;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.95rem;
 }
 
 .app-panel p {

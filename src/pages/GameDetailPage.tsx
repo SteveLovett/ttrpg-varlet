@@ -1,7 +1,25 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { SubmitEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { DND5E_2024_RULESET_LABEL } from '../rules/dnd5e/constants'
 import { supabase } from '../supabaseClient'
+
+const GAME_TABS = ['overview', 'characters', 'session', 'vtt'] as const
+type GameTab = (typeof GAME_TABS)[number]
+
+const TAB_LABELS: Record<GameTab, string> = {
+  overview: 'Overview',
+  characters: 'Characters',
+  session: 'Session',
+  vtt: 'VTT',
+}
+
+function tabFromParam(raw: string | null): GameTab {
+  if (raw && (GAME_TABS as readonly string[]).includes(raw)) {
+    return raw as GameTab
+  }
+  return 'overview'
+}
 
 type Role = 'Game Master' | 'Player'
 
@@ -29,9 +47,46 @@ type MemberRow = {
   joined_at: string | null
 }
 
+function GameTabPlaceholder({
+  title,
+  phase,
+  summary,
+}: {
+  title: string
+  phase: string
+  summary: string
+}) {
+  return (
+    <section className="game-tab-placeholder">
+      <h3>{title}</h3>
+      <p className="muted">{summary}</p>
+      <p>
+        <span className="phase-badge">{phase}</span>
+      </p>
+    </section>
+  )
+}
+
 export function GameDetailPage() {
   const { gameId } = useParams<{ gameId: string }>()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const activeTab = tabFromParam(searchParams.get('tab'))
+
+  function setActiveTab(tab: GameTab) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (tab === 'overview') {
+          next.delete('tab')
+        } else {
+          next.set('tab', tab)
+        }
+        return next
+      },
+      { replace: true },
+    )
+  }
 
   // Game + viewer
   const [loading, setLoading] = useState(true)
@@ -362,33 +417,64 @@ export function GameDetailPage() {
   }
 
   const isGM = role === 'Game Master'
+  const isMember = role === 'Game Master' || role === 'Player'
   const gmCount = members.filter((m) => m.game_role === 'Game Master').length
+  const displayRuleset =
+    ruleset.length > 0 ? ruleset : DND5E_2024_RULESET_LABEL
 
   return (
-    <div className="app-panel">
-      <h2>Game detail</h2>
+    <div className="app-panel app-panel-wide">
       {loading ? <p>Loading game...</p> : null}
-      {!loading && error ? <p>{error}</p> : null}
+      {!loading && error ? (
+        <>
+          <h2>Game</h2>
+          <p>{error}</p>
+        </>
+      ) : null}
       {!loading && !error ? (
         <>
-          <p>
-            <strong>{name}</strong>
-          </p>
-          <p>{description.length > 0 ? description : 'No description yet.'}</p>
-          {role ? (
-            <p>Role: {role}</p>
-          ) : (
-            <p>
-              Visibility: {isPublic ? 'Public' : 'Private'} — you are not a member yet.
-              {isPublic ? (
-                <>
-                  {' '}
-                  <Link to="/app/search">Join from Search games</Link>
-                </>
-              ) : null}
+          <header className="game-detail-header">
+            <h2>{name}</h2>
+            <p className="game-detail-meta">
+              {description.length > 0 ? description : 'No description yet.'}
             </p>
-          )}
+            <p className="game-detail-meta">
+              {role ? (
+                <>
+                  Role: <strong>{role}</strong>
+                  {' · '}
+                  Ruleset: <strong>{displayRuleset}</strong>
+                </>
+              ) : (
+                <>
+                  Visibility: {isPublic ? 'Public' : 'Private'} — you are not a member yet.
+                  {isPublic ? (
+                    <>
+                      {' '}
+                      <Link to="/app/search">Join from Search games</Link>
+                    </>
+                  ) : null}
+                </>
+              )}
+            </p>
+          </header>
 
+          <nav className="game-detail-tabs" aria-label="Game sections">
+            {GAME_TABS.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className={`tab${activeTab === tab ? ' active' : ''}`}
+                aria-current={activeTab === tab ? 'page' : undefined}
+                onClick={() => setActiveTab(tab)}
+              >
+                {TAB_LABELS[tab]}
+              </button>
+            ))}
+          </nav>
+
+          {activeTab === 'overview' ? (
+            <div className="game-tab-panel">
           {isGM ? (
             <section>
               <h3>Lobby settings</h3>
@@ -456,7 +542,7 @@ export function GameDetailPage() {
                     onChange={(e) => setDraftRuleset(e.target.value)}
                     disabled={savingContent}
                     maxLength={64}
-                    placeholder='e.g. "5e", "PF2e", "homebrew"'
+                    placeholder={DND5E_2024_RULESET_LABEL}
                   />
                 </div>
                 <div className="form-row">
@@ -619,10 +705,54 @@ export function GameDetailPage() {
               </div>
             </section>
           ) : null}
+            </div>
+          ) : null}
+
+          {activeTab === 'characters' ? (
+            <div className="game-tab-panel">
+              {isMember ? (
+                <GameTabPlaceholder
+                  title="Characters"
+                  phase="Phase F3"
+                  summary="Build and attach D&D 5e (2024) player characters to this campaign."
+                />
+              ) : (
+                <p className="muted">Join this game to manage characters.</p>
+              )}
+            </div>
+          ) : null}
+
+          {activeTab === 'session' ? (
+            <div className="game-tab-panel">
+              {isMember ? (
+                <GameTabPlaceholder
+                  title="Session"
+                  phase="Phase F2 / F5"
+                  summary="Shared dice tray, roll log, initiative tracker, and live session chat for your table."
+                />
+              ) : (
+                <p className="muted">Join this game to use session tools.</p>
+              )}
+            </div>
+          ) : null}
+
+          {activeTab === 'vtt' ? (
+            <div className="game-tab-panel">
+              {isMember ? (
+                <GameTabPlaceholder
+                  title="Virtual tabletop"
+                  phase="Phase F6"
+                  summary="Battle maps, tokens, and fog of war for online combat."
+                />
+              ) : (
+                <p className="muted">Join this game to open the VTT.</p>
+              )}
+            </div>
+          ) : null}
         </>
       ) : null}
-      <p>
-        <Link to="/app">Back to My games</Link>
+      <p className="game-detail-back">
+        <Link to="/app">Back to Games</Link>
       </p>
     </div>
   )
