@@ -445,6 +445,8 @@ export function GameDetailPage() {
   const memberNames = members
     .map((m) => m.display_name)
     .filter((n): n is string => !!n && n.length > 0)
+  const currentDisplayName =
+    members.find((m) => m.user_id === currentUserId)?.display_name ?? null
   const visibleTabs = GAME_TABS.filter((tab) => tab !== 'gm' || isGM)
 
   return (
@@ -763,6 +765,7 @@ export function GameDetailPage() {
                   gameId={gameId}
                   currentUserId={currentUserId}
                   isGM={isGM}
+                  displayName={currentDisplayName}
                   memberNames={memberNames}
                 />
               ) : (

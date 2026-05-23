@@ -1,32 +1,59 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { NumericInput } from '../NumericInput'
 import { useGameInitiative } from '../../hooks/useGameInitiative'
-import { newInitiativeEntry } from '../../rules/dnd5e/initiative/types'
+import {
+  useBroadcastGameEvent,
+  useLiveInitiativeListener,
+} from '../../hooks/useGameRoomEvents'
+import {
+  newInitiativeEntry,
+  type InitiativeEntry,
+} from '../../rules/dnd5e/initiative/types'
 
 type InitiativeTrackerProps = {
   gameId: string
   isGM: boolean
+  currentUserId: string | null
   memberNames?: string[]
 }
 
-export function InitiativeTracker({ gameId, isGM, memberNames = [] }: InitiativeTrackerProps) {
-  const { entries, loading, error, load, save } = useGameInitiative(gameId)
+export function InitiativeTracker({
+  gameId,
+  isGM,
+  currentUserId,
+  memberNames = [],
+}: InitiativeTrackerProps) {
+  const { entries, loading, error, load, save, setEntries } = useGameInitiative(gameId)
   const [draftName, setDraftName] = useState('')
   const [draftValue, setDraftValue] = useState(10)
   const [draftPc, setDraftPc] = useState(true)
   const [saving, setSaving] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
+  const broadcast = useBroadcastGameEvent()
 
   useEffect(() => {
     void load()
   }, [load])
+
+  useLiveInitiativeListener((event) => {
+    if (event.userId === currentUserId) return
+    setEntries(sortInitiative(event.entries))
+  })
 
   async function persist(next: typeof entries) {
     setSaving(true)
     setLocalError(null)
     const err = await save(next)
     setSaving(false)
-    if (err) setLocalError(err)
+    if (err) {
+      setLocalError(err)
+      return
+    }
+    broadcast({
+      type: 'initiative',
+      userId: currentUserId ?? 'unknown',
+      entries: sortInitiative(next),
+    })
   }
 
   async function handleAdd(e: FormEvent) {
@@ -127,4 +154,8 @@ export function InitiativeTracker({ gameId, isGM, memberNames = [] }: Initiative
       ) : null}
     </section>
   )
+}
+
+function sortInitiative(entries: InitiativeEntry[]): InitiativeEntry[] {
+  return [...entries].sort((a, b) => b.value - a.value)
 }

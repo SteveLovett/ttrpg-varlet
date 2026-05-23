@@ -45,7 +45,8 @@ export function DiceToolsPage() {
   async function handleRoll(result: RollResult, formula: string, label: string) {
     setLastResult(result)
     if (!gameId) return null
-    return saveRoll({ gameId, formula, label, result })
+    const outcome = await saveRoll({ gameId, formula, label, result })
+    return 'error' in outcome ? outcome.error : null
   }
 
   return (

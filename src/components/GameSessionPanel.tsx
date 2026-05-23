@@ -1,39 +1,94 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useGameRolls } from '../hooks/useGameRolls'
+import { useGameRolls, type GameRollRow } from '../hooks/useGameRolls'
+import {
+  useBroadcastGameEvent,
+  useLiveRollListener,
+} from '../hooks/useGameRoomEvents'
 import type { RollResult } from '../rules/dnd5e/dice/types'
 import { InitiativeTracker } from './gm/InitiativeTracker'
 import { DiceTray } from './DiceTray'
+import { LiveSessionRoom } from './session/LiveSessionRoom'
+import { SessionChat } from './session/SessionChat'
+import { SessionPresence } from './session/SessionPresence'
 import { RollLog } from './RollLog'
 
 type GameSessionPanelProps = {
   gameId: string
   currentUserId: string | null
   isGM: boolean
+  displayName: string | null
   memberNames?: string[]
 }
 
-export function GameSessionPanel({
+/**
+ * Phase F5 — wraps the Session tab in a Liveblocks room so rolls, initiative,
+ * and chat fan out to every member without polling.
+ */
+export function GameSessionPanel(props: GameSessionPanelProps) {
+  return (
+    <LiveSessionRoom
+      gameId={props.gameId}
+      isGM={props.isGM}
+      displayName={props.displayName}
+    >
+      <SessionPanelContent {...props} />
+    </LiveSessionRoom>
+  )
+}
+
+function SessionPanelContent({
   gameId,
   currentUserId,
   isGM,
+  displayName,
   memberNames = [],
 }: GameSessionPanelProps) {
-  const { rolls, loading, error, loadRolls, saveRoll } = useGameRolls(gameId)
+  const { rolls, loading, error, loadRolls, saveRoll, addLiveRoll } = useGameRolls(gameId)
   const [lastResult, setLastResult] = useState<RollResult | null>(null)
+  const broadcast = useBroadcastGameEvent()
 
   useEffect(() => {
     void loadRolls()
   }, [loadRolls])
 
+  useLiveRollListener((event) => {
+    if (event.userId === currentUserId) return
+    const row: GameRollRow = {
+      id: event.rollId,
+      game_id: gameId,
+      user_id: event.userId,
+      formula: event.formula,
+      label: event.label,
+      result_json: event.result,
+      created_at: event.createdAt,
+      display_name: event.displayName,
+    }
+    addLiveRoll(row)
+  })
+
   async function handleRoll(result: RollResult, formula: string, label: string) {
     setLastResult(result)
-    return saveRoll({ gameId, formula, label, result })
+    const outcome = await saveRoll({ gameId, formula, label, result })
+    if ('error' in outcome) return outcome.error
+    const row = outcome.row
+    broadcast({
+      type: 'roll',
+      rollId: row.id,
+      userId: row.user_id,
+      displayName: row.display_name ?? displayName,
+      formula: row.formula,
+      label: row.label,
+      result: row.result_json,
+      createdAt: row.created_at,
+    })
+    return null
   }
 
   return (
     <section className="game-session-layout">
       <div className="game-session-dice">
+        <SessionPresence />
         <h3>Session dice</h3>
         <p className="muted">
           Quick rolls for this table.{' '}
@@ -47,7 +102,17 @@ export function GameSessionPanel({
         />
       </div>
       <div className="game-session-side">
-        <InitiativeTracker gameId={gameId} isGM={isGM} memberNames={memberNames} />
+        <InitiativeTracker
+          gameId={gameId}
+          isGM={isGM}
+          currentUserId={currentUserId}
+          memberNames={memberNames}
+        />
+        <SessionChat
+          gameId={gameId}
+          currentUserId={currentUserId}
+          displayName={displayName}
+        />
         <RollLog
           rolls={rolls}
           loading={loading}
