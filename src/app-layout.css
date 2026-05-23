@@ -136,6 +136,12 @@
   gap: 1rem;
 }
 
+/* `display: grid` above overrides the UA default for [hidden]; keep tab panels
+   actually hidden when the hidden attribute is used elsewhere. */
+.game-tab-panel[hidden] {
+  display: none !important;
+}
+
 .game-tab-panel section {
   margin: 0;
 }

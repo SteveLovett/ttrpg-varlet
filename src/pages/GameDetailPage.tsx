@@ -448,14 +448,24 @@ export function GameDetailPage() {
         isGM={isGM}
         displayName={currentDisplayName}
       >
-        <LiveTabPanels
-          activeTab={activeTab}
-          gameId={gameId}
-          currentUserId={currentUserId}
-          isGM={isGM}
-          displayName={currentDisplayName}
-          memberNames={memberNames}
-        />
+        {activeTab === 'session' ? (
+          <div className="game-tab-panel">
+            <GameSessionPanel
+              gameId={gameId}
+              currentUserId={currentUserId}
+              isGM={isGM}
+              displayName={currentDisplayName}
+              memberNames={memberNames}
+            />
+          </div>
+        ) : null}
+        {activeTab === 'vtt' ? (
+          <div className="game-tab-panel">
+            <Suspense fallback={<p className="muted">Loading VTT…</p>}>
+              <VttPanel gameId={gameId} isGM={isGM} />
+            </Suspense>
+          </div>
+        ) : null}
       </GameLiveRoom>
     ) : null
 
@@ -787,48 +797,5 @@ export function GameDetailPage() {
         <Link to="/app">Back to Games</Link>
       </p>
     </div>
-  )
-}
-
-type LiveTabPanelsProps = {
-  activeTab: GameTab
-  gameId: string
-  currentUserId: string | null
-  isGM: boolean
-  displayName: string | null
-  memberNames: string[]
-}
-
-function LiveTabPanels({
-  activeTab,
-  gameId,
-  currentUserId,
-  isGM,
-  displayName,
-  memberNames,
-}: LiveTabPanelsProps) {
-  return (
-    <>
-      <div
-        className="game-tab-panel"
-        hidden={activeTab !== 'session'}
-        aria-hidden={activeTab !== 'session'}
-      >
-        <GameSessionPanel
-          gameId={gameId}
-          currentUserId={currentUserId}
-          isGM={isGM}
-          displayName={displayName}
-          memberNames={memberNames}
-        />
-      </div>
-      {activeTab === 'vtt' ? (
-        <div className="game-tab-panel">
-          <Suspense fallback={<p className="muted">Loading VTT…</p>}>
-            <VttPanel gameId={gameId} isGM={isGM} />
-          </Suspense>
-        </div>
-      ) : null}
-    </>
   )
 }

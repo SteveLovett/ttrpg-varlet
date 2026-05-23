@@ -13,7 +13,7 @@ GM uploads a map, everyone in the game sees it with a square grid, pan, and zoom
 | **Pixi canvas** | `SceneCanvas` — map sprite, square grid, right-drag pan, scroll zoom |
 | **Yjs scene map** | `scene` key in Yjs doc (`gridSizePx`, `mapPath`, dimensions) |
 | **Postgres snapshot** | GM debounced write to `vtt_scenes.state_json` (2 s) |
-| **Hoisted Liveblocks** | `GameLiveRoom` on game detail — Session stays connected when switching tabs |
+| **Hoisted Liveblocks** | `GameLiveRoom` stays mounted after first Session/VTT visit; only the active tab’s panel is rendered (not `hidden`, which fought `display: grid`) |
 | **Removed spike** | `SceneCanvasSpike` deleted |
 
 ## Operator steps
