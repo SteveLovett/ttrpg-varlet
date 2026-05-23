@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { GameCharactersPanel } from '../components/characters/GameCharactersPanel'
 import { GameGmPanel } from '../components/gm/GameGmPanel'
 import { GameSessionPanel } from '../components/GameSessionPanel'
+import { VttPanel } from '../components/vtt/VttPanel'
 import { DND5E_2024_RULESET_LABEL } from '../rules/dnd5e/constants'
 import { supabase } from '../supabaseClient'
 
@@ -49,26 +50,6 @@ type MemberRow = {
   display_name: string | null
   game_role: Role
   joined_at: string | null
-}
-
-function GameTabPlaceholder({
-  title,
-  phase,
-  summary,
-}: {
-  title: string
-  phase: string
-  summary: string
-}) {
-  return (
-    <section className="game-tab-placeholder">
-      <h3>{title}</h3>
-      <p className="muted">{summary}</p>
-      <p>
-        <span className="phase-badge">{phase}</span>
-      </p>
-    </section>
-  )
 }
 
 export function GameDetailPage() {
@@ -776,11 +757,11 @@ export function GameDetailPage() {
 
           {activeTab === 'vtt' ? (
             <div className="game-tab-panel">
-              {isMember ? (
-                <GameTabPlaceholder
-                  title="Virtual tabletop"
-                  phase="Phase F6"
-                  summary="Battle maps, tokens, and fog of war for online combat."
+              {isMember && gameId ? (
+                <VttPanel
+                  gameId={gameId}
+                  isGM={isGM}
+                  displayName={currentDisplayName}
                 />
               ) : (
                 <p className="muted">Join this game to open the VTT.</p>
