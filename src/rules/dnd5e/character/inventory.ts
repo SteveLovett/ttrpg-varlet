@@ -1,7 +1,7 @@
 import { catalogName, type EquipmentKind } from '../data/equipment'
 import { isBodyArmorItem } from './armorAc'
 import { consolidateInventoryItems } from './inventoryStack'
-import type { CharacterSheet, InventoryItem } from './types'
+import type { CharacterSheet, Currency, InventoryItem } from './types'
 
 export { consolidateInventoryItems, inventoryStackKey } from './inventoryStack'
 
@@ -66,6 +66,22 @@ export function setInventoryItemEquipped(
   })
 
   return { ...sheet, inventoryItems }
+}
+
+export function hasAnyCurrency(currency: Currency): boolean {
+  return currency.cp > 0 || currency.sp > 0 || currency.ep > 0 || currency.gp > 0 || currency.pp > 0
+}
+
+export function formatCurrencySummary(currency: Currency): string {
+  return [
+    currency.pp > 0 ? `${currency.pp} pp` : '',
+    currency.gp > 0 ? `${currency.gp} gp` : '',
+    currency.ep > 0 ? `${currency.ep} ep` : '',
+    currency.sp > 0 ? `${currency.sp} sp` : '',
+    currency.cp > 0 ? `${currency.cp} cp` : '',
+  ]
+    .filter(Boolean)
+    .join(', ')
 }
 
 export function displayInventoryItem(item: InventoryItem): string {

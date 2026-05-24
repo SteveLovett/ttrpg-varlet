@@ -4,6 +4,8 @@ import {
   addInventoryItem,
   consolidateInventoryItems,
   displayInventoryItem,
+  formatCurrencySummary,
+  hasAnyCurrency,
   inventoryItemCustom,
   setInventoryItemEquipped,
   suggestAcFromEquipment,
@@ -71,6 +73,7 @@ export function CharacterInventoryEditor({
   }
 
   const suggestedAc = suggestAcFromEquipment(sheet)
+  const currencySummary = formatCurrencySummary(sheet.currency)
 
   return (
     <div className="character-inventory-editor">
@@ -83,42 +86,38 @@ export function CharacterInventoryEditor({
         />
       ) : null}
 
-      <div className="character-inventory-actions">
-        <button type="button" disabled={disabled} onClick={() => setPickerOpen(true)}>
-          Add from catalog
-        </button>
-        <button
-          type="button"
-          className="character-suggest-hp"
-          disabled={disabled}
-          onClick={() => onChange({ ...sheet, ac: suggestedAc })}
-        >
-          Suggest AC from equipment ({suggestedAc})
-        </button>
-        <div className="character-inventory-custom">
-          <input
-            type="text"
-            value={customName}
-            onChange={(e) => setCustomName(e.target.value)}
-            placeholder="Custom item name"
-            disabled={disabled}
-            maxLength={128}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                addCustom()
-              }
-            }}
-          />
-          <button type="button" disabled={disabled || !customName.trim()} onClick={addCustom}>
-            Add custom
-          </button>
-        </div>
+      <div className="character-inventory-currency-block">
+        {hasAnyCurrency(sheet.currency) ? (
+          <p className="character-currency-summary" aria-live="polite">
+            {currencySummary}
+          </p>
+        ) : (
+          <p className="character-currency-summary muted">No coin carried</p>
+        )}
+        <fieldset className="character-currency-fieldset" disabled={disabled}>
+          <legend className="visually-hidden">Edit currency</legend>
+          <div className="character-currency-grid">
+            {(['cp', 'sp', 'ep', 'gp', 'pp'] as const).map((coin) => (
+              <div key={coin} className="form-row">
+                <label htmlFor={`currency-${coin}`}>{coin.toUpperCase()}</label>
+                <NumericInput
+                  id={`currency-${coin}`}
+                  min={0}
+                  max={999999}
+                  emptyFallback={0}
+                  value={sheet.currency[coin]}
+                  onChange={(value) => setCurrency({ ...sheet.currency, [coin]: value })}
+                  disabled={disabled}
+                />
+              </div>
+            ))}
+          </div>
+        </fieldset>
       </div>
 
       <InventoryListDisclosure itemCount={sheet.inventoryItems.length}>
         {sheet.inventoryItems.length === 0 ? (
-          <p className="muted">No items yet.</p>
+          <p className="muted">No catalog items yet.</p>
         ) : (
           <ul className="character-inventory-list">
             {sheet.inventoryItems.map((item) => (
@@ -162,38 +161,51 @@ export function CharacterInventoryEditor({
             ))}
           </ul>
         )}
+
+        <div className="form-row character-inventory-additional">
+          <label htmlFor="inventory-notes">Additional items</label>
+          <textarea
+            id="inventory-notes"
+            value={sheet.inventory}
+            onChange={(e) => onChange({ ...sheet, inventory: e.target.value })}
+            disabled={disabled}
+            rows={2}
+            placeholder="Misc items, notes, or loot not in the catalog…"
+          />
+        </div>
       </InventoryListDisclosure>
 
-      <fieldset className="character-currency-fieldset" disabled={disabled}>
-        <legend>Currency</legend>
-        <div className="character-currency-grid">
-          {(['cp', 'sp', 'ep', 'gp', 'pp'] as const).map((coin) => (
-            <div key={coin} className="form-row">
-              <label htmlFor={`currency-${coin}`}>{coin.toUpperCase()}</label>
-              <NumericInput
-                id={`currency-${coin}`}
-                min={0}
-                max={999999}
-                emptyFallback={0}
-                value={sheet.currency[coin]}
-                onChange={(value) => setCurrency({ ...sheet.currency, [coin]: value })}
-                disabled={disabled}
-              />
-            </div>
-          ))}
-        </div>
-      </fieldset>
-
-      <div className="form-row">
-        <label htmlFor="inventory-notes">Other inventory (free text)</label>
-        <textarea
-          id="inventory-notes"
-          value={sheet.inventory}
-          onChange={(e) => onChange({ ...sheet, inventory: e.target.value })}
+      <div className="character-inventory-actions">
+        <button type="button" disabled={disabled} onClick={() => setPickerOpen(true)}>
+          Add from catalog
+        </button>
+        <button
+          type="button"
+          className="character-suggest-hp"
           disabled={disabled}
-          rows={2}
-          placeholder="Misc items, notes, or loot not in the catalog…"
-        />
+          onClick={() => onChange({ ...sheet, ac: suggestedAc })}
+        >
+          Suggest AC from equipment ({suggestedAc})
+        </button>
+        <div className="character-inventory-custom">
+          <input
+            type="text"
+            value={customName}
+            onChange={(e) => setCustomName(e.target.value)}
+            placeholder="Custom item name"
+            disabled={disabled}
+            maxLength={128}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                addCustom()
+              }
+            }}
+          />
+          <button type="button" disabled={disabled || !customName.trim()} onClick={addCustom}>
+            Add custom
+          </button>
+        </div>
       </div>
 
       <EquipmentCatalogPicker

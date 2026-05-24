@@ -27,9 +27,19 @@ const CREATURE_FIELDS = [
   'document',
 ].join(',')
 
-const SPELL_FIELDS = ['name', 'key', 'level', 'school', 'casting_time', 'range', 'document'].join(
-  ',',
-)
+const SPELL_FIELDS = [
+  'name',
+  'key',
+  'level',
+  'school',
+  'casting_time',
+  'range',
+  'duration',
+  'desc',
+  'ritual',
+  'concentration',
+  'document',
+].join(',')
 
 const WEAPON_FIELDS = [
   'name',
@@ -142,7 +152,11 @@ async function main() {
     level: s.level ?? null,
     school: nestedName(s.school),
     casting_time: s.casting_time ?? null,
-    range: s.range ?? null,
+    range: typeof s.range === 'number' ? s.range : null,
+    duration: s.duration ?? null,
+    desc: typeof s.desc === 'string' ? s.desc : null,
+    ritual: s.ritual === true,
+    concentration: s.concentration === true,
     document: s.document?.key ?? 'srd-2024',
   }))
 

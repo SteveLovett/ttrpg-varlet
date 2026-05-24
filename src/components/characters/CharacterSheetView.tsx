@@ -3,7 +3,9 @@ import {
   ABILITY_LABELS,
   abilityModifier,
   displayInventoryItem,
+  formatCurrencySummary,
   formatModifier,
+  hasAnyCurrency,
   proficiencyBonus,
   SKILL_DEFS,
   type CharacterSheet,
@@ -17,6 +19,12 @@ type CharacterSheetViewProps = {
 
 export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProps) {
   const prof = proficiencyBonus(sheet.level)
+  const hasInventoryItems = sheet.inventoryItems.length > 0
+  const hasAdditionalInventory = sheet.inventory.trim().length > 0
+  const showInventorySection =
+    hasInventoryItems ||
+    hasAdditionalInventory ||
+    hasAnyCurrency(sheet.currency)
 
   return (
     <div className="character-sheet">
@@ -88,52 +96,46 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
           ) : null}
         </section>
 
-        {sheet.inventoryItems.length > 0 ||
-        sheet.inventory.trim().length > 0 ||
-        sheet.currency.gp > 0 ||
-        sheet.currency.pp > 0 ||
-        sheet.currency.ep > 0 ||
-        sheet.currency.sp > 0 ||
-        sheet.currency.cp > 0 ? (
-          <section className="character-sheet-block character-sheet-block--wide">
+        {showInventorySection ? (
+          <section className="character-sheet-block character-sheet-block--wide character-inventory-section">
             <h4>Inventory</h4>
-            {sheet.inventoryItems.length > 0 ? (
+
+            {hasAnyCurrency(sheet.currency) ? (
+              <p className="character-currency-summary">{formatCurrencySummary(sheet.currency)}</p>
+            ) : (
+              <p className="character-currency-summary muted">No coin carried</p>
+            )}
+
+            {hasInventoryItems || hasAdditionalInventory ? (
               <InventoryListDisclosure itemCount={sheet.inventoryItems.length}>
-                <ul className="character-inventory-view-list">
-                  {sheet.inventoryItems.map((item) => (
-                    <li key={item.id} className="character-inventory-view-row">
-                      <span>{displayInventoryItem(item)}</span>
-                      <span
-                        className="character-inventory-view-qty"
-                        aria-label={`Quantity: ${item.quantity}`}
-                      >
-                        ×{item.quantity}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                {hasInventoryItems ? (
+                  <ul className="character-inventory-view-list">
+                    {sheet.inventoryItems.map((item) => (
+                      <li key={item.id} className="character-inventory-view-row">
+                        <span>{displayInventoryItem(item)}</span>
+                        <span
+                          className="character-inventory-view-qty"
+                          aria-label={`Quantity: ${item.quantity}`}
+                        >
+                          ×{item.quantity}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="muted">No catalog items.</p>
+                )}
+
+                {hasAdditionalInventory ? (
+                  <div className="character-inventory-additional">
+                    <h5 className="character-inventory-additional-label">Additional items</h5>
+                    <pre className="character-sheet-pre">{sheet.inventory}</pre>
+                  </div>
+                ) : null}
               </InventoryListDisclosure>
-            ) : null}
-            {sheet.currency.cp > 0 ||
-            sheet.currency.sp > 0 ||
-            sheet.currency.ep > 0 ||
-            sheet.currency.gp > 0 ||
-            sheet.currency.pp > 0 ? (
-              <p className="character-currency-summary muted">
-                {[
-                  sheet.currency.pp > 0 ? `${sheet.currency.pp} pp` : '',
-                  sheet.currency.gp > 0 ? `${sheet.currency.gp} gp` : '',
-                  sheet.currency.ep > 0 ? `${sheet.currency.ep} ep` : '',
-                  sheet.currency.sp > 0 ? `${sheet.currency.sp} sp` : '',
-                  sheet.currency.cp > 0 ? `${sheet.currency.cp} cp` : '',
-                ]
-                  .filter(Boolean)
-                  .join(', ')}
-              </p>
-            ) : null}
-            {sheet.inventory.trim().length > 0 ? (
-              <pre className="character-sheet-pre">{sheet.inventory}</pre>
-            ) : null}
+            ) : (
+              <p className="muted">No items recorded.</p>
+            )}
           </section>
         ) : null}
 

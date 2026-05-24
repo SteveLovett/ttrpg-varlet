@@ -28,6 +28,8 @@ export {
   addInventoryItem,
   consolidateInventoryItems,
   displayInventoryItem,
+  formatCurrencySummary,
+  hasAnyCurrency,
   inventoryItemCustom,
   inventoryItemFromCatalog,
   inventoryStackKey,

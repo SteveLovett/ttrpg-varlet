@@ -33,6 +33,12 @@ export function ToolsPage() {
           — browse SRD weapons, armor, and gear
         </li>
         <li>
+          <Link to="/app/tools/spells">
+            <strong>Spells</strong>
+          </Link>{' '}
+          — SRD spell compendium by level, school, and search
+        </li>
+        <li>
           <strong>Rules quick reference</strong> — conditions on the{' '}
           <Link to="/app/tools/dice">dice tray</Link> page
         </li>

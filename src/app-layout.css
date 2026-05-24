@@ -884,8 +884,34 @@
   font-size: 0.95rem;
 }
 
+.character-inventory-currency-block {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.35rem 0 0.65rem;
+}
+
+.character-inventory-currency-block .character-currency-fieldset {
+  margin: 0;
+}
+
+.character-inventory-currency-block .character-currency-summary {
+  margin: 0;
+}
+
+.character-inventory-additional {
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--border);
+}
+
+.character-inventory-additional-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .character-inventory-list-disclosure {
-  margin: 0.5rem 0;
+  margin: 0;
 }
 
 .character-inventory-list-disclosure .disclosure-trigger {
@@ -899,6 +925,95 @@
 
 .character-sheet-block .character-inventory-list-disclosure {
   margin-top: 0.25rem;
+}
+
+/* Phase F7b — spell compendium */
+.spell-filters {
+  margin-top: 0.75rem;
+}
+
+@media (min-width: 40rem) {
+  .spell-filters {
+    grid-template-columns: 1fr 10rem 11rem;
+  }
+}
+
+.spell-level-sections {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.spell-level-heading {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.spell-list {
+  max-height: none;
+}
+
+.spell-list-item {
+  padding: 0;
+}
+
+.spell-list-button {
+  width: 100%;
+  text-align: left;
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.45rem 0.6rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.spell-list-button:hover {
+  background: var(--surface-emphasis, rgba(0, 0, 0, 0.05));
+}
+
+.spell-detail-dialog {
+  width: min(40rem, 100%);
+  max-height: min(36rem, calc(100vh - 4rem));
+  overflow-y: auto;
+}
+
+.spell-detail-subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+}
+
+.spell-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+}
+
+.spell-detail-stats dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.75;
+}
+
+.spell-detail-stats dd {
+  margin: 0.1rem 0 0;
+  font-weight: 600;
+}
+
+.spell-detail-desc h4 {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.spell-detail-desc p {
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 .character-inventory-editor {
@@ -1044,6 +1159,7 @@
 .character-currency-summary {
   margin: 0 0 0.35rem;
   font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .dice-tray {

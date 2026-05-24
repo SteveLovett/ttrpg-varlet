@@ -12,6 +12,7 @@ import { SearchGamesPage } from './pages/SearchGamesPage.tsx'
 import { DiceToolsPage } from './pages/DiceToolsPage.tsx'
 import { BestiaryPage } from './pages/BestiaryPage.tsx'
 import { EquipmentPage } from './pages/EquipmentPage.tsx'
+import { SpellsReferencePage } from './pages/SpellsReferencePage.tsx'
 import { SettingsPage } from './pages/SettingsPage.tsx'
 import { ToolsPage } from './pages/ToolsPage.tsx'
 import { RegisterPage } from './pages/RegisterPage.tsx'
@@ -81,6 +82,7 @@ function App() {
         <Route path="tools/dice" element={<DiceToolsPage />} />
         <Route path="tools/bestiary" element={<BestiaryPage />} />
         <Route path="tools/equipment" element={<EquipmentPage />} />
+        <Route path="tools/spells" element={<SpellsReferencePage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="games/:gameId" element={<GameDetailPage />} />
       </Route>
