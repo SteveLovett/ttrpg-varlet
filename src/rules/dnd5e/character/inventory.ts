@@ -87,6 +87,20 @@ export function formatCurrencySummary(currency: Currency): string {
     .join(', ')
 }
 
+/** Non-blocking inventory warnings for editor display. */
+export function validateInventory(sheet: CharacterSheet): string[] {
+  const warnings: string[] = []
+  const equippedBody = sheet.inventoryItems.filter((i) => i.equipped && isBodyArmorItem(i))
+  if (equippedBody.length > 1) {
+    warnings.push('Multiple body armor pieces are marked equipped.')
+  }
+  const equippedShields = sheet.inventoryItems.filter((i) => i.equipped && isShieldItem(i))
+  if (equippedShields.length > 1) {
+    warnings.push('Multiple shields are marked equipped.')
+  }
+  return warnings
+}
+
 export function displayInventoryItem(item: InventoryItem): string {
   const equipped = item.equipped ? ' (equipped)' : ''
   return `${item.name}${equipped}`

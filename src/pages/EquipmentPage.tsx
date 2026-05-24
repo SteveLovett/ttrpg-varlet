@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
 import { AddEquipmentToCharacterDialog } from '../components/characters/AddEquipmentToCharacterDialog'
 import { useMyCharacters } from '../hooks/useMyCharacters'
@@ -23,11 +23,7 @@ export function EquipmentPage() {
   const [query, setQuery] = useState('')
   const [kindFilter, setKindFilter] = useState<EquipmentKind | ''>('')
   const [addTarget, setAddTarget] = useState<AddTarget | null>(null)
-  const { characters, loading, error, reload, addItemToCharacter } = useMyCharacters()
-
-  useEffect(() => {
-    void reload()
-  }, [reload])
+  const { characters, loading, error, addItemToCharacter } = useMyCharacters({ loadOnMount: true })
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()

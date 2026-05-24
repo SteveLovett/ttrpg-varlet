@@ -57,6 +57,7 @@ export {
   newInventoryItemId,
   normalizeInventoryIds,
   setInventoryItemEquipped,
+  validateInventory,
 } from './inventory'
 export {
   applyStartingEquipmentSelections,

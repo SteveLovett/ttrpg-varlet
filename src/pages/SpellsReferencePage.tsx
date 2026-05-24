@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
 import { AddSpellToCharacterDialog } from '../components/characters/AddSpellToCharacterDialog'
 import { SpellDetailDialog } from '../components/spells/SpellDetailDialog'
@@ -17,16 +17,12 @@ import {
 const FLAT_LIST_CAP = 120
 
 export function SpellsReferencePage() {
-  const { characters, loading, error, reload, addSpellToCharacter } = useMyCharacters()
+  const { characters, loading, error, addSpellToCharacter } = useMyCharacters({ loadOnMount: true })
   const [query, setQuery] = useState('')
   const [levelFilter, setLevelFilter] = useState<number | ''>('')
   const [schoolFilter, setSchoolFilter] = useState('')
   const [selected, setSelected] = useState<SpellRef | null>(null)
   const [addTarget, setAddTarget] = useState<SpellRef | null>(null)
-
-  useEffect(() => {
-    void reload()
-  }, [reload])
 
   const schools = useMemo(() => listSpellSchools(), [])
 
