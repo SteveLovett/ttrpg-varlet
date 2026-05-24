@@ -1,4 +1,5 @@
 import { DND5E_2024_RULESET_LABEL } from '../constants'
+import { parseActiveConditions, parseExhaustionLevel } from './conditions'
 import { consolidateInventoryItems } from './inventoryStack'
 
 export const SHEET_VERSION = 4 as const
@@ -128,6 +129,10 @@ export type CharacterSheet = {
   spellSlotsUsed: Partial<Record<number, number>>
   /** Warlock pact slots (separate from shared pool). */
   pactSlotsUsed: Partial<Record<number, number>>
+  /** Active condition ids (see conditions.json). */
+  activeConditions: string[]
+  /** Exhaustion level 0–6 (2024 PHB). */
+  exhaustionLevel: number
 }
 
 export function createEmptySheet(name = ''): CharacterSheet {
@@ -153,6 +158,8 @@ export function createEmptySheet(name = ''): CharacterSheet {
     spellcastingByClass: {},
     spellSlotsUsed: {},
     pactSlotsUsed: {},
+    activeConditions: [],
+    exhaustionLevel: 0,
   }
 }
 
@@ -334,6 +341,8 @@ export function parseSheetJson(raw: unknown): CharacterSheet | null {
     spellcastingByClass,
     spellSlotsUsed,
     pactSlotsUsed,
+    activeConditions: parseActiveConditions(o.activeConditions),
+    exhaustionLevel: parseExhaustionLevel(o.exhaustionLevel),
   }
 
   return merged

@@ -7,7 +7,8 @@ Those PDFs are reference-only for developers.
 
 | File | Source | When to update |
 |------|--------|----------------|
-| `conditions.json` | Hand-written SRD summaries | Rarely |
+| `conditions.json` | Hand-written SRD condition summaries | Errata only |
+| `rules-reference.json` | 2024 PHB table summaries (actions, rests, grapple, etc.) | PHB errata |
 | `dice-presets.json` | Hand-written quick rolls | When adding dice UI |
 | `character-options.json` | Species + classes (no subclasses) | New classes/species |
 | `class-spell-lists.json` | SRD class spell lists | Spell list errata |

@@ -19,6 +19,13 @@ export type {
 } from './types'
 export { finalizeCharacterSheet, parseAndFinalizeSheet } from './normalizeSheet'
 export {
+  CONDITION_IDS,
+  parseActiveConditions,
+  parseExhaustionLevel,
+  setExhaustionLevel,
+  toggleActiveCondition,
+} from './conditions'
+export {
   MAX_CHARACTER_LEVEL,
   addClassLevel,
   classLevelsLabel,

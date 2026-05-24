@@ -29,6 +29,7 @@ import {
 } from '../../rules/dnd5e/character'
 import { getSpellBySlug } from '../../rules/dnd5e/data/spells'
 import { SpellDetailDialog } from '../spells/SpellDetailDialog'
+import { CharacterConditionsPanel } from './CharacterConditionsPanel'
 import { InventoryListDisclosure } from './InventoryListDisclosure'
 
 type CharacterSheetViewProps = {
@@ -80,6 +81,10 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
             })}
           </ul>
           <p className="muted character-sheet-prof">Proficiency {formatModifier(prof)}</p>
+        </section>
+
+        <section className="character-sheet-block character-sheet-block--wide">
+          <CharacterConditionsPanel sheet={sheet} />
         </section>
 
         <section className="character-sheet-block">

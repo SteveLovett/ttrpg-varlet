@@ -4,7 +4,8 @@ import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
 import { DiceTray } from '../components/DiceTray'
 import { RollLog } from '../components/RollLog'
 import { useGameRolls } from '../hooks/useGameRolls'
-import { conditions, loadMonstersIndex, loadSpellsIndex, srdManifest } from '../rules/dnd5e/data'
+import { loadMonstersIndex, loadSpellsIndex } from '../rules/dnd5e/data'
+import { flattenRulesReference } from '../rules/dnd5e/data/rulesReference'
 import type { RollResult } from '../rules/dnd5e/dice/types'
 import { supabase } from '../supabaseClient'
 
@@ -95,18 +96,14 @@ export function DiceToolsPage() {
 
       <section className="dice-tools-reference">
         <h3>Quick reference</h3>
-        <p className="muted">{srdManifest.note}</p>
         {srdStats ? <p className="muted">{srdStats}</p> : null}
-        <details className="conditions-ref">
-          <summary>Conditions ({conditions.length})</summary>
-          <ul className="conditions-list">
-            {conditions.map((c) => (
-              <li key={c.id}>
-                <strong>{c.name}</strong> — {c.summary}
-              </li>
-            ))}
-          </ul>
-        </details>
+        <p>
+          <Link to="/app/tools/rules">
+            Open rules quick reference
+          </Link>{' '}
+          — {flattenRulesReference().length} entries (conditions, actions, cover, death saves, and
+          more).
+        </p>
       </section>
 
     </div>

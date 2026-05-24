@@ -2,71 +2,71 @@
   {
     "id": "blinded",
     "name": "Blinded",
-    "summary": "Can't see; auto-fail sight checks; attacks have disadvantage; attacks against have advantage."
+    "summary": "You can't see and auto-fail sight-based checks. Attack rolls against you have advantage; your attack rolls have disadvantage."
   },
   {
     "id": "charmed",
     "name": "Charmed",
-    "summary": "Can't attack charmer; charmer has advantage on social checks against you."
+    "summary": "You can't attack the charmer or target them with damaging abilities or spells. The charmer has advantage on ability checks to interact with you socially."
   },
   {
     "id": "deafened",
     "name": "Deafened",
-    "summary": "Can't hear; auto-fail hearing checks."
+    "summary": "You can't hear and auto-fail hearing-based checks."
   },
   {
     "id": "frightened",
     "name": "Frightened",
-    "summary": "Disadvantage on ability checks and attacks while source is in line of sight; can't willingly move closer."
+    "summary": "You have disadvantage on ability checks and attack rolls while the source of fear is in line of sight. You can't willingly move closer to that source."
   },
   {
     "id": "grappled",
     "name": "Grappled",
-    "summary": "Speed becomes 0; can't benefit from speed bonuses."
+    "summary": "Your speed is 0 and can't increase. You have disadvantage on attack rolls against targets other than the grappler. The grappler can drag you but spends 1 extra foot of movement per foot (unless you're Tiny or two+ sizes smaller)."
   },
   {
     "id": "incapacitated",
     "name": "Incapacitated",
-    "summary": "Can't take actions or reactions."
+    "summary": "You can't take actions, bonus actions, or reactions. Your concentration ends. You can't speak. If incapacitated when rolling initiative, you have disadvantage on the roll."
   },
   {
     "id": "invisible",
     "name": "Invisible",
-    "summary": "Heavily obscured for others; attacks have advantage; attacks against have disadvantage."
+    "summary": "Creatures can't see you without special senses. You have advantage on attack rolls; attack rolls against you have disadvantage."
   },
   {
     "id": "paralyzed",
     "name": "Paralyzed",
-    "summary": "Incapacitated; can't move or speak; auto-fail Str/Dex saves; attacks have advantage; hits within 5 ft. are critical if attacker is within 5 ft."
+    "summary": "You are incapacitated; speed 0. You auto-fail Strength and Dexterity saves. Attacks against you have advantage. Hits from attackers within 5 feet are critical hits."
   },
   {
     "id": "petrified",
     "name": "Petrified",
-    "summary": "Incapacitated; resistant to all damage; immune to poison and disease."
+    "summary": "You are incapacitated and can't move or speak. You have resistance to all damage and immunity to poison and disease."
   },
   {
     "id": "poisoned",
     "name": "Poisoned",
-    "summary": "Disadvantage on attack rolls and ability checks."
+    "summary": "You have disadvantage on attack rolls and ability checks."
   },
   {
     "id": "prone",
     "name": "Prone",
-    "summary": "Melee attacks against have advantage; ranged have disadvantage; your attacks have disadvantage."
+    "summary": "You can only crawl or spend half your speed (round down) to stand. Your attack rolls have disadvantage. Melee attacks against you have advantage; other attacks against you have disadvantage."
   },
   {
     "id": "restrained",
     "name": "Restrained",
-    "summary": "Speed 0; disadvantage on attacks and Dex saves; attacks against have advantage."
+    "summary": "Your speed is 0 and can't increase. Attack rolls against you have advantage; your attack rolls have disadvantage. You have disadvantage on Dexterity saving throws."
   },
   {
     "id": "stunned",
     "name": "Stunned",
-    "summary": "Incapacitated; can't move; can speak only falteringly; auto-fail Str/Dex saves; attacks against have advantage."
+    "summary": "You are incapacitated. You auto-fail Strength and Dexterity saves. Attack rolls against you have advantage."
   },
   {
     "id": "unconscious",
     "name": "Unconscious",
-    "summary": "Incapacitated; can't move or speak; drops held items; falls prone; auto-fail Str/Dex saves; attacks have advantage; hits within 5 ft. are critical."
+    "summary": "You are incapacitated and prone, and drop what you're holding (you stay prone when the condition ends). Speed 0. Attacks against you have advantage. Any hit from within 5 feet is a critical hit if the attacker is within 5 feet."
   }
 ]

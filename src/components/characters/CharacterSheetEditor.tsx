@@ -11,6 +11,7 @@ import {
   type CharacterSheet,
 } from '../../rules/dnd5e/character'
 import type { SpellcastingValidationMode } from '../../settings/validation'
+import { CharacterConditionsPanel } from './CharacterConditionsPanel'
 import { CharacterClassesEditor } from './CharacterClassesEditor'
 import { CharacterInventoryEditor } from './CharacterInventoryEditor'
 import { CharacterSpellcastingEditor } from './CharacterSpellcastingEditor'
@@ -122,6 +123,8 @@ export function CharacterSheetEditor({
           ))}
         </div>
       </fieldset>
+
+      <CharacterConditionsPanel sheet={sheet} onChange={onChange} disabled={disabled} />
 
       <div className="character-editor-row">
         <div className="form-row">

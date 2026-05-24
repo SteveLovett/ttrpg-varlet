@@ -1,0 +1,457 @@
+{
+  "version": 2,
+  "ruleset": "D&D 2024 Player's Handbook (table summaries)",
+  "sections": [
+    {
+      "id": "combat-actions",
+      "title": "Actions in combat",
+      "intro": "On your turn you can move and take one action. Some features grant extra actions, bonus actions, or reactions.",
+      "items": [
+        {
+          "id": "attack",
+          "name": "Attack",
+          "summary": "Make one melee or ranged attack with a weapon or an unarmed strike. Extra Attack and similar features allow additional attacks when you take the Attack action."
+        },
+        {
+          "id": "dash",
+          "name": "Dash",
+          "summary": "Gain extra movement equal to your speed for the turn. You can use this movement before or after your normal move."
+        },
+        {
+          "id": "disengage",
+          "name": "Disengage",
+          "summary": "Your movement doesn't provoke opportunity attacks for the rest of the turn."
+        },
+        {
+          "id": "dodge",
+          "name": "Dodge",
+          "summary": "Until the start of your next turn, attack rolls against you have disadvantage if you can see the attacker, and you make Dexterity saving throws with advantage."
+        },
+        {
+          "id": "help",
+          "name": "Help",
+          "summary": "Assist an ally's ability check (they gain advantage on the next check with a skill or tool you choose) or distract a foe within 5 feet (the next ally's attack against that foe has advantage before your next turn)."
+        },
+        {
+          "id": "hide",
+          "name": "Hide",
+          "summary": "Try to conceal yourself with a DC 15 Dexterity (Stealth) check while heavily obscured or behind three-quarters or total cover and out of enemies' line of sight. On a success you are invisible while hidden until you break cover, are found, attack, or cast a spell with a verbal component."
+        },
+        {
+          "id": "influence",
+          "name": "Influence",
+          "summary": "Make a Charisma check to influence a creature's attitude or behavior, as the DM describes for the situation."
+        },
+        {
+          "id": "magic",
+          "name": "Magic",
+          "summary": "Cast a spell with a casting time of an action, or activate a feature or magic item that requires a Magic action. Spells with a casting time of 1+ minutes require the Magic action each turn and concentration until complete."
+        },
+        {
+          "id": "ready",
+          "name": "Ready",
+          "summary": "Choose a perceivable trigger and a reaction (often an attack, spell, or move up to your speed). When the trigger occurs, use your reaction to act. Readied spells are cast normally but held until the trigger; they require concentration until your next turn."
+        },
+        {
+          "id": "search",
+          "name": "Search",
+          "summary": "Make a Wisdom check to find something hidden—often Perception for concealed creatures or objects, Insight for motives, Medicine for ailments, or Survival for tracks."
+        },
+        {
+          "id": "study",
+          "name": "Study",
+          "summary": "Make an Intelligence check to recall knowledge—Arcana, History, Investigation, Nature, or Religion depending on the topic."
+        },
+        {
+          "id": "utilize",
+          "name": "Utilize",
+          "summary": "Use a nonmagical object or interact with the environment in a way that takes your action, as the DM rules."
+        }
+      ]
+    },
+    {
+      "id": "bonus-actions-reactions",
+      "title": "Bonus actions and reactions",
+      "intro": "Bonus actions and reactions are special actions defined by features or general rules.",
+      "items": [
+        {
+          "id": "bonus-action",
+          "name": "Bonus action",
+          "summary": "You can take a bonus action only when a rule gives you one, and only one bonus action per turn. You can take a bonus action on the same turn you take an action."
+        },
+        {
+          "id": "reaction",
+          "name": "Reaction",
+          "summary": "A reaction responds to a trigger in its description. You can take it on another creature's turn; on your turn you can still take an action and/or bonus action. After you take a reaction, you can't take another until the start of your next turn."
+        },
+        {
+          "id": "opportunity-attack",
+          "name": "Opportunity attack",
+          "summary": "When a creature you can see leaves your reach using its action, bonus action, reaction, or movement, you can use your reaction to make one melee attack with a weapon or unarmed strike against it. The attack happens right before it leaves your reach."
+        }
+      ]
+    },
+    {
+      "id": "cover",
+      "title": "Cover",
+      "intro": "Targets behind cover gain a bonus to AC and Dexterity saving throws. Use only the best degree available.",
+      "items": [
+        {
+          "id": "half-cover",
+          "name": "Half cover",
+          "summary": "+2 bonus to AC and Dexterity saving throws (low wall, furniture, another creature)."
+        },
+        {
+          "id": "three-quarters-cover",
+          "name": "Three-quarters cover",
+          "summary": "+5 bonus to AC and Dexterity saving throws (portcullis, arrow slit, thick tree)."
+        },
+        {
+          "id": "total-cover",
+          "name": "Total cover",
+          "summary": "You can't be targeted directly by attacks or spells, though some area effects may still reach you."
+        }
+      ]
+    },
+    {
+      "id": "difficulty-class",
+      "title": "Difficulty Class",
+      "intro": "Fixed DCs for ability checks and saving throws, plus spell DCs.",
+      "items": [
+        { "id": "dc-5", "name": "Very easy", "summary": "DC 5" },
+        { "id": "dc-10", "name": "Easy", "summary": "DC 10" },
+        { "id": "dc-15", "name": "Medium", "summary": "DC 15" },
+        { "id": "dc-20", "name": "Hard", "summary": "DC 20" },
+        { "id": "dc-25", "name": "Very hard", "summary": "DC 25" },
+        { "id": "dc-30", "name": "Nearly impossible", "summary": "DC 30" },
+        {
+          "id": "spell-dc",
+          "name": "Spell save DC",
+          "summary": "8 + spellcasting ability modifier + proficiency bonus."
+        }
+      ]
+    },
+    {
+      "id": "d20-tests",
+      "title": "D20 tests",
+      "intro": "Ability checks, attack rolls, and saving throws are all D20 tests.",
+      "items": [
+        {
+          "id": "d20-test",
+          "name": "D20 test",
+          "summary": "The three main d20 rolls: ability checks, attack rolls, and saving throws. Effects that affect D20 tests apply to all three unless a rule says otherwise."
+        },
+        {
+          "id": "ability-check",
+          "name": "Ability check",
+          "summary": "A D20 test using one ability score, often with a skill. Roll d20 + ability modifier (+ proficiency if proficient)."
+        },
+        {
+          "id": "attack-roll",
+          "name": "Attack roll",
+          "summary": "A D20 test to hit with a weapon, unarmed strike, or spell attack."
+        },
+        {
+          "id": "saving-throw",
+          "name": "Saving throw",
+          "summary": "A D20 test to resist a threat. Roll d20 + ability modifier (+ proficiency if proficient). You can choose to fail without rolling."
+        }
+      ]
+    },
+    {
+      "id": "advantage",
+      "title": "Advantage and disadvantage",
+      "items": [
+        {
+          "id": "advantage",
+          "name": "Advantage",
+          "summary": "On a D20 test, roll two d20s and use the higher. Multiple sources of advantage don't stack."
+        },
+        {
+          "id": "disadvantage",
+          "name": "Disadvantage",
+          "summary": "On a D20 test, roll two d20s and use the lower. Multiple sources of disadvantage don't stack."
+        },
+        {
+          "id": "cancel",
+          "name": "Both at once",
+          "summary": "If you have both advantage and disadvantage on the same D20 test, roll only one d20."
+        },
+        {
+          "id": "rerolls",
+          "name": "Rerolls vs advantage",
+          "summary": "Effects that let you reroll or replace a die are not the same as advantage or disadvantage unless they say so."
+        }
+      ]
+    },
+    {
+      "id": "death-saves",
+      "title": "Death saving throws",
+      "items": [
+        {
+          "id": "unconscious-zero",
+          "name": "Dropping to 0 HP",
+          "summary": "You fall unconscious and make death saving throws at the start of each of your turns unless a rule says otherwise."
+        },
+        {
+          "id": "death-save-roll",
+          "name": "Each turn",
+          "summary": "Roll 1d20. 10 or higher is a success; 9 or lower is a failure. No modifier unless a feature applies."
+        },
+        {
+          "id": "nat-20",
+          "name": "Natural 20",
+          "summary": "Regain 1 hit point and become conscious (you remain prone until you stand)."
+        },
+        {
+          "id": "nat-1",
+          "name": "Natural 1",
+          "summary": "Counts as two failures."
+        },
+        {
+          "id": "three-fail",
+          "name": "Three failures",
+          "summary": "You die."
+        },
+        {
+          "id": "three-success",
+          "name": "Three successes",
+          "summary": "You stabilize at 0 HP and stop making death saves."
+        },
+        {
+          "id": "damage-at-zero",
+          "name": "Taking damage at 0 HP",
+          "summary": "A hit causes one failure; a critical hit causes two. Massive damage can kill outright."
+        },
+        {
+          "id": "stable",
+          "name": "Stable",
+          "summary": "At 0 HP without making death saves—e.g. after three successes or the Spare the Dying action."
+        }
+      ]
+    },
+    {
+      "id": "concentration",
+      "title": "Concentration",
+      "items": [
+        {
+          "id": "one-spell",
+          "name": "One effect at a time",
+          "summary": "Some spells and effects require concentration. You can concentrate on only one at a time unless a rule says otherwise."
+        },
+        {
+          "id": "con-save",
+          "name": "Damage breaks concentration",
+          "summary": "When you take damage while concentrating, make a Constitution save (DC 10 or half the damage taken, rounded down, whichever is higher; maximum DC 30). On a failure the effect ends."
+        },
+        {
+          "id": "con-end",
+          "name": "Other breaks",
+          "summary": "Concentration ends if you are incapacitated or die, if you cast another concentration spell or start another concentration effect, or if you end it voluntarily (no action)."
+        }
+      ]
+    },
+    {
+      "id": "rests",
+      "title": "Rests",
+      "items": [
+        {
+          "id": "short-rest",
+          "name": "Short rest",
+          "summary": "1 hour of light activity (eat, read, watch). You need at least 1 HP to start. When you finish, spend Hit Point Dice to heal (roll each die + CON modifier, minimum 1 HP per die) and recharge features that recharge on a short rest. Interrupted by initiative, non-cantrip spells, or damage—no benefit if interrupted."
+        },
+        {
+          "id": "long-rest",
+          "name": "Long rest",
+          "summary": "At least 8 hours with 6+ hours of sleep and no more than 2 hours of light activity. You need at least 1 HP to start; you are unconscious while sleeping. When you finish: regain all HP and spent Hit Dice, restore reduced ability scores and HP maximums, reduce exhaustion by 1, and recharge long-rest features. Wait 16 hours before another long rest."
+        },
+        {
+          "id": "rest-interrupt",
+          "name": "Interrupting a long rest",
+          "summary": "Stopped by rolling initiative, casting a non-cantrip spell, taking damage, or 1 hour of exertion. If you rested at least 1 hour first, you gain a short rest's benefits. Resuming adds 1 hour per interruption to finish."
+        }
+      ]
+    },
+    {
+      "id": "grapple-shove",
+      "title": "Grappling and shoving",
+      "intro": "Unarmed strikes can damage, grapple, or shove. Many monsters use special attacks instead.",
+      "items": [
+        {
+          "id": "unarmed-grapple",
+          "name": "Grapple (unarmed)",
+          "summary": "Target within 5 feet makes a Strength or Dexterity save (its choice) vs DC 8 + your Strength modifier + proficiency. On a failure it has the Grappled condition. You need a free hand; target can be at most one size larger. One grapple per hand."
+        },
+        {
+          "id": "unarmed-shove",
+          "name": "Shove (unarmed)",
+          "summary": "Target within 5 feet makes a Strength or Dexterity save (its choice) vs DC 8 + your Strength modifier + proficiency. On a failure you push it 5 feet or knock it prone. Target can be at most one size larger."
+        },
+        {
+          "id": "escape-grapple",
+          "name": "Escaping a grapple",
+          "summary": "Use your action to make Strength (Athletics) or Dexterity (Acrobatics) vs the grapple's escape DC. Success ends the Grappled condition on you. The grapple also ends if the grappler is incapacitated or you move beyond its range."
+        },
+        {
+          "id": "release-grapple",
+          "name": "Releasing a grapple",
+          "summary": "The grappler can release a Grappled creature at any time (no action required)."
+        }
+      ]
+    },
+    {
+      "id": "exhaustion",
+      "title": "Exhaustion",
+      "intro": "Exhaustion is the only condition that stacks with itself (levels 1–6).",
+      "items": [
+        {
+          "id": "exhaustion-levels",
+          "name": "Exhaustion levels",
+          "summary": "Each time you gain exhaustion, your level increases by 1 (maximum 6). You die at level 6."
+        },
+        {
+          "id": "exhaustion-effects",
+          "name": "Effects while exhausted",
+          "summary": "D20 tests are reduced by 2 × your exhaustion level. Your speed is reduced by 5 feet × your exhaustion level."
+        },
+        {
+          "id": "exhaustion-recovery",
+          "name": "Recovering",
+          "summary": "Finishing a long rest removes 1 exhaustion level. At level 0 the condition ends. Some exhaustion (dehydration, malnutrition) can't be removed until you meet the listed requirement."
+        },
+        {
+          "id": "exhaustion-sources",
+          "name": "Common sources",
+          "summary": "Forced march, chases, hazards, suffocation, dehydration, and malnutrition can grant exhaustion levels—see those entries."
+        }
+      ]
+    },
+    {
+      "id": "stealth-hiding",
+      "title": "Stealth and hiding",
+      "items": [
+        {
+          "id": "hide-action",
+          "name": "Hide action",
+          "summary": "DC 15 Dexterity (Stealth) while heavily obscured or behind three-quarters/total cover and out of enemies' line of sight. Success: invisible while hidden. Your check total is the DC to find you with Wisdom (Perception)."
+        },
+        {
+          "id": "hidden-broken",
+          "name": "Breaking hidden",
+          "summary": "You stop being hidden if you make a sound louder than a whisper, an enemy finds you, you make an attack roll, or you cast a spell with a verbal component."
+        },
+        {
+          "id": "passive-perception",
+          "name": "Passive Perception",
+          "summary": "10 + Wisdom (Perception) modifier. The DM often uses this to notice hidden creatures without a roll."
+        },
+        {
+          "id": "heavily-obscured",
+          "name": "Heavily obscured",
+          "summary": "You have the Blinded condition when trying to see in that area (darkness, thick fog, etc.)."
+        }
+      ]
+    },
+    {
+      "id": "spellcasting",
+      "title": "Spellcasting basics",
+      "items": [
+        {
+          "id": "spell-components",
+          "name": "Components (V, S, M)",
+          "summary": "Verbal (V): spoken words. Somatic (S): free hand gestures. Material (M): specific materials; a spellcasting focus can replace non-consumed materials without a listed cost."
+        },
+        {
+          "id": "ritual",
+          "name": "Ritual",
+          "summary": "If you have a prepared spell with the Ritual tag, you can cast it as a ritual: +10 minutes casting time, no spell slot, and you can't cast it at a higher level."
+        },
+        {
+          "id": "upcasting",
+          "name": "Casting at higher level",
+          "summary": "If you cast a spell using a slot above its level, the spell's description describes any stronger effects."
+        },
+        {
+          "id": "spell-attack",
+          "name": "Spell attack",
+          "summary": "An attack roll made as part of a spell. Uses spellcasting ability modifier + proficiency unless the spell says otherwise."
+        },
+        {
+          "id": "spell-focus",
+          "name": "Spellcasting focus",
+          "summary": "Replaces material components that aren't consumed and have no gold cost, if your class allows that focus type."
+        }
+      ]
+    },
+    {
+      "id": "environment",
+      "title": "Environment and hazards",
+      "items": [
+        {
+          "id": "falling",
+          "name": "Falling",
+          "summary": "1d6 bludgeoning damage per 10 feet fallen (maximum 20d6). You land prone unless you took no damage. Into liquid: reaction for DC 15 Athletics or Acrobatics to halve damage."
+        },
+        {
+          "id": "swimming",
+          "name": "Swimming",
+          "summary": "Each foot of movement costs 1 extra foot (2 in difficult terrain). Swim speed avoids the extra cost. Rough water may require a DC 15 Athletics check at the DM's option."
+        },
+        {
+          "id": "suffocation",
+          "name": "Suffocation",
+          "summary": "Hold breath for 1 + CON modifier minutes (minimum 30 seconds). When out of breath or choking, gain 1 exhaustion level at the end of each of your turns. When you can breathe again, remove all exhaustion from suffocation."
+        },
+        {
+          "id": "difficult-terrain",
+          "name": "Difficult terrain",
+          "summary": "Each foot moved in difficult terrain costs 1 extra foot (not cumulative with itself). Includes deep mud, rubble, another creature's space, waist-deep liquid, steep slopes, etc."
+        }
+      ]
+    },
+    {
+      "id": "heroic-inspiration",
+      "title": "Heroic Inspiration",
+      "items": [
+        {
+          "id": "heroic-inspiration-use",
+          "name": "Using Heroic Inspiration",
+          "summary": "Expend it to reroll any die immediately after rolling; you must use the new roll."
+        },
+        {
+          "id": "heroic-inspiration-gain",
+          "name": "Gaining it",
+          "summary": "The DM awards it for memorable play. If you already have it and gain more, you lose the new one unless you give it to a character who lacks it."
+        }
+      ]
+    },
+    {
+      "id": "proficiency",
+      "title": "Proficiency bonus",
+      "intro": "Add your proficiency bonus to D20 tests when you have the relevant proficiency.",
+      "items": [
+        { "id": "pb-2", "name": "Levels 1–4", "summary": "+2" },
+        { "id": "pb-3", "name": "Levels 5–8", "summary": "+3" },
+        { "id": "pb-4", "name": "Levels 9–12", "summary": "+4" },
+        { "id": "pb-5", "name": "Levels 13–16", "summary": "+5" },
+        { "id": "pb-6", "name": "Levels 17–20", "summary": "+6" }
+      ]
+    },
+    {
+      "id": "critical-hits",
+      "title": "Critical hits",
+      "items": [
+        {
+          "id": "crit-attack",
+          "name": "Attack rolls",
+          "summary": "On a critical hit, roll all of the attack's damage dice twice and add modifiers as usual."
+        },
+        {
+          "id": "crit-spell",
+          "name": "Spell attacks",
+          "summary": "Spell attacks can score critical hits. Saving-throw spells usually don't unless a feature says otherwise."
+        }
+      ]
+    }
+  ]
+}

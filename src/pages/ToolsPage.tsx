@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom'
 import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
+import { flattenRulesReference } from '../rules/dnd5e/data/rulesReference'
+
+const RULE_ENTRY_COUNT = flattenRulesReference().length
 
 /**
- * /app/tools — global tools hub (dice tray, bestiary, etc. in later phases).
+ * /app/tools — global tools hub (dice, compendiums, rules reference).
  */
 export function ToolsPage() {
   return (
@@ -10,8 +13,8 @@ export function ToolsPage() {
       <AppBreadcrumbs items={[{ label: 'Games', to: '/app' }, { label: 'Tools' }]} />
       <h2>Tools</h2>
       <p className="muted">
-        Campaign utilities live here and inside each game&apos;s Session tab. More tools arrive in
-        upcoming phases.
+        Campaign utilities live here and inside each game&apos;s Session tab. Browse SRD data, roll
+        dice, and look up common rules at the table.
       </p>
       <ul className="tools-coming-list">
         <li>
@@ -19,6 +22,12 @@ export function ToolsPage() {
             <strong>Dice tray</strong>
           </Link>{' '}
           — roll any formula, d20 with advantage/disadvantage
+        </li>
+        <li>
+          <Link to="/app/tools/rules">
+            <strong>Rules quick reference</strong>
+          </Link>{' '}
+          — conditions, combat actions, cover, DCs, and more ({RULE_ENTRY_COUNT} entries)
         </li>
         <li>
           <Link to="/app/tools/bestiary">
@@ -37,10 +46,6 @@ export function ToolsPage() {
             <strong>Spells</strong>
           </Link>{' '}
           — SRD spell compendium by level, school, and search
-        </li>
-        <li>
-          <strong>Rules quick reference</strong> — conditions on the{' '}
-          <Link to="/app/tools/dice">dice tray</Link> page
         </li>
       </ul>
     </div>
