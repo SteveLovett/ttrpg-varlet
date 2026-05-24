@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
 import { AddEquipmentToCharacterDialog } from '../components/characters/AddEquipmentToCharacterDialog'
 import { useMyCharacters } from '../hooks/useMyCharacters'
@@ -24,6 +24,10 @@ export function EquipmentPage() {
   const [kindFilter, setKindFilter] = useState<EquipmentKind | ''>('')
   const [addTarget, setAddTarget] = useState<AddTarget | null>(null)
   const { characters, loading, error, reload, addItemToCharacter } = useMyCharacters()
+
+  useEffect(() => {
+    void reload()
+  }, [reload])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -70,8 +74,13 @@ export function EquipmentPage() {
     return rows
   }, [query, kindFilter])
 
-  async function handleAddToCharacter(characterId: string, kind: EquipmentKind, slug: string) {
-    const item = inventoryItemFromCatalog(kind, slug, 1)
+  async function handleAddToCharacter(
+    characterId: string,
+    kind: EquipmentKind,
+    slug: string,
+    quantity: number,
+  ) {
+    const item = inventoryItemFromCatalog(kind, slug, quantity)
     if (!item) return 'Item not found in catalog.'
     return addItemToCharacter(characterId, item)
   }
@@ -136,10 +145,7 @@ export function EquipmentPage() {
             <button
               type="button"
               className="equipment-add-to-char"
-              onClick={() => {
-                void reload()
-                setAddTarget({ kind: row.kind, slug: row.key, name: row.name })
-              }}
+              onClick={() => setAddTarget({ kind: row.kind, slug: row.key, name: row.name })}
             >
               Add to character
             </button>
@@ -160,7 +166,9 @@ export function EquipmentPage() {
           characters={characters}
           loading={loading}
           onClose={() => setAddTarget(null)}
-          onAdd={(characterId) => handleAddToCharacter(characterId, addTarget.kind, addTarget.slug)}
+          onAdd={(characterId, quantity) =>
+            handleAddToCharacter(characterId, addTarget.kind, addTarget.slug, quantity)
+          }
         />
       ) : null}
     </div>

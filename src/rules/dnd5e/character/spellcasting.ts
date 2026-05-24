@@ -107,6 +107,25 @@ export function spellcastingMode(className: string): SpellcastingMode {
   return getClassSpellcastingRules(className)?.mode ?? 'none'
 }
 
+export function spellcastingModeLabel(className: string): string {
+  switch (spellcastingMode(className)) {
+    case 'prepared':
+      return 'Prepared caster'
+    case 'known':
+      return 'Spells known'
+    case 'pact':
+      return 'Pact magic'
+    default:
+      return ''
+  }
+}
+
+export function preparedCapDescription(className: string): string {
+  const r = getClassSpellcastingRules(className)
+  if (!r || r.mode !== 'prepared') return 'ability + level'
+  return r.preparedFormula === 'abilityPlusHalfLevel' ? 'ability + half level' : 'ability + level'
+}
+
 export function usesPreparedList(className: string): boolean {
   const mode = spellcastingMode(className)
   return mode === 'prepared'
@@ -243,7 +262,7 @@ export function validateSpellcasting(sheet: CharacterSheet): SpellcastingIssue[]
     if (sc.preparedSlugs.length > maxPrep) {
       issues.push(
         issue(
-          `Prepared spells: ${sc.preparedSlugs.length} selected, maximum ${maxPrep} (ability + level).`,
+          `Prepared spells: ${sc.preparedSlugs.length} selected, maximum ${maxPrep} (${preparedCapDescription(className)}).`,
           'error',
         ),
       )

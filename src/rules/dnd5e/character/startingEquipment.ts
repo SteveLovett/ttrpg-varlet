@@ -111,7 +111,12 @@ export function applyStartingEquipmentSelections(
   const inventoryItems = mergeInventoryItems(replace ? [] : sheet.inventoryItems, entries)
   const currency = mergeCurrency(replace ? { ...sheet, currency: { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 } } : sheet, pack.currency)
 
-  return { ...sheet, inventoryItems, currency }
+  return {
+    ...sheet,
+    inventoryItems,
+    currency,
+    inventory: replace ? '' : sheet.inventory,
+  }
 }
 
 /** Label for a catalog entry (for choice UI). */

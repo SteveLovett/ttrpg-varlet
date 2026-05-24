@@ -9,8 +9,12 @@ import {
   formatModifier,
   hasAnyCurrency,
   proficiencyBonus,
+  spellcastingMode,
+  spellcastingModeLabel,
   spellSlotsMax,
+  suggestAcFromEquipment,
   usesPreparedList,
+  usesKnownList,
   SKILL_DEFS,
   type CharacterSheet,
 } from '../../rules/dnd5e/character'
@@ -29,6 +33,8 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
   const sc = sheet.spellcasting
   const showSpellcasting = classHasSpellcasting(sheet.className) && sc
   const detailSpell = detailSlug ? getSpellBySlug(detailSlug) : null
+  const suggestedAc = suggestAcFromEquipment(sheet)
+  const acDiffers = suggestedAc !== sheet.ac
   const hasInventoryItems = sheet.inventoryItems.length > 0
   const hasAdditionalInventory = sheet.inventory.trim().length > 0
   const showInventorySection =
@@ -71,7 +77,12 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
           <dl className="character-stat-dl">
             <div>
               <dt>AC</dt>
-              <dd>{sheet.ac}</dd>
+              <dd>
+                {sheet.ac}
+                {acDiffers ? (
+                  <span className="muted character-ac-suggested"> · suggested {suggestedAc}</span>
+                ) : null}
+              </dd>
             </div>
             <div>
               <dt>HP</dt>
@@ -110,8 +121,10 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
           <section className="character-sheet-block character-sheet-block--wide character-spellcasting-section">
             <h4>Spellcasting</h4>
             <p className="muted">
-              {ABILITY_LABELS[sc.ability]} ·{' '}
-              {usesPreparedList(sheet.className) ? 'Prepared caster' : 'Known caster'}
+              {ABILITY_LABELS[sc.ability]}
+              {spellcastingModeLabel(sheet.className)
+                ? ` · ${spellcastingModeLabel(sheet.className)}`
+                : ''}
             </p>
 
             {sc.cantripSlugs.length > 0 ? (
@@ -128,9 +141,11 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
               </>
             ) : null}
 
-            {!usesPreparedList(sheet.className) && sc.knownSlugs.length > 0 ? (
+            {usesKnownList(sheet.className) && sc.knownSlugs.length > 0 ? (
               <>
-                <h5 className="character-spell-view-heading">Known</h5>
+                <h5 className="character-spell-view-heading">
+                  {spellcastingMode(sheet.className) === 'pact' ? 'Pact spells' : 'Known'}
+                </h5>
                 <SpellSlugList slugs={sc.knownSlugs} onOpen={setDetailSlug} />
               </>
             ) : null}

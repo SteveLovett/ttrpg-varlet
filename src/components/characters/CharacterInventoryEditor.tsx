@@ -7,6 +7,8 @@ import {
   formatCurrencySummary,
   hasAnyCurrency,
   inventoryItemCustom,
+  isBodyArmorItem,
+  isShieldItem,
   setInventoryItemEquipped,
   suggestAcFromEquipment,
   type CharacterSheet,
@@ -69,7 +71,12 @@ export function CharacterInventoryEditor({
   }
 
   function toggleEquipped(id: string, equipped: boolean) {
-    onChange(setInventoryItemEquipped(sheet, id, equipped))
+    const target = sheet.inventoryItems.find((i) => i.id === id)
+    let next = setInventoryItemEquipped(sheet, id, equipped)
+    if (target && (isBodyArmorItem(target) || isShieldItem(target))) {
+      next = { ...next, ac: suggestAcFromEquipment(next) }
+    }
+    onChange(next)
   }
 
   const suggestedAc = suggestAcFromEquipment(sheet)

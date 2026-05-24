@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import type { EquipmentKind } from '../../rules/dnd5e/data/equipment'
 import { inventoryItemFromCatalog } from '../../rules/dnd5e/character'
 import type { MyCharacterRow } from '../../hooks/useMyCharacters'
+import { AddToCharacterQuantityField } from './AddToCharacterQuantityField'
 
 type AddEquipmentToCharacterDialogProps = {
   open: boolean
@@ -12,7 +13,7 @@ type AddEquipmentToCharacterDialogProps = {
   characters: MyCharacterRow[]
   loading: boolean
   onClose: () => void
-  onAdd: (characterId: string) => Promise<string | null>
+  onAdd: (characterId: string, quantity: number) => Promise<string | null>
 }
 
 export function AddEquipmentToCharacterDialog({
@@ -26,6 +27,7 @@ export function AddEquipmentToCharacterDialog({
   onAdd,
 }: AddEquipmentToCharacterDialogProps) {
   const [characterId, setCharacterId] = useState('')
+  const [quantity, setQuantity] = useState(1)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -37,7 +39,7 @@ export function AddEquipmentToCharacterDialog({
       setError('Choose a character.')
       return
     }
-    const item = inventoryItemFromCatalog(kind, slug, 1)
+    const item = inventoryItemFromCatalog(kind, slug, quantity)
     if (!item) {
       setError('Item not found in catalog.')
       return
@@ -45,15 +47,16 @@ export function AddEquipmentToCharacterDialog({
     setSaving(true)
     setError(null)
     setMessage(null)
-    const err = await onAdd(characterId)
+    const err = await onAdd(characterId, quantity)
     setSaving(false)
     if (err) {
       setError(err)
       return
     }
     const name = characters.find((c) => c.id === characterId)?.name ?? 'Character'
-    setMessage(`Added ${itemName} to ${name}.`)
+    setMessage(`Added ${quantity > 1 ? `${quantity}× ` : ''}${itemName} to ${name}.`)
     setCharacterId('')
+    setQuantity(1)
   }
 
   return (
@@ -87,23 +90,31 @@ export function AddEquipmentToCharacterDialog({
             overview.
           </p>
         ) : (
-          <div className="form-row">
-            <label htmlFor="add-to-char-select">Character</label>
-            <select
-              id="add-to-char-select"
-              value={characterId}
-              onChange={(e) => setCharacterId(e.target.value)}
+          <>
+            <div className="form-row">
+              <label htmlFor="add-to-char-select">Character</label>
+              <select
+                id="add-to-char-select"
+                value={characterId}
+                onChange={(e) => setCharacterId(e.target.value)}
+                disabled={saving}
+              >
+                <option value="">— Select —</option>
+                {characters.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                    {c.game_name ? ` · ${c.game_name}` : ' · (unattached)'}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <AddToCharacterQuantityField
+              id="add-equipment-qty"
+              value={quantity}
               disabled={saving}
-            >
-              <option value="">— Select —</option>
-              {characters.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                  {c.game_name ? ` · ${c.game_name}` : ' · (unattached)'}
-                </option>
-              ))}
-            </select>
-          </div>
+              onChange={setQuantity}
+            />
+          </>
         )}
 
         {error ? <p className="dice-tray-error">{error}</p> : null}

@@ -5,6 +5,8 @@ import {
   ABILITY_LABELS,
   createEmptySheet,
   characterOptions,
+  classHasSpellcasting,
+  createDefaultSpellcasting,
   normalizeInventoryIds,
   SKILL_DEFS,
   STANDARD_ARRAY,
@@ -60,12 +62,18 @@ export function CharacterWizard({ onComplete, onCancel }: CharacterWizardProps) 
     setError(null)
     try {
       const hpMax = suggestHpMax(sheet)
-      const final: CharacterSheet = normalizeInventoryIds({
+      let final: CharacterSheet = normalizeInventoryIds({
         ...sheet,
         name: trimmed,
         hpMax,
         hpCurrent: hpMax,
       })
+      if (classHasSpellcasting(final.className)) {
+        final = {
+          ...final,
+          spellcasting: createDefaultSpellcasting(final),
+        }
+      }
       await onComplete(trimmed, final)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save character.')

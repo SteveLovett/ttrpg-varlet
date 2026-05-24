@@ -1,5 +1,11 @@
 import { useCallback, useState } from 'react'
-import { useResolvedSpellcastingValidation } from './useResolvedSpellcastingValidation'
+import {
+  DEFAULT_SPELLCASTING_VALIDATION_MODE,
+  parseGameSettings,
+  resolveSpellcastingValidationMode,
+  type SpellcastingValidationMode,
+} from '../settings/validation'
+import { useThemeSettings } from '../themes/themeContext'
 import {
   addInventoryItem,
   addSpellToSpellcasting,
@@ -19,21 +25,25 @@ export type MyCharacterRow = {
   game_name: string | null
   sheet_json: CharacterSheet
   updated_at: string
+  spellcastingValidationMode: SpellcastingValidationMode
 }
 
 export function useMyCharacters() {
-  const { mode: validationMode } = useResolvedSpellcastingValidation()
+  const { preferences } = useThemeSettings()
+  const userMode = preferences.spellcastingValidation ?? DEFAULT_SPELLCASTING_VALIDATION_MODE
+
   const [characters, setCharacters] = useState<MyCharacterRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-
     const {
       data: { user },
     } = await supabase.auth.getUser()
+
+    setLoading(true)
+    setError(null)
+
     if (!user) {
       setCharacters([])
       setLoading(false)
@@ -55,16 +65,26 @@ export function useMyCharacters() {
 
     const rows = data ?? []
     const gameIds = [...new Set(rows.map((r) => r.game_id).filter((id): id is string => !!id))]
-    let gameNames = new Map<string, string>()
+    const gameNames = new Map<string, string>()
+    const gamePolicies = new Map<string, ReturnType<typeof parseGameSettings>>()
     if (gameIds.length > 0) {
-      const { data: games } = await supabase.from('games').select('id, name').in('id', gameIds)
-      gameNames = new Map((games ?? []).map((g) => [g.id, g.name]))
+      const { data: games } = await supabase
+        .from('games')
+        .select('id, name, settings')
+        .in('id', gameIds)
+      for (const g of games ?? []) {
+        gameNames.set(g.id, g.name)
+        gamePolicies.set(g.id, parseGameSettings(g.settings))
+      }
     }
 
     const mapped: MyCharacterRow[] = []
     for (const row of rows) {
       const sheet = parseSheetJson(row.sheet_json)
       if (!sheet) continue
+      const gamePolicy = row.game_id
+        ? gamePolicies.get(row.game_id)?.spellcastingValidation
+        : undefined
       mapped.push({
         id: row.id,
         name: row.name,
@@ -72,12 +92,13 @@ export function useMyCharacters() {
         game_name: row.game_id ? (gameNames.get(row.game_id) ?? 'Campaign') : null,
         sheet_json: sheet,
         updated_at: row.updated_at,
+        spellcastingValidationMode: resolveSpellcastingValidationMode(userMode, gamePolicy),
       })
     }
 
     setCharacters(mapped)
     setLoading(false)
-  }, [])
+  }, [userMode])
 
   const addItemToCharacter = useCallback(
     async (characterId: string, item: InventoryItem): Promise<string | null> => {
@@ -103,7 +124,7 @@ export function useMyCharacters() {
       if (!row) return 'Character not found.'
 
       const sheet = addSpellToSpellcasting(ensureSpellcasting(row.sheet_json), slug)
-      const saveCheck = checkSpellcastingSave(sheet, validationMode)
+      const saveCheck = checkSpellcastingSave(sheet, row.spellcastingValidationMode)
       if (saveCheck.blocked) {
         return saveCheck.blockMessages.join(' ')
       }
@@ -116,7 +137,7 @@ export function useMyCharacters() {
       await load()
       return null
     },
-    [characters, load, validationMode],
+    [characters, load],
   )
 
   return {

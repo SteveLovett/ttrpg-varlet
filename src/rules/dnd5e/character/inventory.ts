@@ -1,5 +1,5 @@
 import { catalogName, type EquipmentKind } from '../data/equipment'
-import { isBodyArmorItem } from './armorAc'
+import { isBodyArmorItem, isShieldItem } from './armorAc'
 import { consolidateInventoryItems } from './inventoryStack'
 import type { CharacterSheet, Currency, InventoryItem } from './types'
 
@@ -46,7 +46,7 @@ export function addInventoryItem(sheet: CharacterSheet, item: InventoryItem): Ch
   }
 }
 
-/** Toggle equipped; only one body armor at a time. */
+/** Toggle equipped; only one body armor and one shield at a time. */
 export function setInventoryItemEquipped(
   sheet: CharacterSheet,
   itemId: string,
@@ -60,6 +60,9 @@ export function setInventoryItemEquipped(
       return { ...item, equipped: equipped || undefined }
     }
     if (equipped && isBodyArmorItem(target) && isBodyArmorItem(item)) {
+      return { ...item, equipped: undefined }
+    }
+    if (equipped && isShieldItem(target) && isShieldItem(item)) {
       return { ...item, equipped: undefined }
     }
     return item

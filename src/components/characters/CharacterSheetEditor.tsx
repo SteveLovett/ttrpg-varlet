@@ -4,12 +4,12 @@ import {
   ABILITY_LABELS,
   characterOptions,
   classHasSpellcasting,
-  ensureSpellcasting,
+  createDefaultSpellcasting,
   normalizeInventoryIds,
   SKILL_DEFS,
-  suggestAcFromEquipment,
   suggestHpMax,
   type CharacterSheet,
+  type CharacterSpellcasting,
 } from '../../rules/dnd5e/character'
 import type { SpellcastingValidationMode } from '../../settings/validation'
 import { CharacterInventoryEditor } from './CharacterInventoryEditor'
@@ -85,11 +85,24 @@ export function CharacterSheetEditor({
             value={sheet.className}
             onChange={(e) => {
               const className = e.target.value
-              let next: CharacterSheet = { ...sheet, className }
-              if (!classHasSpellcasting(className)) {
-                next = { ...next, spellcasting: null }
-              } else {
-                next = ensureSpellcasting(next)
+              if (className === sheet.className) return
+
+              const hadSpells = spellListCount(sheet.spellcasting)
+              if (
+                hadSpells > 0 &&
+                !window.confirm(
+                  'Changing class will clear this character’s spell selections. Continue?',
+                )
+              ) {
+                return
+              }
+
+              let next: CharacterSheet = { ...sheet, className, spellcasting: null }
+              if (classHasSpellcasting(className)) {
+                next = {
+                  ...next,
+                  spellcasting: createDefaultSpellcasting(next),
+                }
               }
               onChange(next)
             }}
@@ -167,16 +180,6 @@ export function CharacterSheetEditor({
             disabled={disabled}
           />
         </div>
-        <div className="form-row character-ac-suggest-wrap">
-          <button
-            type="button"
-            className="character-suggest-hp"
-            disabled={disabled}
-            onClick={() => patch({ ac: suggestAcFromEquipment(sheet) })}
-          >
-            Suggest AC ({suggestAcFromEquipment(sheet)})
-          </button>
-        </div>
         <div className="form-row">
           <label htmlFor="edit-hp-max">HP max</label>
           <NumericInput
@@ -250,4 +253,9 @@ export function CharacterSheetEditor({
       </div>
     </div>
   )
+}
+
+function spellListCount(sc: CharacterSpellcasting | null): number {
+  if (!sc) return 0
+  return sc.cantripSlugs.length + sc.knownSlugs.length + sc.preparedSlugs.length
 }

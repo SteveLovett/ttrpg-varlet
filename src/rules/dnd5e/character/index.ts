@@ -27,6 +27,8 @@ export {
   maxSpellsPrepared,
   removeSpellFromSpellcasting,
   spellcastingMode,
+  spellcastingModeLabel,
+  preparedCapDescription,
   spellSlotsMax,
   usesKnownList,
   usesPreparedList,

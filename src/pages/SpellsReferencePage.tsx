@@ -53,7 +53,6 @@ export function SpellsReferencePage() {
           className="equipment-add-to-char"
           onClick={(e) => {
             e.stopPropagation()
-            void reload()
             setAddTarget(spell)
           }}
         >
