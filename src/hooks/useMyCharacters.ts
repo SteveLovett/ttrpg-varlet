@@ -1,11 +1,15 @@
 import { useCallback, useState } from 'react'
+import { useResolvedSpellcastingValidation } from './useResolvedSpellcastingValidation'
 import {
   addInventoryItem,
+  addSpellToSpellcasting,
+  ensureSpellcasting,
   normalizeInventoryIds,
   parseSheetJson,
   type CharacterSheet,
   type InventoryItem,
 } from '../rules/dnd5e/character'
+import { checkSpellcastingSave } from '../rules/dnd5e/character/spellcastingSave'
 import { supabase } from '../supabaseClient'
 
 export type MyCharacterRow = {
@@ -18,6 +22,7 @@ export type MyCharacterRow = {
 }
 
 export function useMyCharacters() {
+  const { mode: validationMode } = useResolvedSpellcastingValidation()
   const [characters, setCharacters] = useState<MyCharacterRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -92,11 +97,34 @@ export function useMyCharacters() {
     [characters, load],
   )
 
+  const addSpellToCharacter = useCallback(
+    async (characterId: string, slug: string): Promise<string | null> => {
+      const row = characters.find((c) => c.id === characterId)
+      if (!row) return 'Character not found.'
+
+      const sheet = addSpellToSpellcasting(ensureSpellcasting(row.sheet_json), slug)
+      const saveCheck = checkSpellcastingSave(sheet, validationMode)
+      if (saveCheck.blocked) {
+        return saveCheck.blockMessages.join(' ')
+      }
+      const { error: updateError } = await supabase
+        .from('characters')
+        .update({ sheet_json: sheet })
+        .eq('id', characterId)
+
+      if (updateError) return updateError.message
+      await load()
+      return null
+    },
+    [characters, load, validationMode],
+  )
+
   return {
     characters,
     loading,
     error,
     reload: load,
     addItemToCharacter,
+    addSpellToCharacter,
   }
 }

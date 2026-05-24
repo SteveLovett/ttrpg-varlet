@@ -1,15 +1,21 @@
+import { useState } from 'react'
 import {
   ABILITY_KEYS,
   ABILITY_LABELS,
   abilityModifier,
+  classHasSpellcasting,
   displayInventoryItem,
   formatCurrencySummary,
   formatModifier,
   hasAnyCurrency,
   proficiencyBonus,
+  spellSlotsMax,
+  usesPreparedList,
   SKILL_DEFS,
   type CharacterSheet,
 } from '../../rules/dnd5e/character'
+import { getSpellBySlug } from '../../rules/dnd5e/data/spells'
+import { SpellDetailDialog } from '../spells/SpellDetailDialog'
 import { InventoryListDisclosure } from './InventoryListDisclosure'
 
 type CharacterSheetViewProps = {
@@ -18,7 +24,11 @@ type CharacterSheetViewProps = {
 }
 
 export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProps) {
+  const [detailSlug, setDetailSlug] = useState<string | null>(null)
   const prof = proficiencyBonus(sheet.level)
+  const sc = sheet.spellcasting
+  const showSpellcasting = classHasSpellcasting(sheet.className) && sc
+  const detailSpell = detailSlug ? getSpellBySlug(detailSlug) : null
   const hasInventoryItems = sheet.inventoryItems.length > 0
   const hasAdditionalInventory = sheet.inventory.trim().length > 0
   const showInventorySection =
@@ -96,6 +106,63 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
           ) : null}
         </section>
 
+        {showSpellcasting ? (
+          <section className="character-sheet-block character-sheet-block--wide character-spellcasting-section">
+            <h4>Spellcasting</h4>
+            <p className="muted">
+              {ABILITY_LABELS[sc.ability]} ·{' '}
+              {usesPreparedList(sheet.className) ? 'Prepared caster' : 'Known caster'}
+            </p>
+
+            {sc.cantripSlugs.length > 0 ? (
+              <>
+                <h5 className="character-spell-view-heading">Cantrips</h5>
+                <SpellSlugList slugs={sc.cantripSlugs} onOpen={setDetailSlug} />
+              </>
+            ) : null}
+
+            {usesPreparedList(sheet.className) && sc.preparedSlugs.length > 0 ? (
+              <>
+                <h5 className="character-spell-view-heading">Prepared</h5>
+                <SpellSlugList slugs={sc.preparedSlugs} onOpen={setDetailSlug} />
+              </>
+            ) : null}
+
+            {!usesPreparedList(sheet.className) && sc.knownSlugs.length > 0 ? (
+              <>
+                <h5 className="character-spell-view-heading">Known</h5>
+                <SpellSlugList slugs={sc.knownSlugs} onOpen={setDetailSlug} />
+              </>
+            ) : null}
+
+            {sc.cantripSlugs.length === 0 &&
+            sc.preparedSlugs.length === 0 &&
+            sc.knownSlugs.length === 0 ? (
+              <p className="muted">No spells recorded.</p>
+            ) : null}
+
+            {(() => {
+              const max = spellSlotsMax(sheet.className, sheet.level)
+              const rows = max
+                .map((m, i) => ({ level: i + 1, max: m, used: sc.slotsUsed[i + 1] ?? 0 }))
+                .filter((r) => r.max > 0)
+              if (rows.length === 0) return null
+              return (
+                <>
+                  <h5 className="character-spell-view-heading">Slots used</h5>
+                  <ul className="character-spell-slots-view">
+                    {rows.map((r) => (
+                      <li key={r.level}>
+                        Level {r.level}: {r.used} / {r.max}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )
+            })()}
+          </section>
+        ) : null}
+
         {showInventorySection ? (
           <section className="character-sheet-block character-sheet-block--wide character-inventory-section">
             <h4>Inventory</h4>
@@ -146,6 +213,31 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
           </section>
         ) : null}
       </div>
+
+      <SpellDetailDialog spell={detailSpell ?? null} onClose={() => setDetailSlug(null)} />
     </div>
+  )
+}
+
+function SpellSlugList({
+  slugs,
+  onOpen,
+}: {
+  slugs: string[]
+  onOpen: (slug: string) => void
+}) {
+  return (
+    <ul className="character-spell-list character-spell-list--view">
+      {slugs.map((slug) => {
+        const spell = getSpellBySlug(slug)
+        return (
+          <li key={slug}>
+            <button type="button" className="character-spell-name" onClick={() => onOpen(slug)}>
+              {spell?.name ?? slug}
+            </button>
+          </li>
+        )
+      })}
+    </ul>
   )
 }

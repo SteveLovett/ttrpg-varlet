@@ -2,6 +2,8 @@ import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
 import { FONT_OVERRIDE_IDS } from '../themes/types'
 import { FONT_OVERRIDES } from '../themes/fonts'
 import { THEME_LIST } from '../themes/registry'
+import { UserSpellcastingValidationField } from '../components/settings/SpellcastingValidationFields'
+import { DEFAULT_SPELLCASTING_VALIDATION_MODE } from '../settings/validation'
 import { useThemeSettings } from '../themes/themeContext'
 import { useDisplayNameProfile } from '../hooks/displayNameProfileContext'
 
@@ -14,6 +16,7 @@ export function SettingsPage() {
     savedAt,
     setThemeId,
     setFontOverrideId,
+    setSpellcastingValidation,
   } = useThemeSettings()
 
   const {
@@ -159,11 +162,19 @@ export function SettingsPage() {
         </p>
       </section>
 
-      <section className="settings-section settings-coming-soon" aria-labelledby="settings-more">
-        <h3 id="settings-more" className="settings-section-title">
-          More settings
+      <section className="settings-section" aria-labelledby="settings-characters">
+        <h3 id="settings-characters" className="settings-section-title">
+          Characters
         </h3>
-        <p className="muted">Additional options will appear here in a future update.</p>
+        <p className="muted settings-lede">
+          How strictly spellcasting is validated when you save a character sheet.
+        </p>
+        <UserSpellcastingValidationField
+          id="settings-spellcasting-validation"
+          value={preferences.spellcastingValidation ?? DEFAULT_SPELLCASTING_VALIDATION_MODE}
+          disabled={themeLoading}
+          onChange={setSpellcastingValidation}
+        />
       </section>
     </div>
   )

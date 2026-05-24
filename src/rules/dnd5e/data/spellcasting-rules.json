@@ -1,0 +1,138 @@
+{
+  "slotTables": {
+    "full": [
+      [],
+      [2, 0, 0, 0, 0, 0, 0, 0, 0],
+      [3, 0, 0, 0, 0, 0, 0, 0, 0],
+      [4, 2, 0, 0, 0, 0, 0, 0, 0],
+      [4, 3, 0, 0, 0, 0, 0, 0, 0],
+      [4, 3, 2, 0, 0, 0, 0, 0, 0],
+      [4, 3, 3, 0, 0, 0, 0, 0, 0],
+      [4, 3, 3, 1, 0, 0, 0, 0, 0],
+      [4, 3, 3, 2, 0, 0, 0, 0, 0],
+      [4, 3, 3, 3, 1, 0, 0, 0, 0],
+      [4, 3, 3, 3, 2, 0, 0, 0, 0],
+      [4, 3, 3, 3, 2, 1, 0, 0, 0],
+      [4, 3, 3, 3, 2, 1, 0, 0, 0],
+      [4, 3, 3, 3, 2, 1, 1, 0, 0],
+      [4, 3, 3, 3, 2, 1, 1, 0, 0],
+      [4, 3, 3, 3, 2, 1, 1, 1, 0],
+      [4, 3, 3, 3, 2, 1, 1, 1, 0],
+      [4, 3, 3, 3, 2, 1, 1, 1, 1],
+      [4, 3, 3, 3, 2, 1, 1, 1, 1],
+      [4, 3, 3, 3, 3, 2, 1, 1, 1],
+      [4, 3, 3, 3, 3, 2, 2, 1, 1],
+      [4, 3, 3, 3, 3, 2, 2, 2, 1]
+    ],
+    "half": [
+      [],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [2, 0, 0, 0, 0, 0, 0, 0, 0],
+      [3, 0, 0, 0, 0, 0, 0, 0, 0],
+      [3, 0, 0, 0, 0, 0, 0, 0, 0],
+      [4, 2, 0, 0, 0, 0, 0, 0, 0],
+      [4, 2, 0, 0, 0, 0, 0, 0, 0],
+      [4, 3, 0, 0, 0, 0, 0, 0, 0],
+      [4, 3, 0, 0, 0, 0, 0, 0, 0],
+      [4, 3, 2, 0, 0, 0, 0, 0, 0],
+      [4, 3, 2, 0, 0, 0, 0, 0, 0],
+      [4, 3, 3, 0, 0, 0, 0, 0, 0],
+      [4, 3, 3, 0, 0, 0, 0, 0, 0],
+      [4, 3, 3, 1, 0, 0, 0, 0, 0],
+      [4, 3, 3, 1, 0, 0, 0, 0, 0],
+      [4, 3, 3, 2, 0, 0, 0, 0, 0],
+      [4, 3, 3, 2, 0, 0, 0, 0, 0],
+      [4, 3, 3, 3, 1, 0, 0, 0, 0],
+      [4, 3, 3, 3, 1, 0, 0, 0, 0],
+      [4, 3, 3, 3, 2, 0, 0, 0, 0],
+      [4, 3, 3, 3, 2, 0, 0, 0, 0],
+      [4, 3, 3, 3, 2, 1, 0, 0, 0]
+    ],
+    "pact": [
+      [],
+      [{ "count": 1, "level": 1 }],
+      [{ "count": 2, "level": 1 }],
+      [{ "count": 2, "level": 2 }],
+      [{ "count": 2, "level": 2 }],
+      [{ "count": 2, "level": 3 }],
+      [{ "count": 2, "level": 3 }],
+      [{ "count": 2, "level": 4 }],
+      [{ "count": 2, "level": 4 }],
+      [{ "count": 2, "level": 5 }],
+      [{ "count": 2, "level": 5 }],
+      [{ "count": 2, "level": 5 }],
+      [{ "count": 3, "level": 5 }],
+      [{ "count": 3, "level": 5 }],
+      [{ "count": 3, "level": 5 }],
+      [{ "count": 3, "level": 5 }],
+      [{ "count": 3, "level": 5 }],
+      [{ "count": 3, "level": 5 }],
+      [{ "count": 4, "level": 5 }],
+      [{ "count": 4, "level": 5 }],
+      [{ "count": 4, "level": 5 }],
+      [{ "count": 4, "level": 5 }],
+      [{ "count": 4, "level": 5 }]
+    ]
+  },
+  "classes": {
+    "Barbarian": { "mode": "none" },
+    "Bard": {
+      "mode": "known",
+      "ability": "cha",
+      "slotTable": "full",
+      "cantripsByLevel": [0, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+      "spellsKnownByLevel": [0, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 16, 17, 17, 18, 18, 19, 20, 21, 22]
+    },
+    "Cleric": {
+      "mode": "prepared",
+      "ability": "wis",
+      "slotTable": "full",
+      "cantripsByLevel": [0, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+      "preparedFormula": "abilityPlusLevel"
+    },
+    "Druid": {
+      "mode": "prepared",
+      "ability": "wis",
+      "slotTable": "full",
+      "cantripsByLevel": [0, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+      "preparedFormula": "abilityPlusLevel"
+    },
+    "Fighter": { "mode": "none" },
+    "Monk": { "mode": "none" },
+    "Paladin": {
+      "mode": "prepared",
+      "ability": "cha",
+      "slotTable": "half",
+      "preparedFormula": "abilityPlusHalfLevel"
+    },
+    "Ranger": {
+      "mode": "known",
+      "ability": "wis",
+      "slotTable": "half",
+      "cantripsByLevel": [0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+      "spellsKnownByLevel": [0, 0, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11]
+    },
+    "Rogue": { "mode": "none" },
+    "Sorcerer": {
+      "mode": "known",
+      "ability": "cha",
+      "slotTable": "full",
+      "cantripsByLevel": [0, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+      "spellsKnownByLevel": [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16]
+    },
+    "Warlock": {
+      "mode": "pact",
+      "ability": "cha",
+      "slotTable": "pact",
+      "cantripsByLevel": [0, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+      "spellsKnownByLevel": [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15]
+    },
+    "Wizard": {
+      "mode": "prepared",
+      "ability": "int",
+      "slotTable": "full",
+      "cantripsByLevel": [0, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+      "preparedFormula": "abilityPlusLevel"
+    }
+  }
+}

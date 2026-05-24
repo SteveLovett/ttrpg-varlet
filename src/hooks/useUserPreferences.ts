@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { applyThemeToDocument } from '../themes/applyTheme'
 import { parseUserPreferences } from '../themes/parsePreferences'
 import { readThemeCache, readThemeCacheUserId, writeThemeCache } from '../themes/themeCache'
+import type { SpellcastingValidationMode } from '../settings/validation'
 import {
   DEFAULT_FONT_OVERRIDE_ID,
   DEFAULT_THEME_ID,
@@ -126,6 +127,18 @@ export function useUserPreferences() {
     [scheduleSave, persistThemeCache],
   )
 
+  const setSpellcastingValidation = useCallback(
+    (spellcastingValidation: SpellcastingValidationMode) => {
+      setState((s) => {
+        const next = { ...s.preferences, spellcastingValidation }
+        persistThemeCache(next)
+        scheduleSave(next)
+        return { ...s, preferences: next, error: null }
+      })
+    },
+    [scheduleSave, persistThemeCache],
+  )
+
   useEffect(() => {
     let cancelled = false
 
@@ -195,5 +208,6 @@ export function useUserPreferences() {
     ...state,
     setThemeId,
     setFontOverrideId,
+    setSpellcastingValidation,
   }
 }

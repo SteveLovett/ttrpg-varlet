@@ -3,6 +3,7 @@ import type { SubmitEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
 import { DisclosureSection } from '../components/DisclosureSection'
+import { GameSpellcastingValidationField } from '../components/settings/SpellcastingValidationFields'
 import { GameCharactersPanel } from '../components/characters/GameCharactersPanel'
 import { GameGmPanel } from '../components/gm/GameGmPanel'
 import { GameSessionPanel } from '../components/GameSessionPanel'
@@ -11,6 +12,11 @@ const VttPanel = lazy(() =>
   import('../components/vtt/VttPanel').then((m) => ({ default: m.VttPanel })),
 )
 import { DND5E_2024_RULESET_LABEL } from '../rules/dnd5e/constants'
+import {
+  DEFAULT_GAME_SPELLCASTING_POLICY,
+  parseGameSettings,
+  type GameSpellcastingPolicy,
+} from '../settings/validation'
 import { supabase } from '../supabaseClient'
 
 const GAME_TABS = ['overview', 'characters', 'gm', 'session', 'vtt'] as const
@@ -41,6 +47,7 @@ type GameContent = {
   ruleset: string | null
   house_rules: string | null
   session_notes: string | null
+  settings: unknown
 }
 
 type MembershipRow = {
@@ -91,6 +98,12 @@ export function GameDetailPage() {
   const [draftName, setDraftName] = useState<string>('')
   const [draftDescription, setDraftDescription] = useState<string>('')
   const [draftPublic, setDraftPublic] = useState<boolean>(false)
+  const [spellcastingPolicy, setSpellcastingPolicy] = useState<GameSpellcastingPolicy>(
+    DEFAULT_GAME_SPELLCASTING_POLICY,
+  )
+  const [draftSpellcastingPolicy, setDraftSpellcastingPolicy] = useState<GameSpellcastingPolicy>(
+    DEFAULT_GAME_SPELLCASTING_POLICY,
+  )
   const [savingSettings, setSavingSettings] = useState(false)
   const [settingsError, setSettingsError] = useState<string | null>(null)
   const [settingsInfo, setSettingsInfo] = useState<string | null>(null)
@@ -145,7 +158,8 @@ export function GameDetailPage() {
     }
     setCurrentUserId(user.id)
 
-    const gameSelect = 'id, name, description, is_public, ruleset, house_rules, session_notes'
+    const gameSelect =
+      'id, name, description, is_public, ruleset, house_rules, session_notes, settings'
 
     // Try membership-first query (gives role + game in one round-trip).
     const { data: membershipData, error: membershipError } = await supabase
@@ -175,6 +189,11 @@ export function GameDetailPage() {
       setDraftRuleset(game.ruleset ?? '')
       setDraftHouseRules(game.house_rules ?? '')
       setDraftSessionNotes(game.session_notes ?? '')
+      const gameSettings = parseGameSettings(game.settings)
+      const policy =
+        gameSettings.spellcastingValidation ?? DEFAULT_GAME_SPELLCASTING_POLICY
+      setSpellcastingPolicy(policy)
+      setDraftSpellcastingPolicy(policy)
     }
 
     if (membershipData) {
@@ -262,12 +281,29 @@ export function GameDetailPage() {
 
     setSavingSettings(true)
     try {
+      const { data: current, error: fetchError } = await supabase
+        .from('games')
+        .select('settings')
+        .eq('id', gameId)
+        .maybeSingle()
+
+      if (fetchError) {
+        setSettingsError(fetchError.message)
+        return
+      }
+
+      const mergedSettings = {
+        ...parseGameSettings(current?.settings),
+        spellcastingValidation: draftSpellcastingPolicy,
+      }
+
       const { error: updateError } = await supabase
         .from('games')
         .update({
           name: trimmedName,
           description: draftDescription.trim(),
           is_public: draftPublic,
+          settings: mergedSettings,
         })
         .eq('id', gameId)
 
@@ -279,6 +315,7 @@ export function GameDetailPage() {
       setName(trimmedName)
       setDescription(draftDescription.trim())
       setIsPublic(draftPublic)
+      setSpellcastingPolicy(draftSpellcastingPolicy)
       setSettingsInfo('Lobby settings saved.')
     } finally {
       setSavingSettings(false)
@@ -587,6 +624,12 @@ export function GameDetailPage() {
                   />
                   <label htmlFor="settings-public">Public game</label>
                 </div>
+                <GameSpellcastingValidationField
+                  id="game-spellcasting-validation"
+                  value={draftSpellcastingPolicy}
+                  disabled={savingSettings}
+                  onChange={setDraftSpellcastingPolicy}
+                />
                 <button type="submit" disabled={savingSettings}>
                   {savingSettings ? 'Saving…' : 'Save lobby settings'}
                 </button>
@@ -799,6 +842,7 @@ export function GameDetailPage() {
                 <GameCharactersPanel
                   gameId={gameId}
                   currentUserId={currentUserId}
+                  gameSpellcastingPolicy={spellcastingPolicy}
                 />
               ) : (
                 <p className="muted">Join this game to manage characters.</p>

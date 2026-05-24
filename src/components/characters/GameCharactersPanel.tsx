@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useGameCharacters, type CharacterRow } from '../../hooks/useGameCharacters'
+import { useResolvedSpellcastingValidation } from '../../hooks/useResolvedSpellcastingValidation'
+import { checkSpellcastingSave } from '../../rules/dnd5e/character/spellcastingSave'
 import type { CharacterSheet } from '../../rules/dnd5e/character'
+import type { GameSpellcastingPolicy } from '../../settings/validation'
 import { CharacterSheetEditor } from './CharacterSheetEditor'
 import { CharacterSheetView } from './CharacterSheetView'
 import { CharacterWizard } from './CharacterWizard'
@@ -9,9 +12,15 @@ import { CharacterWizard } from './CharacterWizard'
 type GameCharactersPanelProps = {
   gameId: string
   currentUserId: string | null
+  gameSpellcastingPolicy: GameSpellcastingPolicy
 }
 
-export function GameCharactersPanel({ gameId, currentUserId }: GameCharactersPanelProps) {
+export function GameCharactersPanel({
+  gameId,
+  currentUserId,
+  gameSpellcastingPolicy,
+}: GameCharactersPanelProps) {
+  const { mode: validationMode } = useResolvedSpellcastingValidation(gameSpellcastingPolicy)
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedId = searchParams.get('characterId')
   const showNew = searchParams.get('new') === '1'
@@ -33,6 +42,7 @@ export function GameCharactersPanel({ gameId, currentUserId }: GameCharactersPan
   const [editing, setEditing] = useState(false)
   const [draftSheet, setDraftSheet] = useState<CharacterSheet | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [saveWarnings, setSaveWarnings] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -81,6 +91,12 @@ export function GameCharactersPanel({ gameId, currentUserId }: GameCharactersPan
   const isOwner = selected?.owner_id === currentUserId
 
   async function handleCreate(name: string, sheet: CharacterSheet) {
+    const saveCheck = checkSpellcastingSave(sheet, validationMode)
+    if (saveCheck.blocked) {
+      throw new Error(
+        `Cannot create character until spellcasting issues are fixed:\n${saveCheck.blockMessages.join('\n')}`,
+      )
+    }
     const result = await createCharacter(name, sheet)
     if ('error' in result) {
       throw new Error(result.error)
@@ -93,11 +109,25 @@ export function GameCharactersPanel({ gameId, currentUserId }: GameCharactersPan
     if (!selected || !draftSheet) return
     setSaving(true)
     setActionError(null)
+    setSaveWarnings([])
+    const saveCheck = checkSpellcastingSave(draftSheet, validationMode)
+    if (saveCheck.blocked) {
+      setSaving(false)
+      setActionError(
+        `Save blocked (campaign uses strict spellcasting validation). Fix:\n${saveCheck.blockMessages.join('\n')}`,
+      )
+      setSaveWarnings(saveCheck.warningMessages)
+      return
+    }
+
     const err = await updateCharacter(selected.id, draftSheet.name, draftSheet)
     setSaving(false)
     if (err) {
       setActionError(err)
       return
+    }
+    if (saveCheck.warningMessages.length > 0) {
+      setSaveWarnings(saveCheck.warningMessages)
     }
     setEditing(false)
     setDraftSheet(null)
@@ -105,6 +135,7 @@ export function GameCharactersPanel({ gameId, currentUserId }: GameCharactersPan
 
   function startEdit() {
     if (!selected) return
+    setSaveWarnings([])
     setDraftSheet({ ...selected.sheet_json })
     setEditing(true)
   }
@@ -113,6 +144,12 @@ export function GameCharactersPanel({ gameId, currentUserId }: GameCharactersPan
     <section className="game-characters">
       <div className="game-characters-toolbar">
         <h3>Party characters</h3>
+        {validationMode === 'block' ? (
+          <p className="muted game-characters-validation-note">
+            This campaign blocks saving characters with spellcasting errors (limits, slots,
+            level). Class-list mismatches are warnings only.
+          </p>
+        ) : null}
         <button type="button" onClick={() => setNewWizard(true)} disabled={showNew}>
           Create character
         </button>
@@ -121,6 +158,18 @@ export function GameCharactersPanel({ gameId, currentUserId }: GameCharactersPan
       {loading ? <p className="muted">Loading characters…</p> : null}
       {error ? <p>{error}</p> : null}
       {actionError ? <p>{actionError}</p> : null}
+      {saveWarnings.length > 0 ? (
+        <div className="character-spellcasting-warnings" role="status">
+          <p className="character-spellcasting-warnings-title">
+            {validationMode === 'block' ? 'Spellcasting notes:' : 'Saved with spellcasting notes:'}
+          </p>
+          <ul>
+            {saveWarnings.map((msg) => (
+              <li key={msg}>{msg}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {showNew ? (
         <CharacterWizard onComplete={handleCreate} onCancel={() => setNewWizard(false)} />
@@ -231,6 +280,7 @@ export function GameCharactersPanel({ gameId, currentUserId }: GameCharactersPan
                   sheet={draftSheet}
                   onChange={setDraftSheet}
                   disabled={saving}
+                  spellcastingValidationMode={validationMode}
                 />
               ) : (
                 <CharacterSheetView

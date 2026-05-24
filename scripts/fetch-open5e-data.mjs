@@ -38,6 +38,13 @@ const SPELL_FIELDS = [
   'desc',
   'ritual',
   'concentration',
+  'verbal',
+  'somatic',
+  'material',
+  'material_specified',
+  'material_cost',
+  'material_consumed',
+  'classes',
   'document',
 ].join(',')
 
@@ -102,6 +109,32 @@ function nestedName(value) {
   return value.name ?? value.key ?? null
 }
 
+function buildClassSpellLists(spellList) {
+  const lists = {}
+  for (const spell of spellList) {
+    const level = spell.level ?? 0
+    for (const className of spell.classNames ?? []) {
+      if (!lists[className]) {
+        lists[className] = { cantrips: [], byLevel: {} }
+      }
+      if (level === 0) {
+        lists[className].cantrips.push(spell.slug)
+      } else {
+        const key = String(level)
+        if (!lists[className].byLevel[key]) lists[className].byLevel[key] = []
+        lists[className].byLevel[key].push(spell.slug)
+      }
+    }
+  }
+  for (const className of Object.keys(lists)) {
+    lists[className].cantrips.sort()
+    for (const key of Object.keys(lists[className].byLevel)) {
+      lists[className].byLevel[key].sort()
+    }
+  }
+  return lists
+}
+
 function propertyNames(properties) {
   if (!Array.isArray(properties)) return []
   return properties
@@ -146,19 +179,33 @@ async function main() {
     document: m.document?.key ?? 'srd-2024',
   }))
 
-  const spellList = dedupe(spells, 'key').map((s) => ({
-    slug: s.key,
-    name: s.name,
-    level: s.level ?? null,
-    school: nestedName(s.school),
-    casting_time: s.casting_time ?? null,
-    range: typeof s.range === 'number' ? s.range : null,
-    duration: s.duration ?? null,
-    desc: typeof s.desc === 'string' ? s.desc : null,
-    ritual: s.ritual === true,
-    concentration: s.concentration === true,
-    document: s.document?.key ?? 'srd-2024',
-  }))
+  const spellList = dedupe(spells, 'key').map((s) => {
+    const classNames = Array.isArray(s.classes)
+      ? s.classes.map((c) => nestedName(c)).filter((name) => typeof name === 'string')
+      : []
+    return {
+      slug: s.key,
+      name: s.name,
+      level: s.level ?? null,
+      school: nestedName(s.school),
+      casting_time: s.casting_time ?? null,
+      range: typeof s.range === 'number' ? s.range : null,
+      duration: s.duration ?? null,
+      desc: typeof s.desc === 'string' ? s.desc : null,
+      ritual: s.ritual === true,
+      concentration: s.concentration === true,
+      verbal: s.verbal === true,
+      somatic: s.somatic === true,
+      material: s.material === true,
+      material_specified: s.material_specified ?? null,
+      material_cost: s.material_cost ?? null,
+      material_consumed: s.material_consumed === true,
+      classNames,
+      document: s.document?.key ?? 'srd-2024',
+    }
+  })
+
+  const classSpellLists = buildClassSpellLists(spellList)
 
   const weaponList = dedupe(weapons, 'key').map((w) => ({
     slug: w.key,
@@ -200,6 +247,10 @@ async function main() {
 
   await writeFile(join(outDir, 'monsters.json'), JSON.stringify(monsterList, null, 0))
   await writeFile(join(outDir, 'spells.json'), JSON.stringify(spellList, null, 0))
+  await writeFile(
+    join(outDir, 'class-spell-lists.json'),
+    JSON.stringify({ classes: classSpellLists }, null, 2),
+  )
   await writeFile(join(outDir, 'weapons.json'), JSON.stringify(weaponList, null, 0))
   await writeFile(join(outDir, 'armor.json'), JSON.stringify(armorList, null, 0))
   await writeFile(join(outDir, 'items.json'), JSON.stringify(itemList, null, 0))

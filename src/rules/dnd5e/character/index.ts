@@ -10,11 +10,30 @@ export {
 export type {
   AbilityKey,
   CharacterSheet,
+  CharacterSpellcasting,
   Currency,
   InventoryItem,
   InventoryItemKind,
   SkillKey,
 } from './types'
+export {
+  addSpellToSpellcasting,
+  classHasSpellcasting,
+  createDefaultSpellcasting,
+  ensureSpellcasting,
+  longRestSpellcasting,
+  maxCantripsKnown,
+  maxSpellsKnown,
+  maxSpellsPrepared,
+  removeSpellFromSpellcasting,
+  spellcastingMode,
+  spellSlotsMax,
+  usesKnownList,
+  usesPreparedList,
+  validateSpellcasting,
+} from './spellcasting'
+export type { SpellcastingIssue, SpellcastingIssueSeverity } from './spellcasting'
+export { partitionSpellcastingIssues } from './spellcasting'
 export {
   abilityModifier,
   formatModifier,

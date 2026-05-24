@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
+import { AddSpellToCharacterDialog } from '../components/characters/AddSpellToCharacterDialog'
 import { SpellDetailDialog } from '../components/spells/SpellDetailDialog'
+import { useMyCharacters } from '../hooks/useMyCharacters'
 import {
   formatSpellSummary,
   groupSpellsByLevel,
@@ -15,10 +17,16 @@ import {
 const FLAT_LIST_CAP = 120
 
 export function SpellsReferencePage() {
+  const { characters, loading, error, reload, addSpellToCharacter } = useMyCharacters()
   const [query, setQuery] = useState('')
   const [levelFilter, setLevelFilter] = useState<number | ''>('')
   const [schoolFilter, setSchoolFilter] = useState('')
   const [selected, setSelected] = useState<SpellRef | null>(null)
+  const [addTarget, setAddTarget] = useState<SpellRef | null>(null)
+
+  useEffect(() => {
+    void reload()
+  }, [reload])
 
   const schools = useMemo(() => listSpellSchools(), [])
 
@@ -39,6 +47,17 @@ export function SpellsReferencePage() {
         <button type="button" className="spell-list-button" onClick={() => setSelected(spell)}>
           <strong>{spell.name}</strong>
           <span className="muted">{formatSpellSummary(spell)}</span>
+        </button>
+        <button
+          type="button"
+          className="equipment-add-to-char"
+          onClick={(e) => {
+            e.stopPropagation()
+            void reload()
+            setAddTarget(spell)
+          }}
+        >
+          Add to character
         </button>
       </li>
     )
@@ -142,7 +161,20 @@ export function SpellsReferencePage() {
 
       {matchCount === 0 ? <p className="muted">No spells match your filters.</p> : null}
 
+      {error ? <p className="dice-tray-error">{error}</p> : null}
+
       <SpellDetailDialog spell={selected} onClose={() => setSelected(null)} />
+
+      {addTarget ? (
+        <AddSpellToCharacterDialog
+          open
+          spellName={addTarget.name}
+          characters={characters}
+          loading={loading}
+          onClose={() => setAddTarget(null)}
+          onAdd={(characterId) => addSpellToCharacter(characterId, addTarget.slug)}
+        />
+      ) : null}
     </div>
   )
 }

@@ -3,21 +3,31 @@ import {
   ABILITY_KEYS,
   ABILITY_LABELS,
   characterOptions,
+  classHasSpellcasting,
+  ensureSpellcasting,
   normalizeInventoryIds,
   SKILL_DEFS,
   suggestAcFromEquipment,
   suggestHpMax,
   type CharacterSheet,
 } from '../../rules/dnd5e/character'
+import type { SpellcastingValidationMode } from '../../settings/validation'
 import { CharacterInventoryEditor } from './CharacterInventoryEditor'
+import { CharacterSpellcastingEditor } from './CharacterSpellcastingEditor'
 
 type CharacterSheetEditorProps = {
   sheet: CharacterSheet
   onChange: (sheet: CharacterSheet) => void
   disabled?: boolean
+  spellcastingValidationMode?: SpellcastingValidationMode
 }
 
-export function CharacterSheetEditor({ sheet, onChange, disabled = false }: CharacterSheetEditorProps) {
+export function CharacterSheetEditor({
+  sheet,
+  onChange,
+  disabled = false,
+  spellcastingValidationMode = 'warn',
+}: CharacterSheetEditorProps) {
   function patch(partial: Partial<CharacterSheet>) {
     onChange({ ...sheet, ...partial })
   }
@@ -73,7 +83,16 @@ export function CharacterSheetEditor({ sheet, onChange, disabled = false }: Char
           <select
             id="edit-class"
             value={sheet.className}
-            onChange={(e) => patch({ className: e.target.value })}
+            onChange={(e) => {
+              const className = e.target.value
+              let next: CharacterSheet = { ...sheet, className }
+              if (!classHasSpellcasting(className)) {
+                next = { ...next, spellcasting: null }
+              } else {
+                next = ensureSpellcasting(next)
+              }
+              onChange(next)
+            }}
             disabled={disabled}
           >
             <option value="">— Select —</option>
@@ -203,6 +222,13 @@ export function CharacterSheetEditor({ sheet, onChange, disabled = false }: Char
       >
         Suggest HP from class &amp; CON
       </button>
+
+      <CharacterSpellcastingEditor
+        sheet={sheet}
+        onChange={onChange}
+        disabled={disabled}
+        validationMode={spellcastingValidationMode}
+      />
 
       <section className="character-inventory-section">
         <h4>Inventory</h4>

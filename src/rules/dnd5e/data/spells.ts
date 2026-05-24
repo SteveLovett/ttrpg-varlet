@@ -11,6 +11,13 @@ export type SpellRef = {
   desc: string | null
   ritual: boolean
   concentration: boolean
+  verbal: boolean
+  somatic: boolean
+  material: boolean
+  material_specified: string | null
+  material_cost: number | null
+  material_consumed: boolean
+  classNames: string[]
   document: string | null
 }
 
@@ -53,10 +60,33 @@ export function formatSpellDuration(duration: string | null): string {
   return duration.charAt(0).toUpperCase() + duration.slice(1)
 }
 
+export function formatComponents(spell: SpellRef): string {
+  const parts: string[] = []
+  if (spell.verbal) parts.push('V')
+  if (spell.somatic) parts.push('S')
+  if (spell.material) {
+    if (spell.material_specified) {
+      parts.push(`M (${spell.material_specified})`)
+    } else {
+      parts.push('M')
+    }
+  }
+  return parts.length > 0 ? parts.join(', ') : '—'
+}
+
+export function formatComponentsShort(spell: SpellRef): string {
+  const parts: string[] = []
+  if (spell.verbal) parts.push('V')
+  if (spell.somatic) parts.push('S')
+  if (spell.material) parts.push('M')
+  return parts.length > 0 ? parts.join(', ') : '—'
+}
+
 export function formatSpellSummary(spell: SpellRef): string {
   const parts = [
     formatSpellLevel(spell.level),
     spell.school,
+    formatComponentsShort(spell),
     formatCastingTime(spell.casting_time),
     formatSpellRange(spell.range),
   ].filter(Boolean)

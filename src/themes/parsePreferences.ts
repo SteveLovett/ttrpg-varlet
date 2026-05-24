@@ -1,3 +1,4 @@
+import { parseSpellcastingValidationMode } from '../settings/validation'
 import {
   DEFAULT_FONT_OVERRIDE_ID,
   DEFAULT_THEME_ID,
@@ -19,5 +20,9 @@ export function parseUserPreferences(raw: unknown): UserPreferences {
   const fontOverrideId = FONT_OVERRIDE_IDS.includes(o.fontOverrideId as FontOverrideId)
     ? (o.fontOverrideId as FontOverrideId)
     : DEFAULT_FONT_OVERRIDE_ID
-  return { themeId, fontOverrideId }
+  const spellcastingValidation =
+    o.spellcastingValidation !== undefined
+      ? parseSpellcastingValidationMode(o.spellcastingValidation)
+      : undefined
+  return { themeId, fontOverrideId, spellcastingValidation }
 }

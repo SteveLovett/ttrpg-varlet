@@ -1,5 +1,6 @@
 import {
   formatCastingTime,
+  formatComponents,
   formatSpellDuration,
   formatSpellLevel,
   formatSpellRange,
@@ -49,6 +50,16 @@ export function SpellDetailDialog({ spell, onClose }: SpellDetailDialogProps) {
             <dt>Duration</dt>
             <dd>{formatSpellDuration(spell.duration)}</dd>
           </div>
+          <div>
+            <dt>Components</dt>
+            <dd>{formatComponents(spell)}</dd>
+          </div>
+          {spell.material && spell.material_cost != null && spell.material_cost > 0 ? (
+            <div>
+              <dt>Material cost</dt>
+              <dd>{spell.material_cost} gp</dd>
+            </div>
+          ) : null}
           <div>
             <dt>Properties</dt>
             <dd>

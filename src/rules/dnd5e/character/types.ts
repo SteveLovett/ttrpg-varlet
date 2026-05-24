@@ -1,7 +1,7 @@
 import { DND5E_2024_RULESET_LABEL } from '../constants'
 import { consolidateInventoryItems } from './inventoryStack'
 
-export const SHEET_VERSION = 2 as const
+export const SHEET_VERSION = 3 as const
 
 export type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'
 
@@ -80,6 +80,14 @@ export type Currency = {
 
 export const EMPTY_CURRENCY: Currency = { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 }
 
+export type CharacterSpellcasting = {
+  ability: AbilityKey
+  cantripSlugs: string[]
+  knownSlugs: string[]
+  preparedSlugs: string[]
+  slotsUsed: Partial<Record<number, number>>
+}
+
 export type CharacterSheet = {
   version: typeof SHEET_VERSION
   ruleset: string
@@ -98,6 +106,7 @@ export type CharacterSheet = {
   inventory: string
   inventoryItems: InventoryItem[]
   currency: Currency
+  spellcasting: CharacterSpellcasting | null
 }
 
 export function createEmptySheet(name = ''): CharacterSheet {
@@ -118,6 +127,41 @@ export function createEmptySheet(name = ''): CharacterSheet {
     inventory: '',
     inventoryItems: [],
     currency: { ...EMPTY_CURRENCY },
+    spellcasting: null,
+  }
+}
+
+function parseSpellcasting(raw: unknown): CharacterSpellcasting | null {
+  if (!raw || typeof raw !== 'object') {
+    return null
+  }
+  const r = raw as Partial<CharacterSpellcasting>
+  const ability =
+    r.ability && ['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(r.ability)
+      ? r.ability
+      : 'int'
+
+  const parseSlugs = (arr: unknown): string[] => {
+    if (!Array.isArray(arr)) return []
+    return arr.filter((s): s is string => typeof s === 'string' && s.length > 0)
+  }
+
+  const slotsUsed: Partial<Record<number, number>> = {}
+  if (r.slotsUsed && typeof r.slotsUsed === 'object') {
+    for (const [key, val] of Object.entries(r.slotsUsed)) {
+      const lvl = Number.parseInt(key, 10)
+      if (lvl >= 1 && lvl <= 9 && typeof val === 'number' && val >= 0) {
+        slotsUsed[lvl] = Math.floor(val)
+      }
+    }
+  }
+
+  return {
+    ability,
+    cantripSlugs: parseSlugs(r.cantripSlugs),
+    knownSlugs: parseSlugs(r.knownSlugs),
+    preparedSlugs: parseSlugs(r.preparedSlugs),
+    slotsUsed,
   }
 }
 
@@ -170,7 +214,7 @@ export function parseSheetJson(raw: unknown): CharacterSheet | null {
   const base = createEmptySheet(o.name)
   const legacyVersion = typeof o.version === 'number' ? o.version : 1
 
-  return {
+  const merged: CharacterSheet = {
     ...base,
     ...o,
     version: SHEET_VERSION,
@@ -182,5 +226,8 @@ export function parseSheetJson(raw: unknown): CharacterSheet | null {
         ? parseInventoryItems(o.inventoryItems)
         : [],
     currency: parseCurrency(o.currency),
+    spellcasting: parseSpellcasting(o.spellcasting),
   }
+
+  return merged
 }

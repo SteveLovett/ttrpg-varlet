@@ -30,9 +30,13 @@ export const FONT_OVERRIDE_IDS = [
 
 export type FontOverrideId = (typeof FONT_OVERRIDE_IDS)[number]
 
+import type { SpellcastingValidationMode } from '../settings/validation'
+
 export type UserPreferences = {
   themeId?: ThemeId
   fontOverrideId?: FontOverrideId
+  /** Personal default when a game uses inherit policy */
+  spellcastingValidation?: SpellcastingValidationMode
 }
 
 export const DEFAULT_THEME_ID: ThemeId = 'default'
