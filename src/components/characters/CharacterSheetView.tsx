@@ -2,11 +2,13 @@ import {
   ABILITY_KEYS,
   ABILITY_LABELS,
   abilityModifier,
+  displayInventoryItem,
   formatModifier,
   proficiencyBonus,
   SKILL_DEFS,
   type CharacterSheet,
 } from '../../rules/dnd5e/character'
+import { InventoryListDisclosure } from './InventoryListDisclosure'
 
 type CharacterSheetViewProps = {
   sheet: CharacterSheet
@@ -86,10 +88,52 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
           ) : null}
         </section>
 
-        {sheet.inventory.trim().length > 0 ? (
+        {sheet.inventoryItems.length > 0 ||
+        sheet.inventory.trim().length > 0 ||
+        sheet.currency.gp > 0 ||
+        sheet.currency.pp > 0 ||
+        sheet.currency.ep > 0 ||
+        sheet.currency.sp > 0 ||
+        sheet.currency.cp > 0 ? (
           <section className="character-sheet-block character-sheet-block--wide">
             <h4>Inventory</h4>
-            <pre className="character-sheet-pre">{sheet.inventory}</pre>
+            {sheet.inventoryItems.length > 0 ? (
+              <InventoryListDisclosure itemCount={sheet.inventoryItems.length}>
+                <ul className="character-inventory-view-list">
+                  {sheet.inventoryItems.map((item) => (
+                    <li key={item.id} className="character-inventory-view-row">
+                      <span>{displayInventoryItem(item)}</span>
+                      <span
+                        className="character-inventory-view-qty"
+                        aria-label={`Quantity: ${item.quantity}`}
+                      >
+                        ×{item.quantity}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </InventoryListDisclosure>
+            ) : null}
+            {sheet.currency.cp > 0 ||
+            sheet.currency.sp > 0 ||
+            sheet.currency.ep > 0 ||
+            sheet.currency.gp > 0 ||
+            sheet.currency.pp > 0 ? (
+              <p className="character-currency-summary muted">
+                {[
+                  sheet.currency.pp > 0 ? `${sheet.currency.pp} pp` : '',
+                  sheet.currency.gp > 0 ? `${sheet.currency.gp} gp` : '',
+                  sheet.currency.ep > 0 ? `${sheet.currency.ep} ep` : '',
+                  sheet.currency.sp > 0 ? `${sheet.currency.sp} sp` : '',
+                  sheet.currency.cp > 0 ? `${sheet.currency.cp} cp` : '',
+                ]
+                  .filter(Boolean)
+                  .join(', ')}
+              </p>
+            ) : null}
+            {sheet.inventory.trim().length > 0 ? (
+              <pre className="character-sheet-pre">{sheet.inventory}</pre>
+            ) : null}
           </section>
         ) : null}
 

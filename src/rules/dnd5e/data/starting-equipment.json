@@ -1,0 +1,639 @@
+{
+  "classes": {
+    "Barbarian": {
+      "description": "Choose your starting gear (PHB-style). You also receive the listed gold.",
+      "currency": { "gp": 15 },
+      "choices": [
+        {
+          "id": "primary-weapon",
+          "prompt": "(a) Greataxe or (b) any martial melee weapon",
+          "options": [
+            {
+              "id": "a",
+              "label": "Greataxe",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_greataxe" }]
+            },
+            {
+              "id": "b",
+              "label": "Martial melee weapon — Battleaxe",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_battleaxe" }]
+            },
+            {
+              "id": "c",
+              "label": "Martial melee weapon — Longsword",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_longsword" }]
+            }
+          ]
+        },
+        {
+          "id": "secondary-weapon",
+          "prompt": "(a) Two Handaxes or (b) any simple weapon",
+          "options": [
+            {
+              "id": "a",
+              "label": "Two Handaxes",
+              "entries": [
+                { "kind": "weapon", "slug": "srd-2024_handaxe", "quantity": 2 }
+              ]
+            },
+            {
+              "id": "b",
+              "label": "Simple weapon — Javelin",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_javelin", "quantity": 4 }]
+            }
+          ]
+        },
+        {
+          "id": "pack",
+          "prompt": "Explorer's Pack",
+          "options": [
+            {
+              "id": "a",
+              "label": "Explorer's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_explorers-pack" }]
+            }
+          ]
+        }
+      ]
+    },
+    "Bard": {
+      "description": "Choose your starting gear (PHB-style). You also receive the listed gold.",
+      "currency": { "gp": 19 },
+      "fixed": [
+        { "kind": "item", "slug": "srd-2024_musical-instrument-lute" },
+        { "kind": "armor", "slug": "srd-2024_leather-armor", "equipped": true }
+      ],
+      "choices": [
+        {
+          "id": "weapon",
+          "prompt": "(a) Rapier, (b) Longsword, or (c) any simple weapon",
+          "options": [
+            {
+              "id": "a",
+              "label": "Rapier",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_rapier" }]
+            },
+            {
+              "id": "b",
+              "label": "Longsword",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_longsword" }]
+            },
+            {
+              "id": "c",
+              "label": "Simple weapon — Dagger",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_dagger" }]
+            }
+          ]
+        },
+        {
+          "id": "pack",
+          "prompt": "(a) Diplomat's Pack or (b) Entertainer's Pack",
+          "options": [
+            {
+              "id": "a",
+              "label": "Diplomat's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_diplomats-pack" }]
+            },
+            {
+              "id": "b",
+              "label": "Entertainer's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_entertainers-pack" }]
+            }
+          ]
+        }
+      ]
+    },
+    "Cleric": {
+      "description": "Choose your starting gear (PHB-style). You also receive the listed gold.",
+      "currency": { "gp": 7 },
+      "fixed": [
+        { "kind": "armor", "slug": "srd-2024_shield", "equipped": true },
+        { "kind": "item", "slug": "srd-2024_holy-symbol-amulet" }
+      ],
+      "choices": [
+        {
+          "id": "weapon",
+          "prompt": "(a) Mace or (b) Warhammer",
+          "options": [
+            {
+              "id": "a",
+              "label": "Mace",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_mace" }]
+            },
+            {
+              "id": "b",
+              "label": "Warhammer",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_warhammer" }]
+            }
+          ]
+        },
+        {
+          "id": "armor",
+          "prompt": "(a) Scale Mail or (b) Leather Armor",
+          "options": [
+            {
+              "id": "a",
+              "label": "Scale Mail",
+              "entries": [{ "kind": "armor", "slug": "srd-2024_scale-mail", "equipped": true }]
+            },
+            {
+              "id": "b",
+              "label": "Leather Armor",
+              "entries": [{ "kind": "armor", "slug": "srd-2024_leather-armor", "equipped": true }]
+            }
+          ]
+        },
+        {
+          "id": "ranged",
+          "prompt": "(a) Light Crossbow and 20 bolts or (b) any simple weapon",
+          "options": [
+            {
+              "id": "a",
+              "label": "Light Crossbow and 20 bolts",
+              "entries": [
+                { "kind": "weapon", "slug": "srd-2024_light-crossbow" },
+                { "kind": "item", "slug": "srd-2024_bolts-20" }
+              ]
+            },
+            {
+              "id": "b",
+              "label": "Simple weapon — Club",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_club" }]
+            }
+          ]
+        },
+        {
+          "id": "pack",
+          "prompt": "(a) Priest's Pack or (b) Explorer's Pack",
+          "options": [
+            {
+              "id": "a",
+              "label": "Priest's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_priests-pack" }]
+            },
+            {
+              "id": "b",
+              "label": "Explorer's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_explorers-pack" }]
+            }
+          ]
+        }
+      ]
+    },
+    "Druid": {
+      "description": "Choose your starting gear (PHB-style). You also receive the listed gold.",
+      "currency": { "gp": 9 },
+      "fixed": [
+        { "kind": "armor", "slug": "srd-2024_shield", "equipped": true },
+        { "kind": "armor", "slug": "srd-2024_leather-armor", "equipped": true },
+        { "kind": "item", "slug": "srd-2024_explorers-pack" },
+        { "kind": "item", "slug": "srd-2024_druidic-focus-wooden-staff" }
+      ],
+      "choices": [
+        {
+          "id": "weapon",
+          "prompt": "(a) Scimitar or (b) any simple melee weapon",
+          "options": [
+            {
+              "id": "a",
+              "label": "Scimitar",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_scimitar" }]
+            },
+            {
+              "id": "b",
+              "label": "Simple melee — Quarterstaff",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_quarterstaff" }]
+            }
+          ]
+        }
+      ]
+    },
+    "Fighter": {
+      "description": "Choose your starting gear (PHB-style). You also receive the listed gold.",
+      "currency": { "gp": 7 },
+      "choices": [
+        {
+          "id": "armor",
+          "prompt": "(a) Chain Mail or (b) Leather Armor, Longbow, and 20 Arrows",
+          "options": [
+            {
+              "id": "a",
+              "label": "Chain Mail",
+              "entries": [{ "kind": "armor", "slug": "srd-2024_chain-mail", "equipped": true }]
+            },
+            {
+              "id": "b",
+              "label": "Leather Armor, Longbow, and 20 Arrows",
+              "entries": [
+                { "kind": "armor", "slug": "srd-2024_leather-armor", "equipped": true },
+                { "kind": "weapon", "slug": "srd-2024_longbow" },
+                { "kind": "item", "slug": "srd-2024_arrows-20" }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "martial",
+          "prompt": "(a) Martial weapon and Shield or (b) two Martial weapons",
+          "options": [
+            {
+              "id": "a",
+              "label": "Longsword and Shield",
+              "entries": [
+                { "kind": "weapon", "slug": "srd-2024_longsword" },
+                { "kind": "armor", "slug": "srd-2024_shield", "equipped": true }
+              ]
+            },
+            {
+              "id": "b",
+              "label": "Two Martial weapons — Longsword and Battleaxe",
+              "entries": [
+                { "kind": "weapon", "slug": "srd-2024_longsword" },
+                { "kind": "weapon", "slug": "srd-2024_battleaxe" }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ranged",
+          "prompt": "(a) Light Crossbow and 20 bolts or (b) two Handaxes",
+          "options": [
+            {
+              "id": "a",
+              "label": "Light Crossbow and 20 bolts",
+              "entries": [
+                { "kind": "weapon", "slug": "srd-2024_light-crossbow" },
+                { "kind": "item", "slug": "srd-2024_bolts-20" }
+              ]
+            },
+            {
+              "id": "b",
+              "label": "Two Handaxes",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_handaxe", "quantity": 2 }]
+            }
+          ]
+        },
+        {
+          "id": "pack",
+          "prompt": "(a) Dungeoneer's Pack or (b) Explorer's Pack",
+          "options": [
+            {
+              "id": "a",
+              "label": "Dungeoneer's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_dungeoneers-pack" }]
+            },
+            {
+              "id": "b",
+              "label": "Explorer's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_explorers-pack" }]
+            }
+          ]
+        }
+      ]
+    },
+    "Monk": {
+      "description": "Choose your starting gear (PHB-style). You also receive the listed gold.",
+      "currency": { "gp": 11 },
+      "choices": [
+        {
+          "id": "weapon",
+          "prompt": "(a) Shortsword or (b) any simple weapon",
+          "options": [
+            {
+              "id": "a",
+              "label": "Shortsword",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_shortsword" }]
+            },
+            {
+              "id": "b",
+              "label": "Simple weapon — Quarterstaff",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_quarterstaff" }]
+            }
+          ]
+        },
+        {
+          "id": "pack",
+          "prompt": "(a) Dungeoneer's Pack or (b) Explorer's Pack",
+          "options": [
+            {
+              "id": "a",
+              "label": "Dungeoneer's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_dungeoneers-pack" }]
+            },
+            {
+              "id": "b",
+              "label": "Explorer's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_explorers-pack" }]
+            }
+          ]
+        }
+      ]
+    },
+    "Paladin": {
+      "description": "Choose your starting gear (PHB-style). You also receive the listed gold.",
+      "currency": { "gp": 9 },
+      "fixed": [
+        { "kind": "item", "slug": "srd-2024_holy-symbol-emblem" },
+        { "kind": "item", "slug": "srd-2024_priests-pack" }
+      ],
+      "choices": [
+        {
+          "id": "weapon",
+          "prompt": "(a) Martial weapon and Shield or (b) two Martial weapons",
+          "options": [
+            {
+              "id": "a",
+              "label": "Longsword and Shield",
+              "entries": [
+                { "kind": "weapon", "slug": "srd-2024_longsword" },
+                { "kind": "armor", "slug": "srd-2024_shield", "equipped": true }
+              ]
+            },
+            {
+              "id": "b",
+              "label": "Two Martial weapons — Longsword and Warhammer",
+              "entries": [
+                { "kind": "weapon", "slug": "srd-2024_longsword" },
+                { "kind": "weapon", "slug": "srd-2024_warhammer" }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ranged",
+          "prompt": "(a) Five Javelins or (b) any simple melee weapon",
+          "options": [
+            {
+              "id": "a",
+              "label": "Five Javelins",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_javelin", "quantity": 5 }]
+            },
+            {
+              "id": "b",
+              "label": "Simple melee — Mace",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_mace" }]
+            }
+          ]
+        },
+        {
+          "id": "armor",
+          "prompt": "Chain Mail",
+          "options": [
+            {
+              "id": "a",
+              "label": "Chain Mail",
+              "entries": [{ "kind": "armor", "slug": "srd-2024_chain-mail", "equipped": true }]
+            }
+          ]
+        }
+      ]
+    },
+    "Ranger": {
+      "description": "Choose your starting gear (PHB-style). You also receive the listed gold.",
+      "currency": { "gp": 7 },
+      "fixed": [
+        { "kind": "armor", "slug": "srd-2024_leather-armor", "equipped": true },
+        { "kind": "item", "slug": "srd-2024_explorers-pack" }
+      ],
+      "choices": [
+        {
+          "id": "weapons",
+          "prompt": "(a) Longbow and 20 Arrows or (b) two Martial weapons",
+          "options": [
+            {
+              "id": "a",
+              "label": "Longbow and 20 Arrows",
+              "entries": [
+                { "kind": "weapon", "slug": "srd-2024_longbow" },
+                { "kind": "item", "slug": "srd-2024_arrows-20" }
+              ]
+            },
+            {
+              "id": "b",
+              "label": "Two Martial weapons — Shortsword and Scimitar",
+              "entries": [
+                { "kind": "weapon", "slug": "srd-2024_shortsword" },
+                { "kind": "weapon", "slug": "srd-2024_scimitar" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "Rogue": {
+      "description": "Choose your starting gear (PHB-style). You also receive the listed gold.",
+      "currency": { "gp": 16 },
+      "fixed": [
+        { "kind": "armor", "slug": "srd-2024_leather-armor", "equipped": true },
+        { "kind": "item", "slug": "srd-2024_thieves-tools" }
+      ],
+      "choices": [
+        {
+          "id": "melee",
+          "prompt": "(a) Rapier or (b) Shortsword",
+          "options": [
+            {
+              "id": "a",
+              "label": "Rapier",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_rapier" }]
+            },
+            {
+              "id": "b",
+              "label": "Shortsword",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_shortsword" }]
+            }
+          ]
+        },
+        {
+          "id": "ranged",
+          "prompt": "(a) Shortbow and 20 Arrows or (b) Shortsword",
+          "options": [
+            {
+              "id": "a",
+              "label": "Shortbow and 20 Arrows",
+              "entries": [
+                { "kind": "weapon", "slug": "srd-2024_shortbow" },
+                { "kind": "item", "slug": "srd-2024_arrows-20" }
+              ]
+            },
+            {
+              "id": "b",
+              "label": "Shortsword",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_shortsword" }]
+            }
+          ]
+        },
+        {
+          "id": "pack",
+          "prompt": "(a) Burglar's Pack or (b) Dungeoneer's Pack",
+          "options": [
+            {
+              "id": "a",
+              "label": "Burglar's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_burglars-pack" }]
+            },
+            {
+              "id": "b",
+              "label": "Dungeoneer's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_dungeoneers-pack" }]
+            }
+          ]
+        }
+      ]
+    },
+    "Sorcerer": {
+      "description": "Choose your starting gear (PHB-style). You also receive the listed gold.",
+      "currency": { "gp": 15 },
+      "fixed": [{ "kind": "item", "slug": "srd-2024_component-pouch" }],
+      "choices": [
+        {
+          "id": "weapon",
+          "prompt": "(a) Light Crossbow and 20 bolts or (b) any simple weapon",
+          "options": [
+            {
+              "id": "a",
+              "label": "Light Crossbow and 20 bolts",
+              "entries": [
+                { "kind": "weapon", "slug": "srd-2024_light-crossbow" },
+                { "kind": "item", "slug": "srd-2024_bolts-20" }
+              ]
+            },
+            {
+              "id": "b",
+              "label": "Simple weapon — Dagger",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_dagger" }]
+            }
+          ]
+        },
+        {
+          "id": "pack",
+          "prompt": "(a) Dungeoneer's Pack or (b) Explorer's Pack",
+          "options": [
+            {
+              "id": "a",
+              "label": "Dungeoneer's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_dungeoneers-pack" }]
+            },
+            {
+              "id": "b",
+              "label": "Explorer's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_explorers-pack" }]
+            }
+          ]
+        },
+        {
+          "id": "focus",
+          "prompt": "Arcane focus",
+          "options": [
+            {
+              "id": "a",
+              "label": "Arcane focus (component pouch counts)",
+              "entries": [{ "kind": "custom", "name": "Arcane focus" }]
+            }
+          ]
+        }
+      ]
+    },
+    "Warlock": {
+      "description": "Choose your starting gear (PHB-style). You also receive the listed gold.",
+      "currency": { "gp": 15 },
+      "fixed": [{ "kind": "item", "slug": "srd-2024_component-pouch" }],
+      "choices": [
+        {
+          "id": "weapon",
+          "prompt": "(a) Light Crossbow and 20 bolts or (b) any simple weapon",
+          "options": [
+            {
+              "id": "a",
+              "label": "Light Crossbow and 20 bolts",
+              "entries": [
+                { "kind": "weapon", "slug": "srd-2024_light-crossbow" },
+                { "kind": "item", "slug": "srd-2024_bolts-20" }
+              ]
+            },
+            {
+              "id": "b",
+              "label": "Simple weapon — Quarterstaff",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_quarterstaff" }]
+            }
+          ]
+        },
+        {
+          "id": "pack",
+          "prompt": "(a) Scholar's Pack or (b) Dungeoneer's Pack",
+          "options": [
+            {
+              "id": "a",
+              "label": "Scholar's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_scholars-pack" }]
+            },
+            {
+              "id": "b",
+              "label": "Dungeoneer's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_dungeoneers-pack" }]
+            }
+          ]
+        },
+        {
+          "id": "focus",
+          "prompt": "Arcane focus",
+          "options": [
+            {
+              "id": "a",
+              "label": "Arcane focus",
+              "entries": [{ "kind": "custom", "name": "Arcane focus" }]
+            }
+          ]
+        }
+      ]
+    },
+    "Wizard": {
+      "description": "Choose your starting gear (PHB-style). You also receive the listed gold.",
+      "currency": { "gp": 15 },
+      "fixed": [
+        { "kind": "item", "slug": "srd-2024_component-pouch" },
+        { "kind": "custom", "name": "Spellbook" }
+      ],
+      "choices": [
+        {
+          "id": "weapon",
+          "prompt": "(a) Quarterstaff or (b) Dagger",
+          "options": [
+            {
+              "id": "a",
+              "label": "Quarterstaff",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_quarterstaff" }]
+            },
+            {
+              "id": "b",
+              "label": "Dagger",
+              "entries": [{ "kind": "weapon", "slug": "srd-2024_dagger" }]
+            }
+          ]
+        },
+        {
+          "id": "pack",
+          "prompt": "Scholar's Pack",
+          "options": [
+            {
+              "id": "a",
+              "label": "Scholar's Pack",
+              "entries": [{ "kind": "item", "slug": "srd-2024_scholars-pack" }]
+            }
+          ]
+        },
+        {
+          "id": "focus",
+          "prompt": "Arcane focus",
+          "options": [
+            {
+              "id": "a",
+              "label": "Arcane focus",
+              "entries": [{ "kind": "custom", "name": "Arcane focus" }]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

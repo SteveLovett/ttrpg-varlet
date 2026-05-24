@@ -5,14 +5,16 @@ import {
   ABILITY_LABELS,
   createEmptySheet,
   characterOptions,
+  normalizeInventoryIds,
   SKILL_DEFS,
   STANDARD_ARRAY,
   suggestHpMax,
   type AbilityKey,
   type CharacterSheet,
 } from '../../rules/dnd5e/character'
+import { CharacterInventoryEditor } from './CharacterInventoryEditor'
 
-const STEPS = ['Basics', 'Abilities', 'Skills', 'Review'] as const
+const STEPS = ['Basics', 'Abilities', 'Skills', 'Equipment', 'Review'] as const
 
 type CharacterWizardProps = {
   onComplete: (name: string, sheet: CharacterSheet) => Promise<void>
@@ -58,12 +60,12 @@ export function CharacterWizard({ onComplete, onCancel }: CharacterWizardProps) 
     setError(null)
     try {
       const hpMax = suggestHpMax(sheet)
-      const final: CharacterSheet = {
+      const final: CharacterSheet = normalizeInventoryIds({
         ...sheet,
         name: trimmed,
         hpMax,
         hpCurrent: hpMax,
-      }
+      })
       await onComplete(trimmed, final)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save character.')
@@ -235,6 +237,19 @@ export function CharacterWizard({ onComplete, onCancel }: CharacterWizardProps) 
 
       {step === 3 ? (
         <div className="character-wizard-panel">
+          <p className="muted">
+            Add starting gear from the SRD catalog, or skip and fill in inventory later.
+          </p>
+          <CharacterInventoryEditor
+            sheet={sheet}
+            onChange={setSheet}
+            showStartingKit
+          />
+        </div>
+      ) : null}
+
+      {step === 4 ? (
+        <div className="character-wizard-panel">
           <p className="muted">Review your character, then save to this campaign.</p>
           <dl className="character-review-dl">
             <div>
@@ -251,6 +266,14 @@ export function CharacterWizard({ onComplete, onCancel }: CharacterWizardProps) 
             <div>
               <dt>HP (suggested)</dt>
               <dd>{suggestHpMax(sheet)}</dd>
+            </div>
+            <div>
+              <dt>Inventory</dt>
+              <dd>
+                {sheet.inventoryItems.length > 0
+                  ? `${sheet.inventoryItems.length} item(s)`
+                  : 'None'}
+              </dd>
             </div>
           </dl>
         </div>

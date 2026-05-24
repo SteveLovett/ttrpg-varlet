@@ -27,6 +27,12 @@ export function ToolsPage() {
           — browse SRD creatures (search &amp; filter)
         </li>
         <li>
+          <Link to="/app/tools/equipment">
+            <strong>Equipment</strong>
+          </Link>{' '}
+          — browse SRD weapons, armor, and gear
+        </li>
+        <li>
           <strong>Rules quick reference</strong> — conditions on the{' '}
           <Link to="/app/tools/dice">dice tray</Link> page
         </li>

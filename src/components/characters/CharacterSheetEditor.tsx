@@ -3,10 +3,13 @@ import {
   ABILITY_KEYS,
   ABILITY_LABELS,
   characterOptions,
+  normalizeInventoryIds,
   SKILL_DEFS,
+  suggestAcFromEquipment,
   suggestHpMax,
   type CharacterSheet,
 } from '../../rules/dnd5e/character'
+import { CharacterInventoryEditor } from './CharacterInventoryEditor'
 
 type CharacterSheetEditorProps = {
   sheet: CharacterSheet
@@ -145,6 +148,16 @@ export function CharacterSheetEditor({ sheet, onChange, disabled = false }: Char
             disabled={disabled}
           />
         </div>
+        <div className="form-row character-ac-suggest-wrap">
+          <button
+            type="button"
+            className="character-suggest-hp"
+            disabled={disabled}
+            onClick={() => patch({ ac: suggestAcFromEquipment(sheet) })}
+          >
+            Suggest AC ({suggestAcFromEquipment(sheet)})
+          </button>
+        </div>
         <div className="form-row">
           <label htmlFor="edit-hp-max">HP max</label>
           <NumericInput
@@ -191,16 +204,14 @@ export function CharacterSheetEditor({ sheet, onChange, disabled = false }: Char
         Suggest HP from class &amp; CON
       </button>
 
-      <div className="form-row">
-        <label htmlFor="edit-inventory">Inventory</label>
-        <textarea
-          id="edit-inventory"
-          value={sheet.inventory}
-          onChange={(e) => patch({ inventory: e.target.value })}
+      <section className="character-inventory-section">
+        <h4>Inventory</h4>
+        <CharacterInventoryEditor
+          sheet={normalizeInventoryIds(sheet)}
+          onChange={onChange}
           disabled={disabled}
-          rows={3}
         />
-      </div>
+      </section>
       <div className="form-row">
         <label htmlFor="edit-notes">Notes</label>
         <textarea
