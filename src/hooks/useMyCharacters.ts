@@ -10,10 +10,13 @@ import {
   addSpellToSpellcasting,
   ensureSpellcasting,
   normalizeInventoryIds,
-  parseSheetJson,
+  finalizeCharacterSheet,
+  inventoryItemCustom,
+  parseAndFinalizeSheet,
   type CharacterSheet,
   type InventoryItem,
 } from '../rules/dnd5e/character'
+import { checkInventorySave } from '../rules/dnd5e/character/inventorySave'
 import { checkSpellcastingSave } from '../rules/dnd5e/character/spellcastingSave'
 import { supabase } from '../supabaseClient'
 import {
@@ -105,7 +108,7 @@ export function useMyCharacters(options: UseMyCharactersOptions = {}) {
 
       if (fetchError || !row) return 'Character not found.'
 
-      const sheet = parseSheetJson(row.sheet_json)
+      const sheet = parseAndFinalizeSheet(row.sheet_json)
       if (!sheet) return 'Invalid character data.'
 
       let validationMode = userMode
@@ -124,9 +127,11 @@ export function useMyCharacters(options: UseMyCharactersOptions = {}) {
       const result = apply(sheet, validationMode)
       if (typeof result === 'string') return result
 
+      const finalized = finalizeCharacterSheet(result)
+
       const { error: updateError } = await supabase
         .from('characters')
-        .update({ sheet_json: result })
+        .update({ sheet_json: finalized })
         .eq('id', characterId)
 
       if (updateError) return updateError.message
@@ -138,21 +143,44 @@ export function useMyCharacters(options: UseMyCharactersOptions = {}) {
 
   const addItemToCharacter = useCallback(
     async (characterId: string, item: InventoryItem): Promise<string | null> => {
-      return updateCharacterSheet(characterId, (sheet) =>
-        normalizeInventoryIds(addInventoryItem(sheet, item)),
-      )
+      return updateCharacterSheet(characterId, (sheet, validationMode) => {
+        const next = normalizeInventoryIds(addInventoryItem(sheet, item))
+        const invCheck = checkInventorySave(next, validationMode)
+        if (invCheck.blocked) return invCheck.blockMessages.join(' ')
+        return next
+      })
     },
     [updateCharacterSheet],
   )
 
   const addSpellToCharacter = useCallback(
-    async (characterId: string, slug: string): Promise<string | null> => {
+    async (
+      characterId: string,
+      slug: string,
+      casterClassName?: string,
+    ): Promise<string | null> => {
       return updateCharacterSheet(characterId, (sheet, validationMode) => {
-        const next = addSpellToSpellcasting(ensureSpellcasting(sheet), slug)
+        const next = addSpellToSpellcasting(ensureSpellcasting(sheet), slug, casterClassName)
         const saveCheck = checkSpellcastingSave(next, validationMode)
         if (saveCheck.blocked) {
           return saveCheck.blockMessages.join(' ')
         }
+        return next
+      })
+    },
+    [updateCharacterSheet],
+  )
+
+  const addMaterialToCharacter = useCallback(
+    async (characterId: string, materialLabel: string): Promise<string | null> => {
+      const trimmed = materialLabel.trim()
+      if (!trimmed) return 'Material name is required.'
+      return updateCharacterSheet(characterId, (sheet, validationMode) => {
+        const next = normalizeInventoryIds(
+          addInventoryItem(sheet, inventoryItemCustom(trimmed)),
+        )
+        const invCheck = checkInventorySave(next, validationMode)
+        if (invCheck.blocked) return invCheck.blockMessages.join(' ')
         return next
       })
     },
@@ -166,5 +194,6 @@ export function useMyCharacters(options: UseMyCharactersOptions = {}) {
     reload: load,
     addItemToCharacter,
     addSpellToCharacter,
+    addMaterialToCharacter,
   }
 }

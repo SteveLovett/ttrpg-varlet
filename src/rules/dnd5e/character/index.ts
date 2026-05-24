@@ -11,11 +11,35 @@ export type {
   AbilityKey,
   CharacterSheet,
   CharacterSpellcasting,
+  ClassLevel,
   Currency,
   InventoryItem,
   InventoryItemKind,
   SkillKey,
 } from './types'
+export { finalizeCharacterSheet, parseAndFinalizeSheet } from './normalizeSheet'
+export {
+  MAX_CHARACTER_LEVEL,
+  addClassLevel,
+  classLevelsLabel,
+  getSheetClasses,
+  primaryClassName,
+  removeClassAt,
+  setSheetClasses,
+  syncClassFields,
+  totalClassLevels,
+  updateClassLevelAt,
+} from './classes'
+export {
+  combinedSpellSlotsMax,
+  hasPactSlots,
+  hasSharedCasterSlots,
+  multiclassCasterLevel,
+  pactSpellSlotsMax,
+} from './multiclassSlots'
+export { casterClassNames, getSpellcastingBlock, setSpellcastingBlock } from './spellcastingState'
+export { checkInventorySave, inventorySaveIssues } from './inventorySave'
+export { defaultInventoryItemWeightLb } from './inventoryWeight'
 export {
   addSpellToSpellcasting,
   classHasSpellcasting,
@@ -34,6 +58,12 @@ export {
   preparedCapDescription,
   spellSaveDc,
   spellSlotsMax,
+  spellSaveDcForClass,
+  spellAttackBonusForClass,
+  classLevelOnSheet,
+  pickCasterClassForSpell,
+  setPactSlotUsed,
+  setSharedSlotUsed,
   toggleSpellPrepared,
   usesKnownList,
   usesPreparedList,

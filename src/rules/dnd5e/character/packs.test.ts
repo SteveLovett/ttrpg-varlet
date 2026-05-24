@@ -8,10 +8,23 @@ describe('packs', () => {
     expect(entries.length).toBeGreaterThan(3)
   })
 
-  it('unpacks into inventory rows', () => {
-    const sheet = testSheet()
+  it('unpacks into inventory rows and removes the pack', () => {
+    const sheet = testSheet({
+      inventoryItems: [
+        {
+          id: 'pack-1',
+          kind: 'item',
+          catalogSlug: 'srd-2024_explorers-pack',
+          name: "Explorer's Pack",
+          quantity: 1,
+        },
+      ],
+    })
     const next = unpackPackIntoInventory(sheet, 'srd-2024_explorers-pack')
-    expect(next.inventoryItems.length).toBeGreaterThan(sheet.inventoryItems.length)
+    expect(next.inventoryItems.length).toBeGreaterThan(0)
+    expect(next.inventoryItems.some((i) => i.catalogSlug === 'srd-2024_explorers-pack')).toBe(
+      false,
+    )
   })
 
   it('recognizes pack slugs', () => {

@@ -5,11 +5,13 @@ import {
   canUnpackPack,
   carryingCapacityLb,
   consolidateInventoryItems,
+  defaultInventoryItemWeightLb,
   displayInventoryItem,
   equippedWeaponAttacks,
   formatCurrencySummary,
   hasAnyCurrency,
   inventoryItemCustom,
+  inventorySaveIssues,
   isBodyArmorItem,
   isShieldItem,
   setInventoryItemAttuned,
@@ -22,6 +24,7 @@ import {
   type Currency,
   type InventoryItem,
 } from '../../rules/dnd5e/character'
+import type { SpellcastingValidationMode } from '../../settings/validation'
 import { EquipmentCatalogPicker } from './EquipmentCatalogPicker'
 import { InventoryListDisclosure } from './InventoryListDisclosure'
 import { StartingEquipmentChooser } from './StartingEquipmentChooser'
@@ -31,6 +34,7 @@ type CharacterInventoryEditorProps = {
   onChange: (sheet: CharacterSheet) => void
   disabled?: boolean
   showStartingKit?: boolean
+  validationMode?: SpellcastingValidationMode
 }
 
 export function CharacterInventoryEditor({
@@ -38,11 +42,16 @@ export function CharacterInventoryEditor({
   onChange,
   disabled = false,
   showStartingKit = false,
+  validationMode = 'warn',
 }: CharacterInventoryEditorProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [customName, setCustomName] = useState('')
 
   const inventoryWarnings = useMemo(() => validateInventory(sheet), [sheet])
+  const { errors: inventoryErrors, warnings: inventorySoftWarnings } = useMemo(
+    () => inventorySaveIssues(sheet),
+    [sheet],
+  )
   const weaponAttacks = useMemo(() => equippedWeaponAttacks(sheet), [sheet])
   const carriedLb = totalInventoryWeightLb(sheet)
   const capacityLb = carryingCapacityLb(sheet)
@@ -114,14 +123,34 @@ export function CharacterInventoryEditor({
         />
       ) : null}
 
-      {inventoryWarnings.length > 0 ? (
+      {inventoryErrors.length > 0 || inventorySoftWarnings.length > 0 || inventoryWarnings.length > 0 ? (
         <div className="character-inventory-warnings" role="status">
-          <p className="character-inventory-warnings-title">Inventory notes</p>
-          <ul>
-            {inventoryWarnings.map((msg) => (
-              <li key={msg}>{msg}</li>
-            ))}
-          </ul>
+          {inventoryErrors.length > 0 ? (
+            <>
+              <p className="character-inventory-warnings-title">
+                {validationMode === 'block'
+                  ? 'Fix before saving (blocking):'
+                  : 'Inventory errors (save allowed):'}
+              </p>
+              <ul>
+                {inventoryErrors.map((msg) => (
+                  <li key={msg}>{msg}</li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+          {inventorySoftWarnings.length > 0 || inventoryWarnings.length > 0 ? (
+            <>
+              <p className="character-inventory-warnings-title">
+                {inventoryErrors.length > 0 ? 'Also note:' : 'Inventory notes:'}
+              </p>
+              <ul>
+                {[...inventorySoftWarnings, ...inventoryWarnings].map((msg) => (
+                  <li key={msg}>{msg}</li>
+                ))}
+              </ul>
+            </>
+          ) : null}
         </div>
       ) : null}
 
@@ -194,6 +223,23 @@ export function CharacterInventoryEditor({
                     onChange={(quantity) => updateItem(item.id, { quantity })}
                     disabled={disabled}
                   />
+                </label>
+                <label className="character-inventory-weight-side">
+                  <span className="visually-hidden">Weight per item (lb)</span>
+                  <NumericInput
+                    min={0}
+                    max={9999}
+                    emptyFallback={defaultInventoryItemWeightLb(item)}
+                    value={
+                      typeof item.weightLb === 'number'
+                        ? item.weightLb
+                        : defaultInventoryItemWeightLb(item)
+                    }
+                    onChange={(weightLb) => updateItem(item.id, { weightLb })}
+                    disabled={disabled}
+                    aria-label={`Weight per ${item.name} in pounds`}
+                  />
+                  <span className="muted">lb</span>
                 </label>
                 <div className="character-inventory-row-controls">
                   {(item.kind === 'weapon' ||

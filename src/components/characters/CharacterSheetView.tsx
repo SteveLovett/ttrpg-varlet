@@ -3,7 +3,9 @@ import {
   ABILITY_KEYS,
   ABILITY_LABELS,
   abilityModifier,
-  classHasSpellcasting,
+  casterClassNames,
+  classLevelsLabel,
+  getSpellcastingBlock,
   displayInventoryItem,
   equippedWeaponAttacks,
   formatCurrencySummary,
@@ -11,11 +13,11 @@ import {
   hasAnyCurrency,
   pactSlotSummary,
   proficiencyBonus,
-  spellAttackBonus,
   spellcastingMode,
   spellcastingModeLabel,
-  spellSaveDc,
-  spellSlotsMax,
+  combinedSpellSlotsMax,
+  spellAttackBonusForClass,
+  spellSaveDcForClass,
   suggestAcFromEquipment,
   totalInventoryWeightLb,
   carryingCapacityLb,
@@ -37,15 +39,12 @@ type CharacterSheetViewProps = {
 export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProps) {
   const [detailSlug, setDetailSlug] = useState<string | null>(null)
   const prof = proficiencyBonus(sheet.level)
-  const sc = sheet.spellcasting
-  const showSpellcasting = classHasSpellcasting(sheet.className) && sc
+  const casters = casterClassNames(sheet)
+  const showSpellcasting = casters.length > 0
   const detailSpell = detailSlug ? getSpellBySlug(detailSlug) : null
   const suggestedAc = suggestAcFromEquipment(sheet)
   const acDiffers = suggestedAc !== sheet.ac
   const weaponAttacks = equippedWeaponAttacks(sheet)
-  const saveDc = showSpellcasting ? spellSaveDc(sheet) : null
-  const spellAttack = showSpellcasting ? spellAttackBonus(sheet) : null
-  const pactSummary = showSpellcasting ? pactSlotSummary(sheet.className, sheet.level) : null
   const hasInventoryItems = sheet.inventoryItems.length > 0
   const hasAdditionalInventory = sheet.inventory.trim().length > 0
   const showInventorySection =
@@ -58,7 +57,7 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
       <header className="character-sheet-header">
         <h3>{sheet.name}</h3>
         <p className="character-sheet-subtitle muted">
-          Level {sheet.level} {sheet.className}
+          {classLevelsLabel(sheet) || `Level ${sheet.level} ${sheet.className}`}
           {sheet.species ? ` · ${sheet.species}` : ''}
           {ownerLabel ? ` · ${ownerLabel}` : ''}
         </p>
@@ -145,63 +144,62 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
         {showSpellcasting ? (
           <section className="character-sheet-block character-sheet-block--wide character-spellcasting-section">
             <h4>Spellcasting</h4>
-            <p className="muted">
-              {ABILITY_LABELS[sc.ability]}
-              {spellcastingModeLabel(sheet.className)
-                ? ` · ${spellcastingModeLabel(sheet.className)}`
-                : ''}
-              {saveDc != null && spellAttack != null
-                ? ` · DC ${saveDc} · attack ${formatModifier(spellAttack)}`
-                : ''}
-            </p>
-            {pactSummary ? <p className="muted">{pactSummary}</p> : null}
-
-            {sc.cantripSlugs.length > 0 ? (
-              <>
-                <h5 className="character-spell-view-heading">Cantrips</h5>
-                <SpellSlugList slugs={sc.cantripSlugs} onOpen={setDetailSlug} />
-              </>
-            ) : null}
-
-            {usesSpellbook(sheet.className) && sc.spellbookSlugs.length > 0 ? (
-              <>
-                <h5 className="character-spell-view-heading">Spellbook</h5>
-                <SpellSlugList slugs={sc.spellbookSlugs} onOpen={setDetailSlug} />
-              </>
-            ) : null}
-
-            {usesPreparedList(sheet.className) && sc.preparedSlugs.length > 0 ? (
-              <>
-                <h5 className="character-spell-view-heading">Prepared</h5>
-                <SpellSlugList slugs={sc.preparedSlugs} onOpen={setDetailSlug} />
-              </>
-            ) : null}
-
-            {usesKnownList(sheet.className) && sc.knownSlugs.length > 0 ? (
-              <>
-                <h5 className="character-spell-view-heading">
-                  {spellcastingMode(sheet.className) === 'pact' ? 'Pact spells' : 'Known'}
-                </h5>
-                <SpellSlugList slugs={sc.knownSlugs} onOpen={setDetailSlug} />
-              </>
-            ) : null}
-
-            {sc.cantripSlugs.length === 0 &&
-            sc.spellbookSlugs.length === 0 &&
-            sc.preparedSlugs.length === 0 &&
-            sc.knownSlugs.length === 0 ? (
-              <p className="muted">No spells recorded.</p>
-            ) : null}
-
+            {casters.map((casterClass) => {
+              const sc = getSpellcastingBlock(sheet, casterClass)
+              if (!sc) return null
+              const classLevel = sheet.classes.find((c) => c.className === casterClass)?.level ?? sheet.level
+              const dc = spellSaveDcForClass(sheet, casterClass)
+              const atk = spellAttackBonusForClass(sheet, casterClass)
+              const pactLine = pactSlotSummary(casterClass, classLevel)
+              return (
+                <div key={casterClass} className="character-spell-class-view">
+                  <h5>{casterClass}</h5>
+                  <p className="muted">
+                    {ABILITY_LABELS[sc.ability]}
+                    {spellcastingModeLabel(casterClass) ? ` · ${spellcastingModeLabel(casterClass)}` : ''}
+                    {dc != null && atk != null
+                      ? ` · DC ${dc} · attack ${formatModifier(atk)}`
+                      : ''}
+                  </p>
+                  {pactLine ? <p className="muted">{pactLine}</p> : null}
+                  {sc.cantripSlugs.length > 0 ? (
+                    <>
+                      <h6 className="character-spell-view-heading">Cantrips</h6>
+                      <SpellSlugList slugs={sc.cantripSlugs} onOpen={setDetailSlug} />
+                    </>
+                  ) : null}
+                  {usesSpellbook(casterClass) && sc.spellbookSlugs.length > 0 ? (
+                    <>
+                      <h6 className="character-spell-view-heading">Spellbook</h6>
+                      <SpellSlugList slugs={sc.spellbookSlugs} onOpen={setDetailSlug} />
+                    </>
+                  ) : null}
+                  {usesPreparedList(casterClass) && sc.preparedSlugs.length > 0 ? (
+                    <>
+                      <h6 className="character-spell-view-heading">Prepared</h6>
+                      <SpellSlugList slugs={sc.preparedSlugs} onOpen={setDetailSlug} />
+                    </>
+                  ) : null}
+                  {usesKnownList(casterClass) && sc.knownSlugs.length > 0 ? (
+                    <>
+                      <h6 className="character-spell-view-heading">
+                        {spellcastingMode(casterClass) === 'pact' ? 'Pact spells' : 'Known'}
+                      </h6>
+                      <SpellSlugList slugs={sc.knownSlugs} onOpen={setDetailSlug} />
+                    </>
+                  ) : null}
+                </div>
+              )
+            })}
             {(() => {
-              const max = spellSlotsMax(sheet.className, sheet.level)
+              const max = combinedSpellSlotsMax(sheet.classes)
               const rows = max
-                .map((m, i) => ({ level: i + 1, max: m, used: sc.slotsUsed[i + 1] ?? 0 }))
+                .map((m, i) => ({ level: i + 1, max: m, used: sheet.spellSlotsUsed[i + 1] ?? 0 }))
                 .filter((r) => r.max > 0)
               if (rows.length === 0) return null
               return (
                 <>
-                  <h5 className="character-spell-view-heading">Slots used</h5>
+                  <h5 className="character-spell-view-heading">Shared slots used</h5>
                   <ul className="character-spell-slots-view">
                     {rows.map((r) => (
                       <li key={r.level}>

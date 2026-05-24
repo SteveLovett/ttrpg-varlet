@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { parseAndFinalizeSheet } from './normalizeSheet'
 import { createEmptySheet, parseSheetJson, SHEET_VERSION } from './types'
 
 describe('parseSheetJson', () => {
@@ -66,10 +67,34 @@ describe('parseSheetJson', () => {
 })
 
 describe('createEmptySheet', () => {
-  it('starts at sheet version 3 with empty spellcasting', () => {
+  it('starts at sheet version 4 with empty spellcasting maps', () => {
     const sheet = createEmptySheet()
     expect(sheet.version).toBe(SHEET_VERSION)
     expect(sheet.spellcasting).toBeNull()
+    expect(sheet.spellcastingByClass).toEqual({})
+    expect(sheet.classes).toEqual([])
     expect(sheet.inventoryItems).toEqual([])
+  })
+})
+
+describe('parseAndFinalizeSheet', () => {
+  it('builds classes and spellcastingByClass from legacy v3', () => {
+    const sheet = parseAndFinalizeSheet({
+      version: 3,
+      name: 'Caster',
+      className: 'Wizard',
+      level: 5,
+      spellcasting: {
+        ability: 'int',
+        cantripSlugs: [],
+        spellbookSlugs: [],
+        knownSlugs: [],
+        preparedSlugs: [],
+        slotsUsed: { 1: 1 },
+      },
+    })
+    expect(sheet?.classes).toEqual([{ className: 'Wizard', level: 5 }])
+    expect(sheet?.spellcastingByClass.Wizard).toBeTruthy()
+    expect(sheet?.spellSlotsUsed[1]).toBe(1)
   })
 })

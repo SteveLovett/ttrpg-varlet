@@ -3,15 +3,15 @@ import {
   ABILITY_KEYS,
   ABILITY_LABELS,
   characterOptions,
-  classHasSpellcasting,
-  createDefaultSpellcasting,
+  ensureSpellcasting,
+  finalizeCharacterSheet,
   normalizeInventoryIds,
   SKILL_DEFS,
   suggestHpMax,
   type CharacterSheet,
-  type CharacterSpellcasting,
 } from '../../rules/dnd5e/character'
 import type { SpellcastingValidationMode } from '../../settings/validation'
+import { CharacterClassesEditor } from './CharacterClassesEditor'
 import { CharacterInventoryEditor } from './CharacterInventoryEditor'
 import { CharacterSpellcastingEditor } from './CharacterSpellcastingEditor'
 
@@ -78,57 +78,13 @@ export function CharacterSheetEditor({
             ))}
           </select>
         </div>
-        <div className="form-row">
-          <label htmlFor="edit-class">Class</label>
-          <select
-            id="edit-class"
-            value={sheet.className}
-            onChange={(e) => {
-              const className = e.target.value
-              if (className === sheet.className) return
-
-              const hadSpells = spellListCount(sheet.spellcasting)
-              if (
-                hadSpells > 0 &&
-                !window.confirm(
-                  'Changing class will clear this character’s spell selections. Continue?',
-                )
-              ) {
-                return
-              }
-
-              let next: CharacterSheet = { ...sheet, className, spellcasting: null }
-              if (classHasSpellcasting(className)) {
-                next = {
-                  ...next,
-                  spellcasting: createDefaultSpellcasting(next),
-                }
-              }
-              onChange(next)
-            }}
-            disabled={disabled}
-          >
-            <option value="">— Select —</option>
-            {characterOptions.classes.map((c) => (
-              <option key={c.name} value={c.name}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-row">
-          <label htmlFor="edit-level">Level</label>
-          <NumericInput
-            id="edit-level"
-            min={1}
-            max={20}
-            emptyFallback={1}
-            value={sheet.level}
-            onChange={(level) => patch({ level })}
-            disabled={disabled}
-          />
-        </div>
       </div>
+
+      <CharacterClassesEditor
+        sheet={sheet}
+        disabled={disabled}
+        onChange={(next) => onChange(ensureSpellcasting(finalizeCharacterSheet(next)))}
+      />
 
       <fieldset className="character-fieldset">
         <legend>Abilities</legend>
@@ -239,6 +195,7 @@ export function CharacterSheetEditor({
           sheet={normalizeInventoryIds(sheet)}
           onChange={onChange}
           disabled={disabled}
+          validationMode={spellcastingValidationMode}
         />
       </section>
       <div className="form-row">
@@ -255,7 +212,3 @@ export function CharacterSheetEditor({
   )
 }
 
-function spellListCount(sc: CharacterSpellcasting | null): number {
-  if (!sc) return 0
-  return sc.cantripSlugs.length + sc.knownSlugs.length + sc.preparedSlugs.length
-}

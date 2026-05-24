@@ -1,7 +1,7 @@
 import { catalogName, type EquipmentKind } from '../data/equipment'
 import { isBodyArmorItem, isShieldItem } from './armorAc'
 import { consolidateInventoryItems } from './inventoryStack'
-import { carryingCapacityLb, encumbranceLabel, encumbranceStatus, totalInventoryWeightLb } from './inventoryWeight'
+import { encumbranceLabel, encumbranceStatus } from './inventoryWeight'
 import type { CharacterSheet, Currency, InventoryItem } from './types'
 
 export { consolidateInventoryItems, inventoryStackKey } from './inventoryStack'
@@ -116,17 +116,6 @@ export function validateInventory(sheet: CharacterSheet): string[] {
   const equippedShields = sheet.inventoryItems.filter((i) => i.equipped && isShieldItem(i))
   if (equippedShields.length > 1) {
     warnings.push('Multiple shields are marked equipped.')
-  }
-  const attuned = countAttunedItems(sheet)
-  if (attuned > MAX_ATTUNEMENT) {
-    warnings.push(`${attuned} items attuned; maximum ${MAX_ATTUNEMENT} normally allowed.`)
-  }
-  const weight = totalInventoryWeightLb(sheet)
-  const capacity = carryingCapacityLb(sheet)
-  if (weight > capacity) {
-    warnings.push(
-      `Carried weight ${weight.toFixed(1)} lb exceeds capacity ${capacity} lb (STR × 15).`,
-    )
   }
   const enc = encumbranceLabel(encumbranceStatus(sheet))
   if (enc) warnings.push(enc)

@@ -1,14 +1,18 @@
-import { getItemBySlug } from '../data/items'
+import { catalogDefaultWeightLb } from '../data/catalogWeights'
 import type { CharacterSheet, InventoryItem } from './types'
 
-/** Item weight in pounds from catalog (items only; weapons/armor unknown → 0). */
+export function defaultInventoryItemWeightLb(item: InventoryItem): number {
+  if (item.kind === 'custom' || !item.catalogSlug) return 0
+  return catalogDefaultWeightLb(item.kind, item.catalogSlug)
+}
+
+/** Per-unit weight in lb (override or catalog default). */
 export function inventoryItemWeightLb(item: InventoryItem): number {
-  if (item.kind !== 'item' || !item.catalogSlug) return 0
-  const ref = getItemBySlug(item.catalogSlug)
-  if (!ref?.weight || ref.weight <= 0) return 0
-  const unit = (ref.weight_unit ?? 'lb').toLowerCase()
-  const perItem = unit === 'kg' ? ref.weight * 2.20462 : ref.weight
-  return perItem * item.quantity
+  const perUnit =
+    typeof item.weightLb === 'number' && Number.isFinite(item.weightLb)
+      ? item.weightLb
+      : defaultInventoryItemWeightLb(item)
+  return perUnit * item.quantity
 }
 
 export function totalInventoryWeightLb(sheet: CharacterSheet): number {

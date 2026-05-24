@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useGameCharacters, type CharacterRow } from '../../hooks/useGameCharacters'
 import { useResolvedSpellcastingValidation } from '../../hooks/useResolvedSpellcastingValidation'
+import { checkInventorySave } from '../../rules/dnd5e/character/inventorySave'
 import { checkSpellcastingSave } from '../../rules/dnd5e/character/spellcastingSave'
 import type { CharacterSheet } from '../../rules/dnd5e/character'
 import type { GameSpellcastingPolicy } from '../../settings/validation'
@@ -91,10 +92,11 @@ export function GameCharactersPanel({
   const isOwner = selected?.owner_id === currentUserId
 
   async function handleCreate(name: string, sheet: CharacterSheet) {
-    const saveCheck = checkSpellcastingSave(sheet, validationMode)
-    if (saveCheck.blocked) {
+    const spellCheck = checkSpellcastingSave(sheet, validationMode)
+    const invCheck = checkInventorySave(sheet, validationMode)
+    if (spellCheck.blocked || invCheck.blocked) {
       throw new Error(
-        `Cannot create character until spellcasting issues are fixed:\n${saveCheck.blockMessages.join('\n')}`,
+        `Cannot create character until issues are fixed:\n${[...spellCheck.blockMessages, ...invCheck.blockMessages].join('\n')}`,
       )
     }
     const result = await createCharacter(name, sheet)
@@ -110,13 +112,14 @@ export function GameCharactersPanel({
     setSaving(true)
     setActionError(null)
     setSaveWarnings([])
-    const saveCheck = checkSpellcastingSave(draftSheet, validationMode)
-    if (saveCheck.blocked) {
+    const spellCheck = checkSpellcastingSave(draftSheet, validationMode)
+    const invCheck = checkInventorySave(draftSheet, validationMode)
+    if (spellCheck.blocked || invCheck.blocked) {
       setSaving(false)
       setActionError(
-        `Save blocked (campaign uses strict spellcasting validation). Fix:\n${saveCheck.blockMessages.join('\n')}`,
+        `Save blocked (strict validation). Fix:\n${[...spellCheck.blockMessages, ...invCheck.blockMessages].join('\n')}`,
       )
-      setSaveWarnings(saveCheck.warningMessages)
+      setSaveWarnings([...spellCheck.warningMessages, ...invCheck.warningMessages])
       return
     }
 
@@ -126,8 +129,8 @@ export function GameCharactersPanel({
       setActionError(err)
       return
     }
-    if (saveCheck.warningMessages.length > 0) {
-      setSaveWarnings(saveCheck.warningMessages)
+    if (spellCheck.warningMessages.length > 0 || invCheck.warningMessages.length > 0) {
+      setSaveWarnings([...spellCheck.warningMessages, ...invCheck.warningMessages])
     }
     setEditing(false)
     setDraftSheet(null)

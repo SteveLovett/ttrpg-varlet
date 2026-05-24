@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { classHasSpellcasting } from '../../rules/dnd5e/character'
+import { casterClassNames, classLevelsLabel } from '../../rules/dnd5e/character'
 import type { MyCharacterRow } from '../../hooks/useMyCharacters'
 
 type AddSpellToCharacterDialogProps = {
@@ -9,7 +9,7 @@ type AddSpellToCharacterDialogProps = {
   characters: MyCharacterRow[]
   loading: boolean
   onClose: () => void
-  onAdd: (characterId: string) => Promise<string | null>
+  onAdd: (characterId: string, casterClassName?: string) => Promise<string | null>
 }
 
 export function AddSpellToCharacterDialog({
@@ -21,14 +21,20 @@ export function AddSpellToCharacterDialog({
   onAdd,
 }: AddSpellToCharacterDialogProps) {
   const [characterId, setCharacterId] = useState('')
+  const [casterClass, setCasterClass] = useState('')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const spellcasters = useMemo(
-    () => characters.filter((c) => classHasSpellcasting(c.sheet_json.className)),
+    () => characters.filter((c) => casterClassNames(c.sheet_json).length > 0),
     [characters],
   )
+
+  const casterOptions = useMemo(() => {
+    const row = spellcasters.find((c) => c.id === characterId)
+    return row ? casterClassNames(row.sheet_json) : []
+  }, [characterId, spellcasters])
 
   if (!open) return null
 
@@ -40,7 +46,7 @@ export function AddSpellToCharacterDialog({
     setSaving(true)
     setError(null)
     setMessage(null)
-    const err = await onAdd(characterId)
+    const err = await onAdd(characterId, casterOptions.length > 1 ? casterClass : undefined)
     setSaving(false)
     if (err) {
       setError(err)
@@ -94,13 +100,32 @@ export function AddSpellToCharacterDialog({
               <option value="">— Select —</option>
               {spellcasters.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} · L{c.sheet_json.level} {c.sheet_json.className}
+                  {c.name} · {classLevelsLabel(c.sheet_json) || c.sheet_json.className}
                   {c.game_name ? ` · ${c.game_name}` : ' · (unattached)'}
                 </option>
               ))}
             </select>
           </div>
         )}
+
+        {casterOptions.length > 1 ? (
+          <div className="form-row">
+            <label htmlFor="add-spell-caster-class">Caster class</label>
+            <select
+              id="add-spell-caster-class"
+              value={casterClass}
+              onChange={(e) => setCasterClass(e.target.value)}
+              disabled={saving}
+            >
+              <option value="">— Select —</option>
+              {casterOptions.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
 
         {error ? <p className="dice-tray-error">{error}</p> : null}
         {message ? <p className="muted">{message}</p> : null}

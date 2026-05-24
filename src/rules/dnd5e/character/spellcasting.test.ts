@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { testSheet } from '../../../test/sheetFixtures'
+import { finalizeCharacterSheet } from './normalizeSheet'
 import {
   addSpellToSpellcasting,
   classHasSpellcasting,
@@ -103,12 +104,15 @@ describe('maxCantripsKnown', () => {
 
 describe('spellSaveDc', () => {
   it('computes 8 + prof + ability mod', () => {
-    const sheet = testSheet({
-      className: 'Wizard',
-      level: 5,
-      abilities: { str: 10, dex: 10, con: 10, int: 18, wis: 10, cha: 10 },
-      spellcasting: createDefaultSpellcasting(testSheet({ className: 'Wizard' }))!,
-    })
+    const sheet = finalizeCharacterSheet(
+      testSheet({
+        className: 'Wizard',
+        level: 5,
+        classes: [{ className: 'Wizard', level: 5 }],
+        abilities: { str: 10, dex: 10, con: 10, int: 18, wis: 10, cha: 10 },
+        spellcasting: createDefaultSpellcasting(testSheet({ className: 'Wizard' }))!,
+      }),
+    )
     expect(spellSaveDc(sheet)).toBe(15)
     expect(spellAttackBonus(sheet)).toBe(7)
   })
@@ -123,15 +127,20 @@ describe('pactSlotSummary', () => {
 
 describe('toggleSpellPrepared', () => {
   it('requires spellbook membership for Wizard', () => {
-    let sheet = testSheet({
-      className: 'Wizard',
-      spellcasting: {
-        ...createDefaultSpellcasting(testSheet({ className: 'Wizard' }))!,
-        spellbookSlugs: ['srd-2024_acid-arrow'],
-      },
-    })
-    sheet = toggleSpellPrepared(sheet, 'srd-2024_acid-arrow')
-    expect(sheet.spellcasting?.preparedSlugs).toContain('srd-2024_acid-arrow')
+    let sheet = finalizeCharacterSheet(
+      testSheet({
+        className: 'Wizard',
+        classes: [{ className: 'Wizard', level: 1 }],
+        spellcastingByClass: {
+          Wizard: {
+            ...createDefaultSpellcasting(testSheet({ className: 'Wizard' }))!,
+            spellbookSlugs: ['srd-2024_acid-arrow'],
+          },
+        },
+      }),
+    )
+    sheet = toggleSpellPrepared(sheet, 'srd-2024_acid-arrow', 'Wizard')
+    expect(sheet.spellcastingByClass.Wizard?.preparedSlugs).toContain('srd-2024_acid-arrow')
     const issues = validateSpellcasting(sheet).filter((i) => i.severity === 'error')
     expect(issues.some((i) => i.message.includes('not in the spellbook'))).toBe(false)
   })

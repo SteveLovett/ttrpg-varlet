@@ -1,7 +1,12 @@
 import { DND5E_2024_RULESET_LABEL } from '../constants'
 import { consolidateInventoryItems } from './inventoryStack'
 
-export const SHEET_VERSION = 3 as const
+export const SHEET_VERSION = 4 as const
+
+export type ClassLevel = {
+  className: string
+  level: number
+}
 
 export type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'
 
@@ -68,6 +73,8 @@ export type InventoryItem = {
   quantity: number
   equipped?: boolean
   attuned?: boolean
+  /** Per-stack weight in lb; overrides catalog default. Zero is allowed. */
+  weightLb?: number
   notes?: string
 }
 
@@ -96,8 +103,12 @@ export type CharacterSheet = {
   ruleset: string
   name: string
   species: string
+  /** Legacy primary class; kept in sync with classes[0]. */
   className: string
+  /** Total character level (sum of class levels, max 20). */
   level: number
+  /** Multiclass breakdown; empty means use className + level only. */
+  classes: ClassLevel[]
   abilities: Record<AbilityKey, number>
   skills: Partial<Record<SkillKey, boolean>>
   ac: number
@@ -109,7 +120,14 @@ export type CharacterSheet = {
   inventory: string
   inventoryItems: InventoryItem[]
   currency: Currency
+  /** @deprecated Use spellcastingByClass; migrated on load. */
   spellcasting: CharacterSpellcasting | null
+  /** Per-class spell lists and abilities. */
+  spellcastingByClass: Partial<Record<string, CharacterSpellcasting>>
+  /** Shared slots for full/half multiclass casters. */
+  spellSlotsUsed: Partial<Record<number, number>>
+  /** Warlock pact slots (separate from shared pool). */
+  pactSlotsUsed: Partial<Record<number, number>>
 }
 
 export function createEmptySheet(name = ''): CharacterSheet {
@@ -120,6 +138,7 @@ export function createEmptySheet(name = ''): CharacterSheet {
     species: '',
     className: '',
     level: 1,
+    classes: [],
     abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
     skills: {},
     ac: 10,
@@ -131,6 +150,9 @@ export function createEmptySheet(name = ''): CharacterSheet {
     inventoryItems: [],
     currency: { ...EMPTY_CURRENCY },
     spellcasting: null,
+    spellcastingByClass: {},
+    spellSlotsUsed: {},
+    pactSlotsUsed: {},
   }
 }
 
@@ -192,6 +214,10 @@ function parseInventoryItems(raw: unknown): InventoryItem[] {
       quantity,
       equipped: r.equipped === true,
       attuned: r.attuned === true,
+      weightLb:
+        typeof r.weightLb === 'number' && Number.isFinite(r.weightLb) && r.weightLb >= 0
+          ? r.weightLb
+          : undefined,
       notes: typeof r.notes === 'string' ? r.notes : undefined,
     })
   }
@@ -211,6 +237,52 @@ function parseCurrency(raw: unknown): Currency {
   return base
 }
 
+function parseSlotMap(raw: unknown): Partial<Record<number, number>> {
+  const slotsUsed: Partial<Record<number, number>> = {}
+  if (!raw || typeof raw !== 'object') return slotsUsed
+  for (const [key, val] of Object.entries(raw)) {
+    const lvl = Number.parseInt(key, 10)
+    if (lvl >= 1 && lvl <= 9 && typeof val === 'number' && val >= 0) {
+      slotsUsed[lvl] = Math.floor(val)
+    }
+  }
+  return slotsUsed
+}
+
+function parseClasses(
+  raw: unknown,
+  className: string,
+  level: number,
+): ClassLevel[] {
+  if (!Array.isArray(raw)) {
+    return className ? [{ className, level: Math.max(1, level) }] : []
+  }
+  const rows: ClassLevel[] = []
+  for (const row of raw) {
+    if (!row || typeof row !== 'object') continue
+    const r = row as Partial<ClassLevel>
+    if (typeof r.className !== 'string' || !r.className.trim()) continue
+    const lvl =
+      typeof r.level === 'number' && Number.isFinite(r.level)
+        ? Math.max(1, Math.min(20, Math.floor(r.level)))
+        : 1
+    rows.push({ className: r.className.trim(), level: lvl })
+  }
+  return rows
+}
+
+function parseSpellcastingByClass(
+  raw: unknown,
+): Partial<Record<string, CharacterSpellcasting>> {
+  if (!raw || typeof raw !== 'object') return {}
+  const out: Partial<Record<string, CharacterSpellcasting>> = {}
+  for (const [className, value] of Object.entries(raw)) {
+    const sc = parseSpellcasting(value)
+    if (sc) out[className] = sc
+  }
+  return out
+}
+
 export function parseSheetJson(raw: unknown): CharacterSheet | null {
   if (!raw || typeof raw !== 'object') return null
   const o = raw as Partial<CharacterSheet> & { version?: number }
@@ -218,11 +290,38 @@ export function parseSheetJson(raw: unknown): CharacterSheet | null {
 
   const base = createEmptySheet(o.name)
   const legacyVersion = typeof o.version === 'number' ? o.version : 1
+  const className = typeof o.className === 'string' ? o.className : ''
+  const level =
+    typeof o.level === 'number' && Number.isFinite(o.level)
+      ? Math.max(1, Math.min(20, Math.floor(o.level)))
+      : 1
+
+  const legacySpellcasting = parseSpellcasting(o.spellcasting)
+  let spellcastingByClass = parseSpellcastingByClass(o.spellcastingByClass)
+  if (Object.keys(spellcastingByClass).length === 0 && legacySpellcasting && className) {
+    spellcastingByClass = { [className]: legacySpellcasting }
+  }
+
+  let spellSlotsUsed = parseSlotMap(o.spellSlotsUsed)
+  const pactSlotsUsed = parseSlotMap(o.pactSlotsUsed)
+  if (Object.keys(spellSlotsUsed).length === 0 && legacySpellcasting?.slotsUsed) {
+    spellSlotsUsed = { ...legacySpellcasting.slotsUsed }
+  }
+
+  const classes =
+    legacyVersion >= 4 || Array.isArray(o.classes)
+      ? parseClasses(o.classes, className, level)
+      : className
+        ? [{ className, level }]
+        : []
 
   const merged: CharacterSheet = {
     ...base,
     ...o,
     version: SHEET_VERSION,
+    className,
+    level,
+    classes,
     abilities: { ...base.abilities, ...(o.abilities as CharacterSheet['abilities']) },
     skills: { ...(o.skills ?? {}) },
     inventory: typeof o.inventory === 'string' ? o.inventory : '',
@@ -231,7 +330,10 @@ export function parseSheetJson(raw: unknown): CharacterSheet | null {
         ? parseInventoryItems(o.inventoryItems)
         : [],
     currency: parseCurrency(o.currency),
-    spellcasting: parseSpellcasting(o.spellcasting),
+    spellcasting: legacySpellcasting,
+    spellcastingByClass,
+    spellSlotsUsed,
+    pactSlotsUsed,
   }
 
   return merged

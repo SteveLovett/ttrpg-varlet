@@ -4,7 +4,7 @@ import {
   type GameSpellcastingPolicy,
   type SpellcastingValidationMode,
 } from '../settings/validation'
-import { parseSheetJson, type CharacterSheet } from '../rules/dnd5e/character'
+import { parseAndFinalizeSheet, type CharacterSheet } from '../rules/dnd5e/character'
 
 export type MyCharacterRow = {
   id: string
@@ -42,7 +42,7 @@ export function buildMyCharacterRows(
 
   const mapped: MyCharacterRow[] = []
   for (const row of rows) {
-    const sheet = parseSheetJson(row.sheet_json)
+    const sheet = parseAndFinalizeSheet(row.sheet_json)
     if (!sheet) continue
     const gamePolicy = row.game_id ? gamePolicies.get(row.game_id) : undefined
     mapped.push({

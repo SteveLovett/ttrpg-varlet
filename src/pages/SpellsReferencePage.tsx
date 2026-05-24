@@ -1,28 +1,32 @@
 import { useMemo, useState } from 'react'
 import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
 import { AddSpellToCharacterDialog } from '../components/characters/AddSpellToCharacterDialog'
+import { TrackMaterialToCharacterDialog } from '../components/characters/TrackMaterialToCharacterDialog'
 import { SpellDetailDialog } from '../components/spells/SpellDetailDialog'
 import { useMyCharacters } from '../hooks/useMyCharacters'
 import {
   formatSpellSummary,
+  type SpellRef,
   groupSpellsByLevel,
   listSpellSchools,
   searchSpells,
   SPELL_LEVELS,
   spellLevelLabel,
   spells,
-  type SpellRef,
 } from '../rules/dnd5e/data/spells'
+import { materialComponentInventoryName } from '../rules/dnd5e/character'
 
 const FLAT_LIST_CAP = 120
 
 export function SpellsReferencePage() {
-  const { characters, loading, error, addSpellToCharacter } = useMyCharacters({ loadOnMount: true })
+  const { characters, loading, error, addSpellToCharacter, addMaterialToCharacter } =
+    useMyCharacters({ loadOnMount: true })
   const [query, setQuery] = useState('')
   const [levelFilter, setLevelFilter] = useState<number | ''>('')
   const [schoolFilter, setSchoolFilter] = useState('')
   const [selected, setSelected] = useState<SpellRef | null>(null)
   const [addTarget, setAddTarget] = useState<SpellRef | null>(null)
+  const [materialTarget, setMaterialTarget] = useState<SpellRef | null>(null)
 
   const schools = useMemo(() => listSpellSchools(), [])
 
@@ -158,7 +162,29 @@ export function SpellsReferencePage() {
 
       {error ? <p className="dice-tray-error">{error}</p> : null}
 
-      <SpellDetailDialog spell={selected} onClose={() => setSelected(null)} />
+      <SpellDetailDialog
+        spell={selected}
+        onClose={() => setSelected(null)}
+        onTrackMaterial={
+          selected && materialComponentInventoryName(selected)
+            ? () => setMaterialTarget(selected)
+            : undefined
+        }
+      />
+
+      {materialTarget && materialComponentInventoryName(materialTarget) ? (
+        <TrackMaterialToCharacterDialog
+          open
+          spellName={materialTarget.name}
+          materialLabel={materialComponentInventoryName(materialTarget)!}
+          characters={characters}
+          loading={loading}
+          onClose={() => setMaterialTarget(null)}
+          onAdd={(characterId) =>
+            addMaterialToCharacter(characterId, materialComponentInventoryName(materialTarget)!)
+          }
+        />
+      ) : null}
 
       {addTarget ? (
         <AddSpellToCharacterDialog

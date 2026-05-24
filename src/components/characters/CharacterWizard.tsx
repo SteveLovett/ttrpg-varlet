@@ -7,7 +7,9 @@ import {
   characterOptions,
   classHasSpellcasting,
   createDefaultSpellcasting,
+  finalizeCharacterSheet,
   normalizeInventoryIds,
+  setSheetClasses,
   SKILL_DEFS,
   STANDARD_ARRAY,
   suggestHpMax,
@@ -68,13 +70,16 @@ export function CharacterWizard({ onComplete, onCancel }: CharacterWizardProps) 
         hpMax,
         hpCurrent: hpMax,
       })
+      if (final.className) {
+        final = setSheetClasses(final, [{ className: final.className, level: final.level }])
+      }
       if (classHasSpellcasting(final.className)) {
         final = {
           ...final,
           spellcasting: createDefaultSpellcasting(final),
         }
       }
-      await onComplete(trimmed, final)
+      await onComplete(trimmed, finalizeCharacterSheet(final))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save character.')
     } finally {

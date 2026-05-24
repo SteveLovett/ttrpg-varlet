@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { parseSheetJson, type CharacterSheet } from '../rules/dnd5e/character'
+import { parseAndFinalizeSheet, type CharacterSheet } from '../rules/dnd5e/character'
 import { supabase } from '../supabaseClient'
 
 export type CharacterRow = {
@@ -25,7 +25,7 @@ function mapRow(
   },
   displayName: string | null,
 ): CharacterRow | null {
-  const sheet = parseSheetJson(row.sheet_json)
+  const sheet = parseAndFinalizeSheet(row.sheet_json)
   if (!sheet) return null
   return {
     ...row,

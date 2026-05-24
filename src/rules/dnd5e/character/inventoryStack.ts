@@ -28,6 +28,8 @@ export function consolidateInventoryItems(items: InventoryItem[]): InventoryItem
       ...existing,
       quantity: existing.quantity + qty,
       equipped: existing.equipped || item.equipped || undefined,
+      attuned: existing.attuned || item.attuned || undefined,
+      weightLb: existing.weightLb ?? item.weightLb,
       notes: existing.notes ?? item.notes,
     })
   }
