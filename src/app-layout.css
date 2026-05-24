@@ -964,6 +964,71 @@
   gap: 0.25rem;
 }
 
+.character-inventory-row {
+  flex-wrap: wrap;
+}
+
+.character-inventory-row-notes {
+  flex: 1 1 100%;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.character-inventory-row-notes textarea {
+  width: 100%;
+  min-height: 2.5rem;
+}
+
+.character-inventory-notes-toggle {
+  font-size: 0.85rem;
+}
+
+.character-inventory-additional-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+}
+
+.character-inventory-view-row-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.character-inventory-item-note {
+  margin: 0.2rem 0 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.legacy-inventory-migrate {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-border, rgba(255, 200, 100, 0.25));
+  background: var(--color-surface-raised, rgba(255, 200, 100, 0.06));
+}
+
+.legacy-inventory-migrate h5 {
+  margin: 0 0 0.5rem;
+}
+
+.legacy-inventory-preview-source {
+  font-size: 0.85rem;
+  max-height: 6rem;
+  overflow: auto;
+  margin: 0.5rem 0;
+}
+
+.legacy-inventory-preview-list {
+  margin: 0.5rem 0 0.75rem;
+  padding-left: 1.25rem;
+  font-size: 0.9rem;
+}
+
+.legacy-inventory-migrate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .character-spell-class-block {
   margin-bottom: 1.25rem;
   padding-bottom: 1rem;

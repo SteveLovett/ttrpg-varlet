@@ -19,6 +19,7 @@ import {
   suggestAcFromEquipment,
   totalInventoryWeightLb,
   unpackPackIntoInventory,
+  shouldOfferLegacyInventoryMigration,
   validateInventory,
   type CharacterSheet,
   type Currency,
@@ -27,6 +28,7 @@ import {
 import type { SpellcastingValidationMode } from '../../settings/validation'
 import { EquipmentCatalogPicker } from './EquipmentCatalogPicker'
 import { InventoryListDisclosure } from './InventoryListDisclosure'
+import { LegacyInventoryMigratePanel } from './LegacyInventoryMigratePanel'
 import { StartingEquipmentChooser } from './StartingEquipmentChooser'
 
 type CharacterInventoryEditorProps = {
@@ -46,6 +48,16 @@ export function CharacterInventoryEditor({
 }: CharacterInventoryEditorProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [customName, setCustomName] = useState('')
+  const [expandedNoteIds, setExpandedNoteIds] = useState<Set<string>>(() => new Set())
+
+  function toggleItemNotes(itemId: string) {
+    setExpandedNoteIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(itemId)) next.delete(itemId)
+      else next.add(itemId)
+      return next
+    })
+  }
 
   const inventoryWarnings = useMemo(() => validateInventory(sheet), [sheet])
   const { errors: inventoryErrors, warnings: inventorySoftWarnings } = useMemo(
@@ -121,6 +133,10 @@ export function CharacterInventoryEditor({
           onChange={onChange}
           disabled={disabled}
         />
+      ) : null}
+
+      {shouldOfferLegacyInventoryMigration(sheet) ? (
+        <LegacyInventoryMigratePanel sheet={sheet} onChange={onChange} disabled={disabled} />
       ) : null}
 
       {inventoryErrors.length > 0 || inventorySoftWarnings.length > 0 || inventoryWarnings.length > 0 ? (
@@ -205,7 +221,9 @@ export function CharacterInventoryEditor({
           <p className="muted">No catalog items yet.</p>
         ) : (
           <ul className="character-inventory-list">
-            {sheet.inventoryItems.map((item) => (
+            {sheet.inventoryItems.map((item) => {
+              const notesOpen = !!item.notes?.trim() || expandedNoteIds.has(item.id)
+              return (
               <li key={item.id} className="character-inventory-row">
                 <div className="character-inventory-row-main">
                   <span className="character-inventory-row-name" title={displayInventoryItem(item)}>
@@ -276,22 +294,52 @@ export function CharacterInventoryEditor({
                   <button type="button" disabled={disabled} onClick={() => removeFromStack(item.id)}>
                     {item.quantity > 1 ? 'Remove one' : 'Remove'}
                   </button>
+                  <button
+                    type="button"
+                    className="character-inventory-notes-toggle"
+                    disabled={disabled}
+                    onClick={() => toggleItemNotes(item.id)}
+                  >
+                    {notesOpen ? 'Hide note' : 'Note'}
+                  </button>
                 </div>
+                {notesOpen ? (
+                  <div className="character-inventory-row-notes form-row">
+                    <label htmlFor={`inv-note-${item.id}`} className="visually-hidden">
+                      Notes for {item.name}
+                    </label>
+                    <textarea
+                      id={`inv-note-${item.id}`}
+                      value={item.notes ?? ''}
+                      onChange={(e) =>
+                        updateItem(item.id, { notes: e.target.value || undefined })
+                      }
+                      disabled={disabled}
+                      rows={2}
+                      placeholder="Attunement detail, charges, custom rules…"
+                      maxLength={256}
+                    />
+                  </div>
+                ) : null}
               </li>
-            ))}
+            )})}
           </ul>
         )}
 
         <div className="form-row character-inventory-additional">
-          <label htmlFor="inventory-notes">Additional items</label>
+          <label htmlFor="inventory-notes">Additional items (free text)</label>
           <textarea
             id="inventory-notes"
             value={sheet.inventory}
             onChange={(e) => onChange({ ...sheet, inventory: e.target.value })}
             disabled={disabled}
             rows={2}
-            placeholder="Misc items, notes, or loot not in the catalog…"
+            placeholder="Loot not in the catalog, reminders, or items you have not migrated yet…"
           />
+          <p className="muted character-inventory-additional-hint">
+            Catalog rows above are used for weight, attunement, and equipment rules. This field is
+            optional narrative or overflow.
+          </p>
         </div>
       </InventoryListDisclosure>
 

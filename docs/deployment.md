@@ -69,6 +69,45 @@ Already covered in `docs/phase-f5-liveblocks-setup.md`. CORS in
 function accepts requests from any Pages preview URL with no extra
 configuration.
 
+### 5. Supabase database migrations
+
+The static Pages deploy does **not** run migrations. Apply schema changes
+to the linked Supabase project before (or right after) shipping app code
+that depends on them:
+
+```bash
+supabase link --project-ref <your-project-ref>
+supabase db push
+```
+
+Relevant migrations for character / campaign features:
+
+| Migration | Purpose |
+|-----------|---------|
+| `20260525120000_phase_f3_characters.sql` | `characters` table + RLS |
+| `20260530120000_profiles_preferences.sql` | User preferences (theme, validation mode) |
+| `20260531120000_game_settings.sql` | `games.settings` JSONB (campaign spellcasting / inventory policy) |
+
+**Verify `games.settings` after push** (SQL editor or Table Editor):
+
+```sql
+select id, name, settings from public.games limit 5;
+```
+
+New column should exist; default `{}`.
+
+**In the app (GM):** open a game → set **Spellcasting validation** to
+`Block` → save → edit a character with too many attriuned items or
+over-attuned or overweight inventory → save should be rejected with a clear message.
+
+Edge functions (e.g. Liveblocks auth) are deployed separately:
+
+```bash
+supabase functions deploy liveblocks-auth
+```
+
+See `docs/phase-f5-liveblocks-setup.md` for secrets.
+
 ## Verifying a fresh deploy
 
 After Cloudflare reports "Success":
@@ -86,6 +125,12 @@ After Cloudflare reports "Success":
    should open `https://ttrpg-varlet.pages.dev/reset-password?…` and
    land on the reset form, not on Supabase's "redirect not allowed"
    page.
+5. **Characters / campaign settings** — create or open a character,
+   confirm inventory and spellcasting editors load. If GM policy controls
+   are missing, `games.settings` migration was not applied.
+6. Optional data sanity (dev machine): `npm run check:data` — confirms
+   bundled `spells.json` / `monsters.json` are non-empty before you
+   rely on a fresh clone.
 
 ## Common gotchas
 
@@ -97,6 +142,8 @@ After Cloudflare reports "Success":
 | Password reset email link → "redirect not allowed" | Add `https://ttrpg-varlet.pages.dev/**` to Supabase redirect URLs |
 | New env var doesn't take effect | Pages bakes `VITE_*` at build time; you must trigger a new deploy |
 | Email confirmation link wrong host | Set Supabase **Site URL** to the Pages URL (step 3) |
+| Campaign validation setting does nothing | Run `supabase db push` so `games.settings` exists |
+| Spell or monster lists empty in Tools | Run `npm run fetch:srd` and commit JSON, or use a build that includes fetched data |
 
 ## Adding a custom domain later
 

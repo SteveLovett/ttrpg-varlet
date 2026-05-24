@@ -111,6 +111,14 @@ export { equippedWeaponAttacks } from './weaponAttacks'
 export type { WeaponAttackLine } from './weaponAttacks'
 export { materialComponentInventoryName } from './materialComponents'
 export {
+  applyLegacyInventoryMigration,
+  hasLegacyInventoryText,
+  parseLegacyInventoryText,
+  previewLegacyInventoryMigration,
+  shouldOfferLegacyInventoryMigration,
+} from './inventoryMigration'
+export type { LegacyInventoryLine, LegacyMigrationMatch } from './inventoryMigration'
+export {
   applyStartingEquipmentSelections,
   getStartingEquipmentPack,
   isStartingSelectionComplete,

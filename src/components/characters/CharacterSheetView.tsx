@@ -236,13 +236,18 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
                   <ul className="character-inventory-view-list">
                     {sheet.inventoryItems.map((item) => (
                       <li key={item.id} className="character-inventory-view-row">
-                        <span>{displayInventoryItem(item)}</span>
-                        <span
-                          className="character-inventory-view-qty"
-                          aria-label={`Quantity: ${item.quantity}`}
-                        >
-                          ×{item.quantity}
-                        </span>
+                        <div className="character-inventory-view-row-main">
+                          <span>{displayInventoryItem(item)}</span>
+                          <span
+                            className="character-inventory-view-qty"
+                            aria-label={`Quantity: ${item.quantity}`}
+                          >
+                            ×{item.quantity}
+                          </span>
+                        </div>
+                        {item.notes?.trim() ? (
+                          <p className="muted character-inventory-item-note">{item.notes}</p>
+                        ) : null}
                       </li>
                     ))}
                   </ul>

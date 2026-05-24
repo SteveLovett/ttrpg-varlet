@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "vite preview",
-    "fetch:srd": "node scripts/fetch-open5e-data.mjs"
+    "fetch:srd": "node scripts/fetch-open5e-data.mjs",
+    "check:data": "node scripts/check-bundled-data.mjs"
   },
   "dependencies": {
     "@liveblocks/client": "^3.19.3",
