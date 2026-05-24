@@ -67,6 +67,7 @@ export type InventoryItem = {
   name: string
   quantity: number
   equipped?: boolean
+  attuned?: boolean
   notes?: string
 }
 
@@ -83,6 +84,8 @@ export const EMPTY_CURRENCY: Currency = { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 }
 export type CharacterSpellcasting = {
   ability: AbilityKey
   cantripSlugs: string[]
+  /** Wizard spellbook (prepared spells must be in this list). */
+  spellbookSlugs: string[]
   knownSlugs: string[]
   preparedSlugs: string[]
   slotsUsed: Partial<Record<number, number>>
@@ -159,6 +162,7 @@ function parseSpellcasting(raw: unknown): CharacterSpellcasting | null {
   return {
     ability,
     cantripSlugs: parseSlugs(r.cantripSlugs),
+    spellbookSlugs: parseSlugs(r.spellbookSlugs),
     knownSlugs: parseSlugs(r.knownSlugs),
     preparedSlugs: parseSlugs(r.preparedSlugs),
     slotsUsed,
@@ -187,6 +191,7 @@ function parseInventoryItems(raw: unknown): InventoryItem[] {
       name: r.name.trim(),
       quantity,
       equipped: r.equipped === true,
+      attuned: r.attuned === true,
       notes: typeof r.notes === 'string' ? r.notes : undefined,
     })
   }

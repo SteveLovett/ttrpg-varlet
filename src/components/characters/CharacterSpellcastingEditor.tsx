@@ -5,18 +5,29 @@ import { SpellDetailDialog } from '../spells/SpellDetailDialog'
 import {
   ABILITY_KEYS,
   ABILITY_LABELS,
+  addInventoryItem,
   addSpellToSpellcasting,
   classHasSpellcasting,
   ensureSpellcasting,
+  formatModifier,
+  inventoryItemCustom,
   longRestSpellcasting,
+  materialComponentInventoryName,
   maxCantripsKnown,
   maxSpellsKnown,
   maxSpellsPrepared,
+  pactSlotSummary,
   removeSpellFromSpellcasting,
+  shortRestSpellcasting,
+  spellAttackBonus,
+  spellSaveDc,
   spellSlotsMax,
+  toggleSpellPrepared,
   usesKnownList,
   usesPreparedList,
+  usesSpellbook,
   partitionSpellcastingIssues,
+  spellcastingMode,
   validateSpellcasting,
   type CharacterSheet,
 } from '../../rules/dnd5e/character'
@@ -30,7 +41,16 @@ type CharacterSpellcastingEditorProps = {
   validationMode?: SpellcastingValidationMode
 }
 
-type PickerTarget = 'cantrip' | 'spell' | null
+type PickerTarget = 'cantrip' | 'spellbook' | 'spell' | null
+
+function spellBadges(slug: string): string[] {
+  const spell = getSpellBySlug(slug)
+  if (!spell) return []
+  const badges: string[] = []
+  if (spell.ritual) badges.push('Ritual')
+  if (spell.concentration) badges.push('Concentration')
+  return badges
+}
 
 export function CharacterSpellcastingEditor({
   sheet,
@@ -60,6 +80,8 @@ export function CharacterSpellcastingEditor({
   const className = sheet.className
   const level = sheet.level
   const abilityScore = working.abilities[sc.ability]
+  const wizardBook = usesSpellbook(className)
+  const isPact = spellcastingMode(className) === 'pact'
 
   const maxCantrips = maxCantripsKnown(className, level)
   const maxPrep = maxSpellsPrepared(className, level, abilityScore)
@@ -67,6 +89,9 @@ export function CharacterSpellcastingEditor({
   const slotMax = spellSlotsMax(className, level)
   const preparedMode = usesPreparedList(className)
   const knownMode = usesKnownList(className)
+  const saveDc = spellSaveDc(working)
+  const attackBonus = spellAttackBonus(working)
+  const pactSummary = pactSlotSummary(className, level)
 
   function updateSpellcasting(patch: Partial<typeof sc>) {
     onChange({
@@ -87,6 +112,13 @@ export function CharacterSpellcastingEditor({
     onChange(removeSpellFromSpellcasting(working, slug))
   }
 
+  function trackMaterialFromSpell() {
+    if (!detailSpell) return
+    const name = materialComponentInventoryName(detailSpell)
+    if (!name) return
+    onChange(addInventoryItem(working, inventoryItemCustom(name)))
+  }
+
   function setSlotUsed(slotLevel: number, used: number) {
     const next = { ...sc.slotsUsed }
     if (used <= 0) {
@@ -97,7 +129,11 @@ export function CharacterSpellcastingEditor({
     updateSpellcasting({ slotsUsed: next })
   }
 
-  function renderSpellList(slugs: string[], emptyLabel: string) {
+  function renderSpellList(
+    slugs: string[],
+    emptyLabel: string,
+    options?: { preparedToggle?: boolean },
+  ) {
     if (slugs.length === 0) {
       return <p className="muted">{emptyLabel}</p>
     }
@@ -106,6 +142,8 @@ export function CharacterSpellcastingEditor({
         {slugs.map((slug) => {
           const spell = getSpellBySlug(slug)
           const name = spell?.name ?? slug
+          const badges = spellBadges(slug)
+          const isPrepared = sc.preparedSlugs.includes(slug)
           return (
             <li key={slug} className="character-spell-row">
               <button
@@ -119,7 +157,18 @@ export function CharacterSpellcastingEditor({
                 <span className="muted character-spell-meta">
                   {spell.level === 0 ? 'Cantrip' : `Level ${spell.level}`}
                   {spell.school ? ` · ${spell.school}` : ''}
+                  {badges.length > 0 ? ` · ${badges.join(', ')}` : ''}
                 </span>
+              ) : null}
+              {options?.preparedToggle ? (
+                <button
+                  type="button"
+                  className="character-spell-prepare"
+                  disabled={disabled || (!isPrepared && sc.preparedSlugs.length >= maxPrep)}
+                  onClick={() => onChange(toggleSpellPrepared(working, slug))}
+                >
+                  {isPrepared ? 'Unprepare' : 'Prepare'}
+                </button>
               ) : null}
               <button
                 type="button"
@@ -138,11 +187,21 @@ export function CharacterSpellcastingEditor({
   }
 
   const pickerLevelFilter: number | '' =
-    pickerTarget === 'cantrip' ? 0 : pickerTarget === 'spell' ? '' : ''
+    pickerTarget === 'cantrip' ? 0 : pickerTarget === 'spellbook' || pickerTarget === 'spell' ? '' : ''
 
   return (
     <section className="character-spellcasting-section">
       <h4>Spellcasting</h4>
+
+      {saveDc != null && attackBonus != null ? (
+        <p className="character-spellcasting-stats muted">
+          Spell save DC {saveDc} · Spell attack {formatModifier(attackBonus)}
+        </p>
+      ) : null}
+
+      {isPact && pactSummary ? (
+        <p className="muted character-pact-summary">{pactSummary}</p>
+      ) : null}
 
       <div className="character-editor-row">
         <div className="form-row">
@@ -182,7 +241,39 @@ export function CharacterSpellcastingEditor({
         {renderSpellList(sc.cantripSlugs, 'No cantrips added.')}
       </div>
 
-      {preparedMode ? (
+      {wizardBook ? (
+        <>
+          <div className="character-spell-block">
+            <div className="character-spell-block-header">
+              <h5>
+                Spellbook{' '}
+                <span className="muted">({sc.spellbookSlugs.length} spells)</span>
+              </h5>
+              <button type="button" disabled={disabled} onClick={() => setPickerTarget('spellbook')}>
+                Add to spellbook
+              </button>
+            </div>
+            {renderSpellList(sc.spellbookSlugs, 'No spells in spellbook.', {
+              preparedToggle: true,
+            })}
+          </div>
+          <div className="character-spell-block">
+            <h5>
+              Prepared{' '}
+              <span className="muted">
+                ({sc.preparedSlugs.length} / {maxPrep})
+              </span>
+            </h5>
+            {sc.preparedSlugs.length === 0 ? (
+              <p className="muted">Mark spells prepared from the spellbook list.</p>
+            ) : (
+              renderSpellList(sc.preparedSlugs, '')
+            )}
+          </div>
+        </>
+      ) : null}
+
+      {preparedMode && !wizardBook ? (
         <div className="character-spell-block">
           <div className="character-spell-block-header">
             <h5>
@@ -207,7 +298,7 @@ export function CharacterSpellcastingEditor({
         <div className="character-spell-block">
           <div className="character-spell-block-header">
             <h5>
-              Spells known{' '}
+              {isPact ? 'Pact spells' : 'Spells known'}{' '}
               <span className="muted">
                 ({sc.knownSlugs.length}
                 {maxKnown > 0 ? ` / ${maxKnown}` : ''})
@@ -229,13 +320,24 @@ export function CharacterSpellcastingEditor({
         <div className="character-spell-block">
           <div className="character-spell-block-header">
             <h5>Spell slots</h5>
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => onChange(longRestSpellcasting(working))}
-            >
-              Long rest (restore slots)
-            </button>
+            <div className="character-spell-rest-actions">
+              {isPact ? (
+                <button
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => onChange(shortRestSpellcasting(working))}
+                >
+                  Short rest (restore pact slots)
+                </button>
+              ) : null}
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => onChange(longRestSpellcasting(working))}
+              >
+                Long rest (restore slots)
+              </button>
+            </div>
           </div>
           <ul className="character-spell-slots">
             {slotMax.map((max, index) => {
@@ -302,7 +404,15 @@ export function CharacterSpellcastingEditor({
         onAdd={addSlug}
       />
 
-      <SpellDetailDialog spell={detailSpell ?? null} onClose={() => setDetailSlug(null)} />
+      <SpellDetailDialog
+        spell={detailSpell ?? null}
+        onClose={() => setDetailSlug(null)}
+        onTrackMaterial={
+          detailSpell && materialComponentInventoryName(detailSpell)
+            ? trackMaterialFromSpell
+            : undefined
+        }
+      />
     </section>
   )
 }

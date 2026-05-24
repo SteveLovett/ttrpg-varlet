@@ -1,4 +1,6 @@
 {
+  "version": 1,
+  "notes": "Hand-maintained SRD 2024 spellcasting tables. Run npm run fetch:srd for spells only.",
   "slotTables": {
     "full": [
       [],

@@ -1,16 +1,23 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { NumericInput } from '../NumericInput'
 import {
   addInventoryItem,
+  canUnpackPack,
+  carryingCapacityLb,
   consolidateInventoryItems,
   displayInventoryItem,
+  equippedWeaponAttacks,
   formatCurrencySummary,
   hasAnyCurrency,
   inventoryItemCustom,
   isBodyArmorItem,
   isShieldItem,
+  setInventoryItemAttuned,
   setInventoryItemEquipped,
   suggestAcFromEquipment,
+  totalInventoryWeightLb,
+  unpackPackIntoInventory,
+  validateInventory,
   type CharacterSheet,
   type Currency,
   type InventoryItem,
@@ -34,6 +41,11 @@ export function CharacterInventoryEditor({
 }: CharacterInventoryEditorProps) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [customName, setCustomName] = useState('')
+
+  const inventoryWarnings = useMemo(() => validateInventory(sheet), [sheet])
+  const weaponAttacks = useMemo(() => equippedWeaponAttacks(sheet), [sheet])
+  const carriedLb = totalInventoryWeightLb(sheet)
+  const capacityLb = carryingCapacityLb(sheet)
 
   function patchItems(inventoryItems: InventoryItem[]) {
     onChange({ ...sheet, inventoryItems: consolidateInventoryItems(inventoryItems) })
@@ -79,6 +91,15 @@ export function CharacterInventoryEditor({
     onChange(next)
   }
 
+  function toggleAttuned(id: string, attuned: boolean) {
+    onChange(setInventoryItemAttuned(sheet, id, attuned))
+  }
+
+  function unpackPack(item: InventoryItem) {
+    if (!item.catalogSlug || !canUnpackPack(item.catalogSlug)) return
+    onChange(unpackPackIntoInventory(sheet, item.catalogSlug))
+  }
+
   const suggestedAc = suggestAcFromEquipment(sheet)
   const currencySummary = formatCurrencySummary(sheet.currency)
 
@@ -91,6 +112,34 @@ export function CharacterInventoryEditor({
           onChange={onChange}
           disabled={disabled}
         />
+      ) : null}
+
+      {inventoryWarnings.length > 0 ? (
+        <div className="character-inventory-warnings" role="status">
+          <p className="character-inventory-warnings-title">Inventory notes</p>
+          <ul>
+            {inventoryWarnings.map((msg) => (
+              <li key={msg}>{msg}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <p className="muted character-inventory-weight">
+        Carried {carriedLb.toFixed(1)} lb / {capacityLb} lb capacity (STR × 15)
+      </p>
+
+      {weaponAttacks.length > 0 ? (
+        <div className="character-weapon-attacks">
+          <h5>Equipped weapons</h5>
+          <ul>
+            {weaponAttacks.map((line) => (
+              <li key={line.itemId}>
+                <strong>{line.name}</strong> — {line.attackBonus} to hit, {line.damage}
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
 
       <div className="character-inventory-currency-block">
@@ -160,6 +209,24 @@ export function CharacterInventoryEditor({
                       Equipped
                     </label>
                   )}
+                  <label className="character-inventory-attuned">
+                    <input
+                      type="checkbox"
+                      checked={!!item.attuned}
+                      disabled={disabled}
+                      onChange={(e) => toggleAttuned(item.id, e.target.checked)}
+                    />
+                    Attuned
+                  </label>
+                  {item.catalogSlug && canUnpackPack(item.catalogSlug) ? (
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => unpackPack(item)}
+                    >
+                      Unpack
+                    </button>
+                  ) : null}
                   <button type="button" disabled={disabled} onClick={() => removeFromStack(item.id)}>
                     {item.quantity > 1 ? 'Remove one' : 'Remove'}
                   </button>

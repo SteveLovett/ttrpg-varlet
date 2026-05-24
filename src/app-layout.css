@@ -899,6 +899,59 @@
   font-weight: 600;
 }
 
+.equipment-list-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.equipment-list-name-button {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.equipment-list-name-button:hover strong {
+  text-decoration: underline;
+}
+
+.character-inventory-warnings {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  background: var(--color-surface-raised, rgba(255, 200, 100, 0.08));
+}
+
+.character-inventory-warnings-title,
+.character-spellcasting-warnings-title {
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.character-inventory-weight {
+  margin: 0 0 0.75rem;
+}
+
+.character-weapon-attacks ul,
+.character-weapon-attacks-view ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.character-spell-rest-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.spell-detail-material-action {
+  margin: 0.75rem 0;
+}
+
 .equipment-picker-row-meta {
   font-size: 0.85rem;
 }

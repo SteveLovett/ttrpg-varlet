@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
 import { AddEquipmentToCharacterDialog } from '../components/characters/AddEquipmentToCharacterDialog'
+import { EquipmentDetailDialog } from '../components/equipment/EquipmentDetailDialog'
 import { useMyCharacters } from '../hooks/useMyCharacters'
 import { inventoryItemFromCatalog } from '../rules/dnd5e/character'
 import { armor } from '../rules/dnd5e/data/armor'
@@ -23,6 +24,7 @@ export function EquipmentPage() {
   const [query, setQuery] = useState('')
   const [kindFilter, setKindFilter] = useState<EquipmentKind | ''>('')
   const [addTarget, setAddTarget] = useState<AddTarget | null>(null)
+  const [detailTarget, setDetailTarget] = useState<AddTarget | null>(null)
   const { characters, loading, error, addItemToCharacter } = useMyCharacters({ loadOnMount: true })
 
   const filtered = useMemo(() => {
@@ -133,18 +135,36 @@ export function EquipmentPage() {
         {filtered.slice(0, 120).map((row) => (
           <li key={`${row.kind}-${row.key}`} className="bestiary-item equipment-list-item">
             <div className="equipment-list-item-text">
-              <strong>{row.name}</strong>
+              <button
+                type="button"
+                className="equipment-list-name-button"
+                onClick={() =>
+                  setDetailTarget({ kind: row.kind, slug: row.key, name: row.name })
+                }
+              >
+                <strong>{row.name}</strong>
+              </button>
               <span className="muted">
                 {row.kind} · {row.meta}
               </span>
             </div>
-            <button
-              type="button"
-              className="equipment-add-to-char"
-              onClick={() => setAddTarget({ kind: row.kind, slug: row.key, name: row.name })}
-            >
-              Add to character
-            </button>
+            <div className="equipment-list-item-actions">
+              <button
+                type="button"
+                onClick={() =>
+                  setDetailTarget({ kind: row.kind, slug: row.key, name: row.name })
+                }
+              >
+                Details
+              </button>
+              <button
+                type="button"
+                className="equipment-add-to-char"
+                onClick={() => setAddTarget({ kind: row.kind, slug: row.key, name: row.name })}
+              >
+                Add to character
+              </button>
+            </div>
           </li>
         ))}
       </ul>
@@ -152,6 +172,12 @@ export function EquipmentPage() {
       {filtered.length > 120 ? (
         <p className="muted">Narrow your search to see more than 120 results.</p>
       ) : null}
+
+      <EquipmentDetailDialog
+        kind={detailTarget?.kind ?? null}
+        slug={detailTarget?.slug ?? null}
+        onClose={() => setDetailTarget(null)}
+      />
 
       {addTarget ? (
         <AddEquipmentToCharacterDialog

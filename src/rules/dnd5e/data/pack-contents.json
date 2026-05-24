@@ -1,0 +1,41 @@
+{
+  "packs": {
+    "srd-2024_explorers-pack": [
+      { "kind": "item", "slug": "srd-2024_backpack", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_bedroll", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_tinderbox", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_torch", "quantity": 10 },
+      { "kind": "item", "slug": "srd-2024_rations", "quantity": 10 },
+      { "kind": "item", "slug": "srd-2024_waterskin", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_rope", "quantity": 1 }
+    ],
+    "srd-2024_dungeoneers-pack": [
+      { "kind": "item", "slug": "srd-2024_backpack", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_caltrops", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_oil", "quantity": 2 },
+      { "kind": "item", "slug": "srd-2024_rations", "quantity": 10 },
+      { "kind": "item", "slug": "srd-2024_rope", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_tinderbox", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_torch", "quantity": 10 },
+      { "kind": "item", "slug": "srd-2024_waterskin", "quantity": 1 }
+    ],
+    "srd-2024_priests-pack": [
+      { "kind": "item", "slug": "srd-2024_backpack", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_blanket", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_holy-water", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_lamp", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_rations", "quantity": 2 },
+      { "kind": "item", "slug": "srd-2024_robe", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_tinderbox", "quantity": 1 }
+    ],
+    "srd-2024_scholars-pack": [
+      { "kind": "item", "slug": "srd-2024_backpack", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_book", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_ink", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_ink-pen", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_lamp", "quantity": 1 },
+      { "kind": "item", "slug": "srd-2024_oil", "quantity": 10 },
+      { "kind": "item", "slug": "srd-2024_parchment", "quantity": 10 }
+    ]
+  }
+}

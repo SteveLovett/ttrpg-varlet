@@ -25,13 +25,19 @@ export {
   maxCantripsKnown,
   maxSpellsKnown,
   maxSpellsPrepared,
+  pactSlotSummary,
   removeSpellFromSpellcasting,
+  shortRestSpellcasting,
+  spellAttackBonus,
   spellcastingMode,
   spellcastingModeLabel,
   preparedCapDescription,
+  spellSaveDc,
   spellSlotsMax,
+  toggleSpellPrepared,
   usesKnownList,
   usesPreparedList,
+  usesSpellbook,
   validateSpellcasting,
 } from './spellcasting'
 export type { SpellcastingIssue, SpellcastingIssueSeverity } from './spellcasting'
@@ -48,17 +54,32 @@ export { suggestAcFromEquipment, isBodyArmorItem, isShieldItem } from './armorAc
 export {
   addInventoryItem,
   consolidateInventoryItems,
+  countAttunedItems,
   displayInventoryItem,
   formatCurrencySummary,
   hasAnyCurrency,
   inventoryItemCustom,
   inventoryItemFromCatalog,
   inventoryStackKey,
+  MAX_ATTUNEMENT,
   newInventoryItemId,
   normalizeInventoryIds,
+  setInventoryItemAttuned,
   setInventoryItemEquipped,
   validateInventory,
 } from './inventory'
+export {
+  carryingCapacityLb,
+  encumbranceLabel,
+  encumbranceStatus,
+  inventoryItemWeightLb,
+  totalInventoryWeightLb,
+} from './inventoryWeight'
+export type { EncumbranceStatus } from './inventoryWeight'
+export { canUnpackPack, getPackContents, unpackPackIntoInventory } from './packs'
+export { equippedWeaponAttacks } from './weaponAttacks'
+export type { WeaponAttackLine } from './weaponAttacks'
+export { materialComponentInventoryName } from './materialComponents'
 export {
   applyStartingEquipmentSelections,
   getStartingEquipmentPack,

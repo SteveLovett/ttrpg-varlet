@@ -1,6 +1,7 @@
 import { catalogName, type EquipmentKind } from '../data/equipment'
 import { isBodyArmorItem, isShieldItem } from './armorAc'
 import { consolidateInventoryItems } from './inventoryStack'
+import { carryingCapacityLb, encumbranceLabel, encumbranceStatus, totalInventoryWeightLb } from './inventoryWeight'
 import type { CharacterSheet, Currency, InventoryItem } from './types'
 
 export { consolidateInventoryItems, inventoryStackKey } from './inventoryStack'
@@ -44,6 +45,24 @@ export function addInventoryItem(sheet: CharacterSheet, item: InventoryItem): Ch
     ...sheet,
     inventoryItems: consolidateInventoryItems([...sheet.inventoryItems, item]),
   }
+}
+
+export const MAX_ATTUNEMENT = 3
+
+export function setInventoryItemAttuned(
+  sheet: CharacterSheet,
+  itemId: string,
+  attuned: boolean,
+): CharacterSheet {
+  const inventoryItems = sheet.inventoryItems.map((item) => {
+    if (item.id !== itemId) return item
+    return { ...item, attuned: attuned || undefined }
+  })
+  return { ...sheet, inventoryItems }
+}
+
+export function countAttunedItems(sheet: CharacterSheet): number {
+  return sheet.inventoryItems.filter((i) => i.attuned).length
 }
 
 /** Toggle equipped; only one body armor and one shield at a time. */
@@ -98,12 +117,28 @@ export function validateInventory(sheet: CharacterSheet): string[] {
   if (equippedShields.length > 1) {
     warnings.push('Multiple shields are marked equipped.')
   }
+  const attuned = countAttunedItems(sheet)
+  if (attuned > MAX_ATTUNEMENT) {
+    warnings.push(`${attuned} items attuned; maximum ${MAX_ATTUNEMENT} normally allowed.`)
+  }
+  const weight = totalInventoryWeightLb(sheet)
+  const capacity = carryingCapacityLb(sheet)
+  if (weight > capacity) {
+    warnings.push(
+      `Carried weight ${weight.toFixed(1)} lb exceeds capacity ${capacity} lb (STR × 15).`,
+    )
+  }
+  const enc = encumbranceLabel(encumbranceStatus(sheet))
+  if (enc) warnings.push(enc)
   return warnings
 }
 
 export function displayInventoryItem(item: InventoryItem): string {
-  const equipped = item.equipped ? ' (equipped)' : ''
-  return `${item.name}${equipped}`
+  const tags: string[] = []
+  if (item.equipped) tags.push('equipped')
+  if (item.attuned) tags.push('attuned')
+  const suffix = tags.length > 0 ? ` (${tags.join(', ')})` : ''
+  return `${item.name}${suffix}`
 }
 
 /** Ensure stable ids and one row per identical item stack. */

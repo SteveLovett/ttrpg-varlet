@@ -6,9 +6,14 @@ import {
   createDefaultSpellcasting,
   maxCantripsKnown,
   maxSpellsPrepared,
+  pactSlotSummary,
   preparedCapDescription,
+  spellAttackBonus,
   spellcastingMode,
+  spellSaveDc,
   spellSlotsMax,
+  toggleSpellPrepared,
+  validateSpellcasting,
 } from './spellcasting'
 
 describe('classHasSpellcasting', () => {
@@ -69,13 +74,14 @@ describe('addSpellToSpellcasting', () => {
     expect(next.spellcasting?.cantripSlugs).toContain('srd-2024_acid-splash')
   })
 
-  it('adds leveled spells to preparedSlugs for prepared casters', () => {
+  it('adds leveled spells to spellbook for Wizard', () => {
     const base = testSheet({
       className: 'Wizard',
       spellcasting: createDefaultSpellcasting(testSheet({ className: 'Wizard' }))!,
     })
     const next = addSpellToSpellcasting(base, 'srd-2024_acid-arrow')
-    expect(next.spellcasting?.preparedSlugs).toContain('srd-2024_acid-arrow')
+    expect(next.spellcasting?.spellbookSlugs).toContain('srd-2024_acid-arrow')
+    expect(next.spellcasting?.preparedSlugs).not.toContain('srd-2024_acid-arrow')
   })
 
   it('adds leveled spells to knownSlugs for Warlock', () => {
@@ -92,5 +98,41 @@ describe('addSpellToSpellcasting', () => {
 describe('maxCantripsKnown', () => {
   it('returns cantrip allowance for Wizard', () => {
     expect(maxCantripsKnown('Wizard', 1)).toBeGreaterThan(0)
+  })
+})
+
+describe('spellSaveDc', () => {
+  it('computes 8 + prof + ability mod', () => {
+    const sheet = testSheet({
+      className: 'Wizard',
+      level: 5,
+      abilities: { str: 10, dex: 10, con: 10, int: 18, wis: 10, cha: 10 },
+      spellcasting: createDefaultSpellcasting(testSheet({ className: 'Wizard' }))!,
+    })
+    expect(spellSaveDc(sheet)).toBe(15)
+    expect(spellAttackBonus(sheet)).toBe(7)
+  })
+})
+
+describe('pactSlotSummary', () => {
+  it('describes warlock slots', () => {
+    const summary = pactSlotSummary('Warlock', 5)
+    expect(summary).toMatch(/slot/i)
+  })
+})
+
+describe('toggleSpellPrepared', () => {
+  it('requires spellbook membership for Wizard', () => {
+    let sheet = testSheet({
+      className: 'Wizard',
+      spellcasting: {
+        ...createDefaultSpellcasting(testSheet({ className: 'Wizard' }))!,
+        spellbookSlugs: ['srd-2024_acid-arrow'],
+      },
+    })
+    sheet = toggleSpellPrepared(sheet, 'srd-2024_acid-arrow')
+    expect(sheet.spellcasting?.preparedSlugs).toContain('srd-2024_acid-arrow')
+    const issues = validateSpellcasting(sheet).filter((i) => i.severity === 'error')
+    expect(issues.some((i) => i.message.includes('not in the spellbook'))).toBe(false)
   })
 })

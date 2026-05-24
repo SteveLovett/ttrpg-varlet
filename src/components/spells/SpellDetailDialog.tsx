@@ -10,9 +10,11 @@ import {
 type SpellDetailDialogProps = {
   spell: SpellRef | null
   onClose: () => void
+  /** Add spell material as a custom inventory row on the open character sheet. */
+  onTrackMaterial?: () => void
 }
 
-export function SpellDetailDialog({ spell, onClose }: SpellDetailDialogProps) {
+export function SpellDetailDialog({ spell, onClose, onTrackMaterial }: SpellDetailDialogProps) {
   if (!spell) return null
 
   return (
@@ -72,6 +74,14 @@ export function SpellDetailDialog({ spell, onClose }: SpellDetailDialogProps) {
             </dd>
           </div>
         </dl>
+
+        {spell.material && onTrackMaterial ? (
+          <p className="spell-detail-material-action">
+            <button type="button" onClick={onTrackMaterial}>
+              Track material in inventory
+            </button>
+          </p>
+        ) : null}
 
         {spell.desc ? (
           <div className="spell-detail-desc">

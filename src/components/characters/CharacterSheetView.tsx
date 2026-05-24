@@ -5,16 +5,23 @@ import {
   abilityModifier,
   classHasSpellcasting,
   displayInventoryItem,
+  equippedWeaponAttacks,
   formatCurrencySummary,
   formatModifier,
   hasAnyCurrency,
+  pactSlotSummary,
   proficiencyBonus,
+  spellAttackBonus,
   spellcastingMode,
   spellcastingModeLabel,
+  spellSaveDc,
   spellSlotsMax,
   suggestAcFromEquipment,
+  totalInventoryWeightLb,
+  carryingCapacityLb,
   usesPreparedList,
   usesKnownList,
+  usesSpellbook,
   SKILL_DEFS,
   type CharacterSheet,
 } from '../../rules/dnd5e/character'
@@ -35,6 +42,10 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
   const detailSpell = detailSlug ? getSpellBySlug(detailSlug) : null
   const suggestedAc = suggestAcFromEquipment(sheet)
   const acDiffers = suggestedAc !== sheet.ac
+  const weaponAttacks = equippedWeaponAttacks(sheet)
+  const saveDc = showSpellcasting ? spellSaveDc(sheet) : null
+  const spellAttack = showSpellcasting ? spellAttackBonus(sheet) : null
+  const pactSummary = showSpellcasting ? pactSlotSummary(sheet.className, sheet.level) : null
   const hasInventoryItems = sheet.inventoryItems.length > 0
   const hasAdditionalInventory = sheet.inventory.trim().length > 0
   const showInventorySection =
@@ -94,6 +105,20 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
               <dt>Speed</dt>
               <dd>{sheet.speed} ft.</dd>
             </div>
+            {weaponAttacks.length > 0 ? (
+              <div className="character-weapon-attacks-view">
+                <dt>Attacks</dt>
+                <dd>
+                  <ul>
+                    {weaponAttacks.map((line) => (
+                      <li key={line.itemId}>
+                        {line.name} {line.attackBonus}, {line.damage}
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            ) : null}
           </dl>
         </section>
 
@@ -125,12 +150,23 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
               {spellcastingModeLabel(sheet.className)
                 ? ` · ${spellcastingModeLabel(sheet.className)}`
                 : ''}
+              {saveDc != null && spellAttack != null
+                ? ` · DC ${saveDc} · attack ${formatModifier(spellAttack)}`
+                : ''}
             </p>
+            {pactSummary ? <p className="muted">{pactSummary}</p> : null}
 
             {sc.cantripSlugs.length > 0 ? (
               <>
                 <h5 className="character-spell-view-heading">Cantrips</h5>
                 <SpellSlugList slugs={sc.cantripSlugs} onOpen={setDetailSlug} />
+              </>
+            ) : null}
+
+            {usesSpellbook(sheet.className) && sc.spellbookSlugs.length > 0 ? (
+              <>
+                <h5 className="character-spell-view-heading">Spellbook</h5>
+                <SpellSlugList slugs={sc.spellbookSlugs} onOpen={setDetailSlug} />
               </>
             ) : null}
 
@@ -151,6 +187,7 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
             ) : null}
 
             {sc.cantripSlugs.length === 0 &&
+            sc.spellbookSlugs.length === 0 &&
             sc.preparedSlugs.length === 0 &&
             sc.knownSlugs.length === 0 ? (
               <p className="muted">No spells recorded.</p>
@@ -181,6 +218,13 @@ export function CharacterSheetView({ sheet, ownerLabel }: CharacterSheetViewProp
         {showInventorySection ? (
           <section className="character-sheet-block character-sheet-block--wide character-inventory-section">
             <h4>Inventory</h4>
+
+            {hasInventoryItems ? (
+              <p className="muted character-inventory-weight">
+                {totalInventoryWeightLb(sheet).toFixed(1)} lb carried ·{' '}
+                {carryingCapacityLb(sheet)} lb capacity
+              </p>
+            ) : null}
 
             {hasAnyCurrency(sheet.currency) ? (
               <p className="character-currency-summary">{formatCurrencySummary(sheet.currency)}</p>

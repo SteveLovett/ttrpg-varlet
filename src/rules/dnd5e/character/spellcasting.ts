@@ -1,7 +1,7 @@
 import rulesData from '../data/spellcasting-rules.json'
 import { isSpellOnClassList } from '../data/class-spell-lists'
 import { getSpellBySlug } from '../data/spells'
-import { abilityModifier } from './math'
+import { abilityModifier, proficiencyBonus } from './math'
 import type { AbilityKey, CharacterSheet, CharacterSpellcasting } from './types'
 
 export type SpellcastingMode = 'none' | 'prepared' | 'known' | 'pact'
@@ -50,10 +50,41 @@ export function createDefaultSpellcasting(sheet: CharacterSheet): CharacterSpell
   return {
     ability: defaultSpellcastingAbility(sheet.className),
     cantripSlugs: [],
+    spellbookSlugs: [],
     knownSlugs: [],
     preparedSlugs: [],
     slotsUsed: {},
   }
+}
+
+export function usesSpellbook(className: string): boolean {
+  return className === 'Wizard'
+}
+
+export function spellSaveDc(sheet: CharacterSheet): number | null {
+  const sc = sheet.spellcasting
+  if (!sc || !classHasSpellcasting(sheet.className)) return null
+  return 8 + proficiencyBonus(sheet.level) + abilityModifier(sheet.abilities[sc.ability])
+}
+
+export function spellAttackBonus(sheet: CharacterSheet): number | null {
+  const sc = sheet.spellcasting
+  if (!sc || !classHasSpellcasting(sheet.className)) return null
+  return proficiencyBonus(sheet.level) + abilityModifier(sheet.abilities[sc.ability])
+}
+
+/** Human-readable pact slot line for Warlock (all slots share one level). */
+export function pactSlotSummary(className: string, level: number): string | null {
+  const r = getClassSpellcastingRules(className)
+  if (!r || r.slotTable !== 'pact') return null
+  const groups = rules.slotTables.pact[levelIndex(level)] ?? []
+  if (groups.length === 0) return null
+  return groups
+    .map((g) => {
+      const slotWord = g.count === 1 ? 'slot' : 'slots'
+      return `${g.count} ${slotWord} (cast at level ${g.level})`
+    })
+    .join('; ')
 }
 
 function levelIndex(level: number): number {
@@ -140,18 +171,47 @@ export function activeSpellList(sc: CharacterSpellcasting, className: string): s
   return usesPreparedList(className) ? sc.preparedSlugs : sc.knownSlugs
 }
 
+/** Merge legacy prepared spells into spellbook for Wizards missing spellbook rows. */
+export function normalizeSpellcasting(sheet: CharacterSheet): CharacterSheet {
+  if (!usesSpellbook(sheet.className) || !sheet.spellcasting) return sheet
+  const sc = sheet.spellcasting
+  const book = new Set(sc.spellbookSlugs)
+  for (const slug of sc.preparedSlugs) book.add(slug)
+  if (book.size === sc.spellbookSlugs.length) return sheet
+  return { ...sheet, spellcasting: { ...sc, spellbookSlugs: [...book] } }
+}
+
 export function ensureSpellcasting(sheet: CharacterSheet): CharacterSheet {
   if (!classHasSpellcasting(sheet.className)) {
     return { ...sheet, spellcasting: null }
   }
-  if (sheet.spellcasting) return sheet
-  return { ...sheet, spellcasting: createDefaultSpellcasting(sheet) }
+  if (sheet.spellcasting) return normalizeSpellcasting(sheet)
+  return normalizeSpellcasting({
+    ...sheet,
+    spellcasting: createDefaultSpellcasting(sheet),
+  })
 }
 
 export function longRestSpellcasting(sheet: CharacterSheet): CharacterSheet {
   const sc = sheet.spellcasting
   if (!sc) return sheet
   return { ...sheet, spellcasting: { ...sc, slotsUsed: {} } }
+}
+
+/** Warlock pact slots refresh on a short rest. */
+export function shortRestSpellcasting(sheet: CharacterSheet): CharacterSheet {
+  if (spellcastingMode(sheet.className) !== 'pact') return sheet
+  return longRestSpellcasting(sheet)
+}
+
+export function toggleSpellPrepared(sheet: CharacterSheet, slug: string): CharacterSheet {
+  const sc = sheet.spellcasting
+  if (!sc || !usesPreparedList(sheet.className)) return sheet
+  if (usesSpellbook(sheet.className) && !sc.spellbookSlugs.includes(slug)) return sheet
+  const prepared = sc.preparedSlugs.includes(slug)
+    ? sc.preparedSlugs.filter((s) => s !== slug)
+    : [...sc.preparedSlugs, slug]
+  return { ...sheet, spellcasting: { ...sc, preparedSlugs: prepared } }
 }
 
 export function addSpellToSpellcasting(
@@ -176,6 +236,13 @@ export function addSpellToSpellcasting(
   }
 
   if (usesPreparedList(sheet.className)) {
+    if (usesSpellbook(sheet.className)) {
+      if (inList(sc.spellbookSlugs)) return next
+      return {
+        ...next,
+        spellcasting: { ...sc, spellbookSlugs: [...sc.spellbookSlugs, slug] },
+      }
+    }
     if (inList(sc.preparedSlugs)) return next
     return {
       ...next,
@@ -201,6 +268,7 @@ export function removeSpellFromSpellcasting(
     spellcasting: {
       ...sc,
       cantripSlugs: sc.cantripSlugs.filter((s) => s !== slug),
+      spellbookSlugs: sc.spellbookSlugs.filter((s) => s !== slug),
       knownSlugs: sc.knownSlugs.filter((s) => s !== slug),
       preparedSlugs: sc.preparedSlugs.filter((s) => s !== slug),
     },
@@ -266,6 +334,19 @@ export function validateSpellcasting(sheet: CharacterSheet): SpellcastingIssue[]
           'error',
         ),
       )
+    }
+    if (usesSpellbook(className)) {
+      for (const slug of sc.preparedSlugs) {
+        if (!sc.spellbookSlugs.includes(slug)) {
+          const spell = getSpellBySlug(slug)
+          issues.push(
+            issue(
+              `${spell?.name ?? slug} is prepared but not in the spellbook.`,
+              'error',
+            ),
+          )
+        }
+      }
     }
   } else {
     const maxKnown = maxSpellsKnown(className, level)
