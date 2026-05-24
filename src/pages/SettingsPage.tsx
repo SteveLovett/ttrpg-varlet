@@ -3,6 +3,11 @@ import { FONT_OVERRIDE_IDS } from '../themes/types'
 import { FONT_OVERRIDES } from '../themes/fonts'
 import { THEME_LIST } from '../themes/registry'
 import { UserSpellcastingValidationField } from '../components/settings/SpellcastingValidationFields'
+import {
+  DICE_ANIMATION_MODES,
+  DEFAULT_DICE_ANIMATION_MODE,
+  type DiceAnimationMode,
+} from '../settings/diceAnimation'
 import { DEFAULT_SPELLCASTING_VALIDATION_MODE } from '../settings/validation'
 import { useThemeSettings } from '../themes/themeContext'
 import { useDisplayNameProfile } from '../hooks/displayNameProfileContext'
@@ -17,6 +22,7 @@ export function SettingsPage() {
     setThemeId,
     setFontOverrideId,
     setSpellcastingValidation,
+    setDiceAnimation,
   } = useThemeSettings()
 
   const {
@@ -33,6 +39,14 @@ export function SettingsPage() {
 
   const activeTheme = preferences.themeId ?? 'default'
   const activeFont = preferences.fontOverrideId ?? 'theme'
+  const activeDiceAnimation = preferences.diceAnimation ?? DEFAULT_DICE_ANIMATION_MODE
+
+  const diceAnimationLabels: Record<DiceAnimationMode, string> = {
+    auto: 'Automatic (3D on full tray, quick 3D on session tray)',
+    instant: 'Instant — no animation',
+    pseudo3d: 'Quick 3D-style (2D) everywhere',
+    full3d: '3D physics on full tray when possible',
+  }
 
   return (
     <div className="settings-page">
@@ -160,6 +174,32 @@ export function SettingsPage() {
           <span className="settings-font-sample-label">Preview: </span>
           The quick brown fox jumps over the lazy dog. Roll for initiative.
         </p>
+      </section>
+
+      <section className="settings-section" aria-labelledby="settings-dice">
+        <h3 id="settings-dice" className="settings-section-title">
+          Dice
+        </h3>
+        <p className="muted settings-lede">
+          Control roll animations. The app also respects your system&apos;s{' '}
+          <strong>prefers-reduced-motion</strong> setting (treated as instant). Session tray uses
+          lightweight dice; the full dice page uses physics-based 3D when available.
+        </p>
+        <div className="form-row settings-font-row">
+          <label htmlFor="settings-dice-animation">Dice animation</label>
+          <select
+            id="settings-dice-animation"
+            value={activeDiceAnimation}
+            disabled={themeLoading}
+            onChange={(e) => setDiceAnimation(e.target.value as DiceAnimationMode)}
+          >
+            {DICE_ANIMATION_MODES.map((mode) => (
+              <option key={mode} value={mode}>
+                {diceAnimationLabels[mode]}
+              </option>
+            ))}
+          </select>
+        </div>
       </section>
 
       <section className="settings-section" aria-labelledby="settings-characters">

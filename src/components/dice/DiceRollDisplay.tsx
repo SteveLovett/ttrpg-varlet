@@ -6,9 +6,15 @@ type DiceRollDisplayProps = {
   result: RollResult
   rolling?: boolean
   compact?: boolean
+  pseudo3d?: boolean
 }
 
-export function DiceRollDisplay({ result, rolling = false, compact = false }: DiceRollDisplayProps) {
+export function DiceRollDisplay({
+  result,
+  rolling = false,
+  compact = false,
+  pseudo3d = false,
+}: DiceRollDisplayProps) {
   const dice = displayDiceFromResult(result)
   const size = compact ? 'sm' : 'md'
 
@@ -22,6 +28,7 @@ export function DiceRollDisplay({ result, rolling = false, compact = false }: Di
             value={die.dropped ? die.value : die.value}
             dropped={die.dropped}
             rolling={rolling}
+            pseudo3d={pseudo3d}
             size={dice.length > 4 ? 'sm' : size}
           />
         ))}

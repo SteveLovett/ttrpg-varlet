@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import type { DiceAnimationMode } from '../settings/diceAnimation'
 import type { SpellcastingValidationMode } from '../settings/validation'
 import type { FontOverrideId, ThemeId, UserPreferences } from './types'
 
@@ -11,6 +12,7 @@ export type ThemeContextValue = {
   setThemeId: (id: ThemeId) => void
   setFontOverrideId: (id: FontOverrideId) => void
   setSpellcastingValidation: (mode: SpellcastingValidationMode) => void
+  setDiceAnimation: (mode: DiceAnimationMode) => void
 }
 
 export const ThemeContext = createContext<ThemeContextValue | null>(null)

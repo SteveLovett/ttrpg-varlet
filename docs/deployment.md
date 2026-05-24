@@ -19,13 +19,18 @@ ever deployed by us.
 | Field | Value |
 |-------|-------|
 | Framework preset | Vite |
-| Build command | `npm run build` |
+| Build command | `npm run copy:dice-assets && npm run build` |
 | Build output directory | `dist` |
 | Root directory | (leave blank) |
 | Node version | 20 (the `package.json` `engines` field will pin it) |
 
 Vite's Pages preset handles SPA fallback automatically — no `_redirects`
 file required for react-router to work.
+
+3D dice on the full dice tray need static assets under `public/assets/dice-threejs/`.
+After `npm install`, run `npm run copy:dice-assets` once (or include it in the
+build command above). Commit `public/assets/dice-threejs/` if you prefer not to
+copy on every CI build.
 
 ### 2. Environment variables (Pages → Settings → Environment variables)
 

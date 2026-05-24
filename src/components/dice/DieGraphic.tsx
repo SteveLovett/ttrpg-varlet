@@ -6,6 +6,8 @@ export type DieGraphicProps = {
   value?: number | null
   rolling?: boolean
   dropped?: boolean
+  /** CSS perspective tumble (compact tray). */
+  pseudo3d?: boolean
   size?: 'sm' | 'md' | 'lg'
   /** Show label under shape (preset buttons). */
   showLabel?: boolean
@@ -89,6 +91,7 @@ export function DieGraphic({
   value = null,
   rolling = false,
   dropped = false,
+  pseudo3d = false,
   size = 'md',
   showLabel = false,
   caption,
@@ -99,6 +102,8 @@ export function DieGraphic({
     `die-graphic--${sides}`,
     `die-graphic--${size}`,
     rolling ? 'die-graphic--rolling' : '',
+    pseudo3d ? 'die-graphic--pseudo3d' : '',
+    rolling && pseudo3d ? 'die-graphic--pseudo3d-rolling' : '',
     dropped ? 'die-graphic--dropped' : '',
     value != null && !rolling ? 'die-graphic--revealed' : '',
   ]
@@ -107,12 +112,14 @@ export function DieGraphic({
 
   return (
     <div className={classes} aria-hidden={showLabel}>
+      <div className="die-graphic-stage">
       <svg viewBox="0 0 64 64" className="die-graphic-svg" role="img" aria-label={`${SIDE_LABELS[sides]} ${face}`}>
         <DieShape sides={sides} />
         <text className="die-graphic-value" x="32" y="36" textAnchor="middle">
           {face}
         </text>
       </svg>
+      </div>
       {showLabel ? (
         <span className="die-graphic-label">{caption ?? SIDE_LABELS[sides]}</span>
       ) : null}

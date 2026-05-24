@@ -14,9 +14,11 @@
     "test:watch": "vitest",
     "preview": "vite preview",
     "fetch:srd": "node scripts/fetch-open5e-data.mjs",
-    "check:data": "node scripts/check-bundled-data.mjs"
+    "check:data": "node scripts/check-bundled-data.mjs",
+    "copy:dice-assets": "mkdir -p public/assets/dice-threejs && cp -R node_modules/@3d-dice/dice-box-threejs/public/* public/assets/dice-threejs/"
   },
   "dependencies": {
+    "@3d-dice/dice-box-threejs": "^0.0.12",
     "@liveblocks/client": "^3.19.3",
     "@liveblocks/react": "^3.19.3",
     "@liveblocks/yjs": "^3.19.3",
@@ -25,6 +27,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.14.0",
+    "three": "^0.170.0",
     "yjs": "^13.6.30"
   },
   "devDependencies": {

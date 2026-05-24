@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { NumericInput } from './NumericInput'
 import type { SubmitEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { DiceBoxViewport } from './dice/DiceBoxViewport'
+import { DiceTrayAppearanceRow } from './dice/DiceTrayAppearanceRow'
 import { DiceRollDisplay } from './dice/DiceRollDisplay'
 import { DieGraphic } from './dice/DieGraphic'
 import {
@@ -10,13 +12,17 @@ import {
   presetUsesDieIcon,
   quickDicePresets,
 } from './dice/presetDisplay'
-import { useDiceGraphicsPreference } from '../hooks/useDiceGraphicsPreference'
+import { useDiceColorTheme } from '../hooks/useDiceColorTheme'
+import { useDiceTrayBackground } from '../hooks/useDiceTrayBackground'
+import { useDicePresentation } from '../hooks/useDicePresentation'
+import {
+  DICE_3D_ANIMATION_MS,
+  DICE_PSEUDO_ANIMATION_MS,
+} from '../settings/diceAnimation'
 import { dicePresets } from '../rules/dnd5e/data'
 import type { DicePreset } from '../rules/dnd5e/data'
 import { rollD20, rollD100, rollFormula } from '../rules/dnd5e/dice'
 import type { AdvantageMode, RollResult } from '../rules/dnd5e/dice/types'
-
-const ROLL_ANIM_MS = 480
 
 export type DiceTrayProps = {
   variant: 'full' | 'compact'
@@ -30,8 +36,22 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+function animationDurationMs(presentation: {
+  instant: boolean
+  full3d: boolean
+  pseudo3d: boolean
+}): number {
+  if (presentation.instant) return 0
+  if (presentation.full3d) return DICE_3D_ANIMATION_MS
+  if (presentation.pseudo3d) return DICE_PSEUDO_ANIMATION_MS
+  return 0
+}
+
 export function DiceTray({ variant, gameId, onRoll, lastResult }: DiceTrayProps) {
-  const [graphicsEnabled, setGraphicsEnabled] = useDiceGraphicsPreference()
+  const { presentation } = useDicePresentation(variant)
+  const { themeId: diceColorThemeId, setTheme: setDiceColorTheme } = useDiceColorTheme()
+  const { backgroundId: diceTrayBackgroundId, setBackground: setDiceTrayBackground } =
+    useDiceTrayBackground()
   const [formula, setFormula] = useState('1d20')
   const [modifier, setModifier] = useState(0)
   const [label, setLabel] = useState('')
@@ -42,16 +62,19 @@ export function DiceTray({ variant, gameId, onRoll, lastResult }: DiceTrayProps)
 
   const displayResult = lastResult ?? localResult
   const isCompact = variant === 'compact'
+  const showGraphics = !presentation.instant
+  const usePseudo3d = presentation.pseudo3d
+  const useFull3d = presentation.full3d && !isCompact
 
   async function revealResult(result: RollResult, rolledFormula: string, rollLabel: string) {
     setRollError(null)
-    if (graphicsEnabled) {
+    setLocalResult(result)
+
+    const animMs = animationDurationMs(presentation)
+    if (animMs > 0) {
       setShowRollAnim(true)
-      setLocalResult(result)
-      await delay(ROLL_ANIM_MS)
+      await delay(animMs)
       setShowRollAnim(false)
-    } else {
-      setLocalResult(result)
     }
 
     if (onRoll) {
@@ -119,14 +142,36 @@ export function DiceTray({ variant, gameId, onRoll, lastResult }: DiceTrayProps)
 
   return (
     <div className={`dice-tray dice-tray--${variant}`}>
-      <label className="dice-tray-graphics-toggle">
-        <input
-          type="checkbox"
-          checked={graphicsEnabled}
-          onChange={(e) => setGraphicsEnabled(e.target.checked)}
-        />
-        Animated dice
-      </label>
+      {isCompact ? (
+        <p className="muted dice-tray-graphics-hint">
+          Compact tray uses quick 3D-style dice.{' '}
+          <Link to="/app/tools/dice">Full tray</Link> has physics dice.{' '}
+          <Link to="/app/settings">Settings</Link>
+        </p>
+      ) : (
+        <p className="muted dice-tray-graphics-hint">
+          3D resin dice — faces match your roll. Change behavior in{' '}
+          <Link to="/app/settings">Settings</Link>.
+        </p>
+      )}
+
+      {useFull3d ? (
+        <>
+          <DiceTrayAppearanceRow
+            colorThemeId={diceColorThemeId}
+            onColorThemeChange={setDiceColorTheme}
+            backgroundId={diceTrayBackgroundId}
+            onBackgroundChange={setDiceTrayBackground}
+            disabled={rolling}
+          />
+          <DiceBoxViewport
+            colorThemeId={diceColorThemeId}
+            backgroundId={diceTrayBackgroundId}
+            rollResult={showRollAnim ? displayResult : null}
+            rolling={showRollAnim}
+          />
+        </>
+      ) : null}
 
       <div className="dice-tray-d20-block">
         <label className="dice-tray-mod-label" htmlFor={isCompact ? 'd20-mod-compact' : 'd20-mod'}>
@@ -141,7 +186,7 @@ export function DiceTray({ variant, gameId, onRoll, lastResult }: DiceTrayProps)
           disabled={rolling}
         />
         <div className="dice-tray-adv-row">
-          {graphicsEnabled ? (
+          {showGraphics ? (
             <>
               <button
                 type="button"
@@ -150,7 +195,7 @@ export function DiceTray({ variant, gameId, onRoll, lastResult }: DiceTrayProps)
                 onClick={() => void handleD20('normal')}
                 aria-label="Roll d20"
               >
-                <DieGraphic sides={20} size="sm" showLabel />
+                <DieGraphic sides={20} size="sm" showLabel pseudo3d={usePseudo3d} />
               </button>
               <button type="button" disabled={rolling} onClick={() => void handleD20('advantage')}>
                 Adv
@@ -176,14 +221,14 @@ export function DiceTray({ variant, gameId, onRoll, lastResult }: DiceTrayProps)
       </div>
 
       <div
-        className={`dice-tray-presets${graphicsEnabled ? ' dice-tray-presets--graphic' : ''}`}
+        className={`dice-tray-presets${showGraphics ? ' dice-tray-presets--graphic' : ''}`}
         role="group"
         aria-label="Quick dice"
       >
         {visiblePresets.map((preset) => {
           const caption = presetButtonLabel(preset)
           const sides = presetDieSides(preset)
-          const showIcon = graphicsEnabled && presetUsesDieIcon(preset) && sides != null
+          const showIcon = showGraphics && presetUsesDieIcon(preset) && sides != null
 
           if (showIcon) {
             return (
@@ -195,7 +240,13 @@ export function DiceTray({ variant, gameId, onRoll, lastResult }: DiceTrayProps)
                 onClick={() => void handlePreset(preset)}
                 aria-label={`Roll ${preset.label}`}
               >
-                <DieGraphic sides={sides} size="sm" showLabel caption={caption} />
+                <DieGraphic
+                  sides={sides}
+                  size="sm"
+                  showLabel
+                  caption={caption}
+                  pseudo3d={usePseudo3d}
+                />
               </button>
             )
           }
@@ -256,11 +307,12 @@ export function DiceTray({ variant, gameId, onRoll, lastResult }: DiceTrayProps)
       {rollError ? <p className="dice-tray-error">{rollError}</p> : null}
 
       {displayResult ? (
-        graphicsEnabled ? (
+        showGraphics && !useFull3d ? (
           <DiceRollDisplay
             result={displayResult}
             rolling={showRollAnim}
             compact={isCompact}
+            pseudo3d={usePseudo3d}
           />
         ) : (
           <div className="dice-result" role="status">

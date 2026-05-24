@@ -1,3 +1,4 @@
+import { parseDiceAnimationMode } from '../settings/diceAnimation'
 import { parseSpellcastingValidationMode } from '../settings/validation'
 import {
   DEFAULT_FONT_OVERRIDE_ID,
@@ -24,5 +25,7 @@ export function parseUserPreferences(raw: unknown): UserPreferences {
     o.spellcastingValidation !== undefined
       ? parseSpellcastingValidationMode(o.spellcastingValidation)
       : undefined
-  return { themeId, fontOverrideId, spellcastingValidation }
+  const diceAnimation =
+    o.diceAnimation !== undefined ? parseDiceAnimationMode(o.diceAnimation) : undefined
+  return { themeId, fontOverrideId, spellcastingValidation, diceAnimation }
 }

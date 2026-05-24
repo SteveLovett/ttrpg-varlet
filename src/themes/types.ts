@@ -30,6 +30,7 @@ export const FONT_OVERRIDE_IDS = [
 
 export type FontOverrideId = (typeof FONT_OVERRIDE_IDS)[number]
 
+import type { DiceAnimationMode } from '../settings/diceAnimation'
 import type { SpellcastingValidationMode } from '../settings/validation'
 
 export type UserPreferences = {
@@ -37,6 +38,8 @@ export type UserPreferences = {
   fontOverrideId?: FontOverrideId
   /** Personal default when a game uses inherit policy */
   spellcastingValidation?: SpellcastingValidationMode
+  /** Dice tray animation: auto, instant, pseudo3d, or full3d. */
+  diceAnimation?: DiceAnimationMode
 }
 
 export const DEFAULT_THEME_ID: ThemeId = 'default'

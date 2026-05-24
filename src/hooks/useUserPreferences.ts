@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { applyThemeToDocument } from '../themes/applyTheme'
 import { parseUserPreferences } from '../themes/parsePreferences'
 import { readThemeCache, readThemeCacheUserId, writeThemeCache } from '../themes/themeCache'
+import type { DiceAnimationMode } from '../settings/diceAnimation'
 import type { SpellcastingValidationMode } from '../settings/validation'
 import {
   DEFAULT_FONT_OVERRIDE_ID,
@@ -139,6 +140,18 @@ export function useUserPreferences() {
     [scheduleSave, persistThemeCache],
   )
 
+  const setDiceAnimation = useCallback(
+    (diceAnimation: DiceAnimationMode) => {
+      setState((s) => {
+        const next = { ...s.preferences, diceAnimation }
+        persistThemeCache(next)
+        scheduleSave(next)
+        return { ...s, preferences: next, error: null }
+      })
+    },
+    [scheduleSave, persistThemeCache],
+  )
+
   useEffect(() => {
     let cancelled = false
 
@@ -209,5 +222,6 @@ export function useUserPreferences() {
     setThemeId,
     setFontOverrideId,
     setSpellcastingValidation,
+    setDiceAnimation,
   }
 }
