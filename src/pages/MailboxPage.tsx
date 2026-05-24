@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
 import { supabase } from '../supabaseClient'
 
 type MessageRow = {
@@ -256,6 +257,7 @@ export function MailboxPage() {
 
   return (
     <div className="app-panel">
+      <AppBreadcrumbs items={[{ label: 'Games', to: '/app' }, { label: 'Mailbox' }]} />
       <h2>Mailbox</h2>
 
       <nav className="mailbox-tabs">

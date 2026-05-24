@@ -1,6 +1,13 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SubmitEvent } from 'react'
+import { Link } from 'react-router-dom'
+import { GameCardSkeleton } from '../components/GameCardSkeleton'
 import { MyGameCard } from '../components/MyGameCard'
+import { useDisplayNameProfile } from '../hooks/displayNameProfileContext'
+import {
+  readCreateGamePanelExpanded,
+  writeCreateGamePanelExpanded,
+} from '../hooks/createGamePanelStorage'
 import { supabase } from '../supabaseClient'
 import { DND5E_2024_RULESET_LABEL } from '../rules/dnd5e/constants'
 
@@ -60,92 +67,60 @@ function mapMembershipRowsToGames(rows: GameMembershipRow[]): GameSummary[] {
 
 /**
  * /app — main authenticated home (rendered inside AppShellLayout).
- * Loads `profiles.display_name` when the Phase 0 migration is applied; backfills a row if missing.
  */
 export function HomePage() {
-  const [email, setEmail] = useState<string | null>(null)
-  const [displayName, setDisplayName] = useState<string | null>(null)
+  const { greetingLabel, displayName, email, loading: loadingProfile } = useDisplayNameProfile()
+
   const [games, setGames] = useState<GameSummary[]>([])
   const [loadingGames, setLoadingGames] = useState(true)
-  const [loadingProfile, setLoadingProfile] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
   const [gamesError, setGamesError] = useState<string | null>(null)
   const [createError, setCreateError] = useState<string | null>(null)
   const [gameName, setGameName] = useState('')
   const [description, setDescription] = useState('')
   const [isPublic, setIsPublic] = useState(false)
-  const [displayNameDraft, setDisplayNameDraft] = useState('')
-  const [savingDisplayName, setSavingDisplayName] = useState(false)
-  const [displayNameError, setDisplayNameError] = useState<string | null>(null)
-  const [displayNameInfo, setDisplayNameInfo] = useState<string | null>(null)
 
-  /** Loads “my games” from Supabase (memberships + nested game rows). */
-  const loadMyGames = useCallback(async (userId: string): Promise<{ error: string | null }> => {
-    const { data, error } = await supabase
-      .from('game_members')
-      .select('game_role, games ( id, name, description, created_at, ruleset )')
-      .eq('user_id', userId)
+  const [createExpanded, setCreateExpandedState] = useState(false)
+  const createPrefsInitRef = useRef(false)
 
-    if (error) {
-      return { error: error.message }
-    }
+  const setCreateExpanded = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      setCreateExpandedState((prev) => {
+        const next = typeof value === 'function' ? value(prev) : value
+        writeCreateGamePanelExpanded(next)
+        return next
+      })
+    },
+    [],
+  )
 
-    const rows = (data ?? []) as GameMembershipRow[]
-    setGames(mapMembershipRowsToGames(rows))
-    return { error: null }
-  }, [])
+  const loadMyGames = useCallback(
+    async (userId: string): Promise<{ error: string | null; count: number }> => {
+      const { data, error } = await supabase
+        .from('game_members')
+        .select('game_role, games ( id, name, description, created_at, ruleset )')
+        .eq('user_id', userId)
 
-  const handleSaveDisplayName = async (e: SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setDisplayNameError(null)
-    setDisplayNameInfo(null)
-
-    const trimmed = displayNameDraft.trim()
-    if (!trimmed) {
-      setDisplayNameError('Display name cannot be empty.')
-      return
-    }
-    if (trimmed === displayName) {
-      setDisplayNameInfo('No changes to save.')
-      return
-    }
-
-    setSavingDisplayName(true)
-    try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-      if (userError) {
-        setDisplayNameError(userError.message)
-        return
-      }
-      if (!user) {
-        setDisplayNameError('You must be signed in.')
-        return
+      if (error) {
+        return { error: error.message, count: 0 }
       }
 
-      const { data, error: updateError } = await supabase
-        .from('profiles')
-        .update({ display_name: trimmed })
-        .eq('id', user.id)
-        .select('display_name')
-        .maybeSingle()
+      const rows = (data ?? []) as GameMembershipRow[]
+      const mapped = mapMembershipRowsToGames(rows)
+      setGames(mapped)
+      return { error: null, count: mapped.length }
+    },
+    [],
+  )
 
-      if (updateError) {
-        setDisplayNameError(updateError.message)
-        return
-      }
-
-      if (data?.display_name) {
-        setDisplayName(data.display_name)
-        setDisplayNameDraft(data.display_name)
-        setDisplayNameInfo('Display name updated.')
-      }
-    } finally {
-      setSavingDisplayName(false)
+  useEffect(() => {
+    if (!createExpanded) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setCreateExpanded(false)
     }
-  }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [createExpanded, setCreateExpanded])
 
   const handleCreateGame = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -199,16 +174,17 @@ export function HomePage() {
       setGameName('')
       setDescription('')
       setIsPublic(false)
+      setCreateExpanded(false)
     } finally {
       setIsCreating(false)
     }
   }
+
   useEffect(() => {
     let cancelled = false
 
     void (async () => {
       setLoadingGames(true)
-      setLoadingProfile(true)
       setGamesError(null)
 
       const {
@@ -217,7 +193,6 @@ export function HomePage() {
       const user = session?.user
       if (!user) {
         setLoadingGames(false)
-        setLoadingProfile(false)
         return
       }
 
@@ -227,71 +202,17 @@ export function HomePage() {
       if (refresh.error) {
         setGamesError(refresh.error)
         setGames([])
-        setLoadingGames(false)
-        return
+      }
+
+      if (!createPrefsInitRef.current) {
+        createPrefsInitRef.current = true
+        const gameCount = refresh.error ? 0 : refresh.count
+        const shouldOpen =
+          gameCount === 0 ? true : (readCreateGamePanelExpanded() ?? false)
+        setCreateExpandedState(shouldOpen)
       }
 
       setLoadingGames(false)
-
-      
-      setEmail(user.email ?? null)
-      try {
-        const { data: row, error: selectError } = await supabase
-          .from('profiles')
-          .select('display_name')
-          .eq('id', user.id)
-          .maybeSingle()
-
-        if (selectError) {
-          console.warn('profiles select:', selectError.message)
-          return
-        }
-
-        const fallback = user.email?.split('@')[0]?.trim() || 'Player'
-
-        if (row?.display_name) {
-          setDisplayName(row.display_name)
-          setDisplayNameDraft(row.display_name)
-          return
-        }
-
-        if (row && row.display_name == null) {
-          const { data: updated, error: updateError } = await supabase
-            .from('profiles')
-            .update({ display_name: fallback })
-            .eq('id', user.id)
-            .select('display_name')
-            .maybeSingle()
-
-          if (updateError) {
-            console.warn('profiles update:', updateError.message)
-            return
-          }
-          if (updated?.display_name) {
-            setDisplayName(updated.display_name)
-            setDisplayNameDraft(updated.display_name)
-          }
-          return
-        }
-
-        const { data: inserted, error: insertError } = await supabase
-          .from('profiles')
-          .insert({ id: user.id, display_name: fallback })
-          .select('display_name')
-          .maybeSingle()
-
-        if (insertError) {
-          console.warn('profiles insert:', insertError.message)
-          return
-        }
-
-        if (inserted?.display_name) {
-          setDisplayName(inserted.display_name)
-          setDisplayNameDraft(inserted.display_name)
-        }
-      } finally {
-        setLoadingProfile(false)
-      }
     })()
 
     return () => {
@@ -299,106 +220,57 @@ export function HomePage() {
     }
   }, [loadMyGames])
 
-  const label = loadingProfile ? null : (displayName ?? email)
+  function toggleCreatePanel() {
+    setCreateExpanded((open) => {
+      const next = !open
+      if (next) {
+        requestAnimationFrame(() => {
+          document.getElementById('game-name')?.focus()
+        })
+      }
+      return next
+    })
+  }
 
   return (
-    <div className="app-panel">
+    <div className="app-panel app-panel-wide">
       <h2>Games</h2>
-      <p>
-        {"You're signed in"}
-        {label ? (
+      <p className="games-intro">
+        {loadingProfile ? (
+          'Loading…'
+        ) : greetingLabel ? (
           <>
-            {' '}
-            as <strong>{label}</strong>
+            Signed in as <strong>{greetingLabel}</strong>
             {displayName && email && displayName !== email ? (
-              <span style={{ color: 'var(--text)' }}> ({email})</span>
+              <span className="muted"> ({email})</span>
             ) : null}
+            . Change your display name in{' '}
+            <Link to="/app/settings">Settings</Link>.
           </>
-        ) : null}
-        .
+        ) : (
+          <>
+            Signed in. Set your display name in <Link to="/app/settings">Settings</Link>.
+          </>
+        )}
       </p>
-      <section>
-        <h3>Your display name</h3>
-        <form onSubmit={handleSaveDisplayName} className="create-game-form">
-          <div className="form-row">
-            <label htmlFor="display-name">Display name </label>
-            <input
-              id="display-name"
-              name="display-name"
-              type="text"
-              autoComplete="off"
-              value={displayNameDraft}
-              onChange={(e) => setDisplayNameDraft(e.target.value)}
-              disabled={savingDisplayName || loadingProfile}
-              minLength={1}
-              required
-            />
-          </div>
-          <button type="submit" disabled={savingDisplayName || loadingProfile}>
-            {savingDisplayName ? 'Saving...' : 'Save display name'}
-          </button>
-          {displayNameError ? <p>{displayNameError}</p> : null}
-          {displayNameInfo ? <p>{displayNameInfo}</p> : null}
-        </form>
-      </section>
-      <section>
-        <h3>Create a new game</h3>
-        <form onSubmit={handleCreateGame} className="create-game-form">
-          <div className="form-row">
-            <label htmlFor="game-name">Game name </label>
-            <input
-              id="game-name"
-              name="game-name"
-              type="text"
-              autoComplete="off"
-              value={gameName}
-              onChange={(e) => setGameName(e.target.value)}
-              disabled={isCreating}
-              minLength={3}
-              required
-            />
-          </div>
 
-          <div className="form-row">
-            <label htmlFor="description">Description </label>
-            <textarea
-              id="description"
-              name="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={isCreating}
-            />
-          </div>
-
-          <div className="form-row form-row-inline">
-            <input
-              id="is-public"
-              name="is-public"
-              type="checkbox"
-              checked={isPublic}
-              onChange={(e) => setIsPublic(e.target.checked)}
-            />
-            <label htmlFor="is-public">Public game </label>
-          </div>
-
-          <p className="muted create-game-ruleset-hint">
-            New games use ruleset: <strong>{DND5E_2024_RULESET_LABEL}</strong>
-          </p>
-
-          <button type="submit" disabled={isCreating}>
-            Create game
-          </button>
-          {createError ? <p>{createError}</p> : null}
-        </form>
-      </section>
-      <section>
+      <section className="games-section">
         <h3>My games</h3>
         {loadingGames ? (
-          <p>Loading games...</p>
+          <GameCardSkeleton count={games.length > 0 ? games.length : 3} />
         ) : gamesError ? (
-          <p>Could not load games: {gamesError}</p>
+          <p role="alert">Could not load games: {gamesError}</p>
         ) : games.length === 0 ? (
-          <p>You are not in any games yet.</p>
+          <div className="games-empty-state">
+            <p className="muted">You are not in any games yet.</p>
+            <p className="games-empty-actions">
+              <button type="button" className="link-button" onClick={() => setCreateExpanded(true)}>
+                Create a game
+              </button>
+              {' · '}
+              <Link to="/app/search">Search public games to join</Link>
+            </p>
+          </div>
         ) : (
           <ul className="game-card-list">
             {games.map((game) => (
@@ -406,6 +278,76 @@ export function HomePage() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="games-section games-create-section">
+        <button
+          type="button"
+          className="disclosure-trigger"
+          aria-expanded={createExpanded}
+          aria-controls="create-game-panel"
+          onClick={toggleCreatePanel}
+        >
+          <span className="disclosure-trigger-label">Create a new game</span>
+          <span className="disclosure-chevron" aria-hidden />
+        </button>
+        <div
+          id="create-game-panel"
+          className="disclosure-panel"
+          hidden={!createExpanded}
+        >
+          <form onSubmit={handleCreateGame} className="create-game-form">
+            <div className="form-row">
+              <label htmlFor="game-name">Game name</label>
+              <input
+                id="game-name"
+                name="game-name"
+                type="text"
+                autoComplete="off"
+                value={gameName}
+                onChange={(e) => setGameName(e.target.value)}
+                disabled={isCreating}
+                minLength={3}
+                required
+              />
+            </div>
+
+            <div className="form-row">
+              <label htmlFor="description">Description</label>
+              <textarea
+                id="description"
+                name="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                disabled={isCreating}
+              />
+            </div>
+
+            <div className="form-row form-row-inline">
+              <input
+                id="is-public"
+                name="is-public"
+                type="checkbox"
+                checked={isPublic}
+                onChange={(e) => setIsPublic(e.target.checked)}
+              />
+              <label htmlFor="is-public">Public game</label>
+            </div>
+
+            <p className="muted create-game-ruleset-hint">
+              New games use ruleset: <strong>{DND5E_2024_RULESET_LABEL}</strong>
+            </p>
+
+            <button type="submit" disabled={isCreating}>
+              {isCreating ? 'Creating…' : 'Create game'}
+            </button>
+            {createError ? (
+              <p className="form-error" role="alert">
+                {createError}
+              </p>
+            ) : null}
+          </form>
+        </div>
       </section>
     </div>
   )

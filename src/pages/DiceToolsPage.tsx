@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
 import { DiceTray } from '../components/DiceTray'
 import { RollLog } from '../components/RollLog'
 import { useGameRolls } from '../hooks/useGameRolls'
@@ -51,11 +52,18 @@ export function DiceToolsPage() {
 
   return (
     <div className="app-panel app-panel-wide">
+      <AppBreadcrumbs
+        items={[
+          { label: 'Games', to: '/app' },
+          { label: 'Tools', to: '/app/tools' },
+          { label: 'Dice tray' },
+        ]}
+      />
       <h2>Dice tray</h2>
       {gameId ? (
         <p className="muted">
           Rolls are saved to your game log.{' '}
-          <Link to={`/app/games/${gameId}?tab=session`}>Back to session</Link>
+          <Link to={`/app/games/${gameId}?tab=session`}>Return to session</Link>
         </p>
       ) : (
         <p className="muted">
@@ -101,9 +109,6 @@ export function DiceToolsPage() {
         </details>
       </section>
 
-      <p>
-        <Link to="/app/tools">Back to Tools</Link>
-      </p>
     </div>
   )
 }

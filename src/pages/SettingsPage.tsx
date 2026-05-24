@@ -1,40 +1,103 @@
+import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
 import { FONT_OVERRIDE_IDS } from '../themes/types'
 import { FONT_OVERRIDES } from '../themes/fonts'
 import { THEME_LIST } from '../themes/registry'
 import { useThemeSettings } from '../themes/themeContext'
+import { useDisplayNameProfile } from '../hooks/displayNameProfileContext'
 
 export function SettingsPage() {
   const {
     preferences,
-    loading,
+    loading: themeLoading,
     saving,
-    error,
+    error: themeError,
     savedAt,
     setThemeId,
     setFontOverrideId,
   } = useThemeSettings()
+
+  const {
+    email,
+    displayName,
+    displayNameDraft,
+    setDisplayNameDraft,
+    loading: profileLoading,
+    saving: savingDisplayName,
+    error: displayNameError,
+    info: displayNameInfo,
+    saveDisplayName,
+  } = useDisplayNameProfile()
 
   const activeTheme = preferences.themeId ?? 'default'
   const activeFont = preferences.fontOverrideId ?? 'theme'
 
   return (
     <div className="settings-page">
+      <AppBreadcrumbs items={[{ label: 'Games', to: '/app' }, { label: 'Settings' }]} />
       <header className="settings-header">
         <h2>Settings</h2>
-        <p className="muted">Appearance and preferences for your account.</p>
-        {loading ? <p className="settings-status muted" role="status">Loading…</p> : null}
-        {!loading && saving ? (
+        <p className="muted">Account, appearance, and preferences.</p>
+        {themeLoading ? <p className="settings-status muted" role="status">Loading…</p> : null}
+        {!themeLoading && saving ? (
           <p className="settings-status muted" role="status">Saving…</p>
         ) : null}
-        {!loading && !saving && savedAt ? (
+        {!themeLoading && !saving && savedAt ? (
           <p className="settings-status settings-status-ok" role="status">Saved</p>
         ) : null}
-        {error ? (
+        {themeError ? (
           <p className="settings-status settings-status-error" role="alert">
-            {error}
+            {themeError}
           </p>
         ) : null}
       </header>
+
+      <section className="settings-section" aria-labelledby="settings-profile">
+        <h3 id="settings-profile" className="settings-section-title">
+          Profile
+        </h3>
+        <p className="muted settings-lede">
+          Your display name is shown in chat, rolls, and game member lists.
+        </p>
+        {email ? (
+          <p className="settings-email muted">
+            Signed in as <strong>{email}</strong>
+          </p>
+        ) : null}
+        <form onSubmit={saveDisplayName} className="create-game-form settings-profile-form">
+          <div className="form-row">
+            <label htmlFor="settings-display-name">Display name</label>
+            <input
+              id="settings-display-name"
+              name="display-name"
+              type="text"
+              autoComplete="nickname"
+              value={displayNameDraft}
+              onChange={(e) => setDisplayNameDraft(e.target.value)}
+              disabled={savingDisplayName || profileLoading}
+              minLength={1}
+              required
+            />
+          </div>
+          <button type="submit" disabled={savingDisplayName || profileLoading}>
+            {savingDisplayName ? 'Saving…' : 'Save display name'}
+          </button>
+          {displayNameError ? (
+            <p className="settings-status-error" role="alert">
+              {displayNameError}
+            </p>
+          ) : null}
+          {displayNameInfo ? (
+            <p className="settings-status-ok" role="status">
+              {displayNameInfo}
+            </p>
+          ) : null}
+        </form>
+        {displayName && email && displayName !== email ? (
+          <p className="muted settings-profile-hint">
+            Currently shown to others as <strong>{displayName}</strong>.
+          </p>
+        ) : null}
+      </section>
 
       <section className="settings-section" aria-labelledby="settings-appearance">
         <h3 id="settings-appearance" className="settings-section-title">
@@ -50,7 +113,7 @@ export function SettingsPage() {
                   type="button"
                   className={`theme-card${selected ? ' is-selected' : ''}`}
                   aria-pressed={selected}
-                  disabled={loading}
+                  disabled={themeLoading}
                   onClick={() => setThemeId(theme.id)}
                 >
                   <span className="theme-card-swatch" aria-hidden>
@@ -80,7 +143,7 @@ export function SettingsPage() {
           <select
             id="settings-font-select"
             value={activeFont}
-            disabled={loading}
+            disabled={themeLoading}
             onChange={(e) => setFontOverrideId(e.target.value as typeof activeFont)}
           >
             {FONT_OVERRIDE_IDS.map((id) => (

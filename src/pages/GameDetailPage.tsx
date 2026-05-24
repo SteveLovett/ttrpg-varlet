@@ -1,6 +1,8 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
+import { DisclosureSection } from '../components/DisclosureSection'
 import { GameCharactersPanel } from '../components/characters/GameCharactersPanel'
 import { GameGmPanel } from '../components/gm/GameGmPanel'
 import { GameSessionPanel } from '../components/GameSessionPanel'
@@ -92,6 +94,8 @@ export function GameDetailPage() {
   const [savingSettings, setSavingSettings] = useState(false)
   const [settingsError, setSettingsError] = useState<string | null>(null)
   const [settingsInfo, setSettingsInfo] = useState<string | null>(null)
+  const [lobbySettingsExpanded, setLobbySettingsExpanded] = useState(true)
+  const [gameContentExpanded, setGameContentExpanded] = useState(false)
 
   // Game content (ruleset / house rules / session notes)
   const [ruleset, setRuleset] = useState<string>('')
@@ -482,12 +486,22 @@ export function GameDetailPage() {
       {loading ? <p>Loading game...</p> : null}
       {!loading && error ? (
         <>
+          <AppBreadcrumbs items={[{ label: 'Games', to: '/app' }, { label: 'Game' }]} />
           <h2>Game</h2>
           <p>{error}</p>
         </>
       ) : null}
       {!loading && !error ? (
         <>
+          <AppBreadcrumbs
+            items={[
+              { label: 'Games', to: '/app' },
+              { label: name || 'Game' },
+              ...(activeTab !== 'overview'
+                ? [{ label: TAB_LABELS[activeTab] }]
+                : []),
+            ]}
+          />
           <header className="game-detail-header">
             <h2>{name}</h2>
             <p className="game-detail-meta">
@@ -531,11 +545,15 @@ export function GameDetailPage() {
           {activeTab === 'overview' ? (
             <div className="game-tab-panel">
           {isGM ? (
-            <section>
-              <h3>Lobby settings</h3>
+            <DisclosureSection
+              id="lobby-settings"
+              title="Lobby settings"
+              expanded={lobbySettingsExpanded}
+              onToggle={() => setLobbySettingsExpanded((open) => !open)}
+            >
               <form onSubmit={handleSaveSettings} className="create-game-form">
                 <div className="form-row">
-                  <label htmlFor="settings-name">Game name </label>
+                  <label htmlFor="settings-name">Game name</label>
                   <input
                     id="settings-name"
                     name="settings-name"
@@ -549,7 +567,7 @@ export function GameDetailPage() {
                   />
                 </div>
                 <div className="form-row">
-                  <label htmlFor="settings-description">Description </label>
+                  <label htmlFor="settings-description">Description</label>
                   <textarea
                     id="settings-description"
                     name="settings-description"
@@ -567,27 +585,35 @@ export function GameDetailPage() {
                     onChange={(e) => setDraftPublic(e.target.checked)}
                     disabled={savingSettings}
                   />
-                  <label htmlFor="settings-public">Public game </label>
+                  <label htmlFor="settings-public">Public game</label>
                 </div>
                 <button type="submit" disabled={savingSettings}>
-                  {savingSettings ? 'Saving...' : 'Save lobby settings'}
+                  {savingSettings ? 'Saving…' : 'Save lobby settings'}
                 </button>
-                {settingsError ? <p>{settingsError}</p> : null}
-                {settingsInfo ? <p>{settingsInfo}</p> : null}
+                {settingsError ? (
+                  <p className="form-error" role="alert">
+                    {settingsError}
+                  </p>
+                ) : null}
+                {settingsInfo ? <p role="status">{settingsInfo}</p> : null}
               </form>
-            </section>
+            </DisclosureSection>
           ) : null}
 
           {isGM ? (
-            <section>
-              <h3>Game content</h3>
-              <p className="muted">
+            <DisclosureSection
+              id="game-content"
+              title="Game content"
+              expanded={gameContentExpanded}
+              onToggle={() => setGameContentExpanded((open) => !open)}
+            >
+              <p className="muted overview-disclosure-lede">
                 Ruleset, house rules, and session notes — visible to all members and (if public)
                 anyone who can see the game.
               </p>
               <form onSubmit={handleSaveContent} className="create-game-form">
                 <div className="form-row">
-                  <label htmlFor="content-ruleset">Ruleset label </label>
+                  <label htmlFor="content-ruleset">Ruleset label</label>
                   <input
                     id="content-ruleset"
                     name="content-ruleset"
@@ -627,12 +653,16 @@ export function GameDetailPage() {
                   />
                 </div>
                 <button type="submit" disabled={savingContent}>
-                  {savingContent ? 'Saving...' : 'Save game content'}
+                  {savingContent ? 'Saving…' : 'Save game content'}
                 </button>
-                {contentError ? <p>{contentError}</p> : null}
-                {contentInfo ? <p>{contentInfo}</p> : null}
+                {contentError ? (
+                  <p className="form-error" role="alert">
+                    {contentError}
+                  </p>
+                ) : null}
+                {contentInfo ? <p role="status">{contentInfo}</p> : null}
               </form>
-            </section>
+            </DisclosureSection>
           ) : null}
 
           {(ruleset.length > 0 || houseRules.length > 0 || sessionNotes.length > 0) ? (
@@ -801,9 +831,6 @@ export function GameDetailPage() {
           ) : null}
         </>
       ) : null}
-      <p className="game-detail-back">
-        <Link to="/app">Back to Games</Link>
-      </p>
     </div>
   )
 }

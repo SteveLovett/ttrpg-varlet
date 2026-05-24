@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
 import { estimateMonsterCr } from '../rules/dnd5e/encounter'
 import { monsters } from '../rules/dnd5e/data/monsters'
 
@@ -26,6 +26,13 @@ export function BestiaryPage() {
 
   return (
     <div className="app-panel app-panel-wide">
+      <AppBreadcrumbs
+        items={[
+          { label: 'Games', to: '/app' },
+          { label: 'Tools', to: '/app/tools' },
+          { label: 'Bestiary' },
+        ]}
+      />
       <h2>Bestiary</h2>
       <p className="muted">
         SRD 2024 creatures from Open5e ({monsters.length} entries). CR is estimated when not
@@ -86,9 +93,6 @@ export function BestiaryPage() {
         <p className="muted">Narrow your search to see more than 120 results.</p>
       ) : null}
 
-      <p>
-        <Link to="/app/tools">Back to Tools</Link>
-      </p>
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
 import { supabase } from '../supabaseClient'
 
 type SearchGame = {
@@ -102,6 +103,7 @@ export function SearchGamesPage() {
 
   return (
     <div className="app-panel">
+      <AppBreadcrumbs items={[{ label: 'Games', to: '/app' }, { label: 'Search games' }]} />
       <h2>Search games</h2>
       <p>Find public games and join instantly as a Player.</p>
 

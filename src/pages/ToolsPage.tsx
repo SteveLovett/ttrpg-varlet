@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { AppBreadcrumbs } from '../components/AppBreadcrumbs'
 
 /**
  * /app/tools — global tools hub (dice tray, bestiary, etc. in later phases).
@@ -6,6 +7,7 @@ import { Link } from 'react-router-dom'
 export function ToolsPage() {
   return (
     <div className="app-panel">
+      <AppBreadcrumbs items={[{ label: 'Games', to: '/app' }, { label: 'Tools' }]} />
       <h2>Tools</h2>
       <p className="muted">
         Campaign utilities live here and inside each game&apos;s Session tab. More tools arrive in
@@ -29,9 +31,6 @@ export function ToolsPage() {
           <Link to="/app/tools/dice">dice tray</Link> page
         </li>
       </ul>
-      <p>
-        <Link to="/app">Back to Games</Link>
-      </p>
     </div>
   )
 }
