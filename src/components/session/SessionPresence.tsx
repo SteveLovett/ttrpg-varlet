@@ -1,7 +1,7 @@
 import { useOthers, useSelf } from '@liveblocks/react'
 
 /**
- * Compact presence row: who else is currently in the game room.
+ * Online users in the game room — shown beside session chat.
  */
 export function SessionPresence() {
   const self = useSelf()
@@ -10,20 +10,26 @@ export function SessionPresence() {
     ...(self ? [{ id: self.id, name: presenceName(self), isSelf: true }] : []),
     ...others.map((o) => ({ id: o.id, name: presenceName(o), isSelf: false })),
   ]
-  if (all.length === 0) return null
+
   return (
-    <div className="session-presence" aria-label="People in this room">
-      <span className="muted">In room:</span>
-      <ul>
-        {all.map((p, idx) => (
-          <li key={`${p.id ?? 'anon'}-${idx}`}>
-            <span className="presence-dot" aria-hidden />
-            {p.name}
-            {p.isSelf ? ' (you)' : ''}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <section className="session-presence" aria-label="People in this room">
+      <h3>In this room</h3>
+      {all.length === 0 ? (
+        <p className="session-presence-empty muted">No one connected</p>
+      ) : (
+        <ul className="session-presence-list">
+          {all.map((p, idx) => (
+            <li key={`${p.id ?? 'anon'}-${idx}`} className="session-presence-user">
+              <span className="presence-dot" aria-hidden />
+              <span className="session-presence-name">
+                {p.name}
+                {p.isSelf ? <span className="muted"> (you)</span> : null}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }
 

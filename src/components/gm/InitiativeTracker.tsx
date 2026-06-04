@@ -82,28 +82,37 @@ export function InitiativeTracker({
 
       {entries.length === 0 && !loading ? (
         <p className="muted">No initiative entries yet.</p>
+      ) : entries.length > 3 ? (
+        <div className="initiative-list-viewport initiative-list-viewport--scrollable">
+          <ol className="initiative-list initiative-list--scrollable">
+            {entries.map((entry, index) => (
+              <InitiativeRow
+                key={entry.id}
+                entry={entry}
+                index={index}
+                isGM={isGM}
+                saving={saving}
+                onRemove={() =>
+                  void persist(entries.filter((e) => e.id !== entry.id))
+                }
+              />
+            ))}
+          </ol>
+          <div className="initiative-scroll-rail" aria-hidden="true" />
+        </div>
       ) : (
         <ol className="initiative-list">
           {entries.map((entry, index) => (
-            <li key={entry.id} className="initiative-row">
-              <span className="initiative-rank">{index + 1}</span>
-              <span className="initiative-name">
-                {entry.name}
-                {entry.isPc ? ' (PC)' : ''}
-              </span>
-              <span className="initiative-value">{entry.value}</span>
-              {isGM ? (
-                <button
-                  type="button"
-                  className="initiative-remove"
-                  disabled={saving}
-                  aria-label={`Remove ${entry.name}`}
-                  onClick={() => void persist(entries.filter((e) => e.id !== entry.id))}
-                >
-                  ×
-                </button>
-              ) : null}
-            </li>
+            <InitiativeRow
+              key={entry.id}
+              entry={entry}
+              index={index}
+              isGM={isGM}
+              saving={saving}
+              onRemove={() =>
+                void persist(entries.filter((e) => e.id !== entry.id))
+              }
+            />
           ))}
         </ol>
       )}
@@ -158,4 +167,42 @@ export function InitiativeTracker({
 
 function sortInitiative(entries: InitiativeEntry[]): InitiativeEntry[] {
   return [...entries].sort((a, b) => b.value - a.value)
+}
+
+type InitiativeRowProps = {
+  entry: InitiativeEntry
+  index: number
+  isGM: boolean
+  saving: boolean
+  onRemove: () => void
+}
+
+function InitiativeRow({
+  entry,
+  index,
+  isGM,
+  saving,
+  onRemove,
+}: InitiativeRowProps) {
+  return (
+    <li className="initiative-row">
+      <span className="initiative-rank">{index + 1}</span>
+      <span className="initiative-name" title={entry.name}>
+        {entry.name}
+        {entry.isPc ? ' (PC)' : ''}
+      </span>
+      <span className="initiative-value">{entry.value}</span>
+      {isGM ? (
+        <button
+          type="button"
+          className="initiative-remove"
+          disabled={saving}
+          aria-label={`Remove ${entry.name}`}
+          onClick={onRemove}
+        >
+          ×
+        </button>
+      ) : null}
+    </li>
+  )
 }

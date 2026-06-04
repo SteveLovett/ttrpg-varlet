@@ -8,8 +8,7 @@ import {
 import type { RollResult } from '../rules/dnd5e/dice/types'
 import { InitiativeTracker } from './gm/InitiativeTracker'
 import { DiceTray } from './DiceTray'
-import { SessionChat } from './session/SessionChat'
-import { SessionPresence } from './session/SessionPresence'
+import { SessionChatRoom } from './session/SessionChatRoom'
 import { RollLog } from './RollLog'
 
 type GameSessionPanelProps = {
@@ -75,7 +74,6 @@ export function GameSessionPanel({
   return (
     <section className="game-session-layout">
       <div className="game-session-dice">
-        <SessionPresence />
         <h3>Session dice</h3>
         <p className="muted">
           Quick rolls for this table.{' '}
@@ -95,16 +93,18 @@ export function GameSessionPanel({
           currentUserId={currentUserId}
           memberNames={memberNames}
         />
-        <SessionChat
-          gameId={gameId}
-          currentUserId={currentUserId}
-          displayName={displayName}
-        />
         <RollLog
           rolls={rolls}
           loading={loading}
           error={error}
           currentUserId={currentUserId}
+        />
+      </div>
+      <div className="game-session-chat">
+        <SessionChatRoom
+          gameId={gameId}
+          currentUserId={currentUserId}
+          displayName={displayName}
         />
       </div>
     </section>
